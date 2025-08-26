@@ -20,7 +20,7 @@ export interface Preschool {
 }
 
 export interface SearchFilters {
-  kommun?: string;
+  kommuner?: string[]; // Changed to array for multiple municipalities
   huvudman?: string;
   minPersonaltäthet?: number;
   maxPersonaltäthet?: number;
@@ -32,6 +32,7 @@ export interface SearchFilters {
   center?: LngLatLike;
   query?: string;
   maxChildren?: number;
+  nearbyMode?: boolean; // Track if "nearby" mode is active
 }
 
 export type HeatmapType = 'density' | 'staff' | 'quality' | 'rating';
@@ -277,9 +278,11 @@ export const useMapStore = create<MapState>((set, get) => ({
         return false;
       }
 
-      // Kommun filter
-      if (searchFilters.kommun && preschool.kommun !== searchFilters.kommun) {
-        return false;
+      // Kommuner filter (multiple municipalities)
+      if (searchFilters.kommuner && searchFilters.kommuner.length > 0) {
+        if (!searchFilters.kommuner.includes(preschool.kommun)) {
+          return false;
+        }
       }
 
       // Huvudman filter

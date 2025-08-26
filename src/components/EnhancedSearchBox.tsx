@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Filter, Users, GraduationCap, X } from 'lucide-react';
+import { Search, MapPin, Filter, Users, GraduationCap, X, Locate, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useMapStore } from '@/stores/mapStore';
 
 interface EnhancedSearchBoxProps {
@@ -13,20 +14,42 @@ interface EnhancedSearchBoxProps {
   map?: mapboxgl.Map | null;
 }
 
+// Get all unique municipalities from the store
+const getMunicipalities = (preschools: any[]) => {
+  const municipalities = [...new Set(preschools.map(p => p.kommun))].filter(Boolean).sort();
+  return municipalities;
+};
+
 export const EnhancedSearchBox: React.FC<EnhancedSearchBoxProps> = ({ onLocationSearch, map }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [maxChildren, setMaxChildren] = useState([200]);
   const [selectedHuvudman, setSelectedHuvudman] = useState<string>('alla');
   const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [radius, setRadius] = useState([1000]); // In meters
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   const { 
     setSearchFilters, 
     clearSearchFilters, 
     hasActiveFilters,
-    searchFilters 
+    searchFilters,
+    preschools
   } = useMapStore();
+
+  const municipalities = getMunicipalities(preschools);
+  const selectedMunicipalities = searchFilters.kommuner || [];
+  const hasSearchQuery = searchText.trim().length > 0;
+  const hasNearbyMode = searchFilters.nearbyMode || false;
+
+  // Filter suggestions based on search text
+  const filteredSuggestions = searchText.trim().length > 0 
+    ? municipalities.filter(m => 
+        m.toLowerCase().includes(searchText.toLowerCase()) &&
+        !selectedMunicipalities.includes(m)
+      ).slice(0, 5)
+    : [];
 
   // Auto-expand when there are active filters
   useEffect(() => {
@@ -51,82 +74,213 @@ export const EnhancedSearchBox: React.FC<EnhancedSearchBoxProps> = ({ onLocation
             duration: 2000
           });
         }
+        
+        // Set nearby mode filters
+        setSearchFilters({
+          center: [position.coords.longitude, position.coords.latitude],
+          radius: radius[0],
+          nearbyMode: true
+        });
+        
         setIsSearching(false);
       },
       (error) => {
         console.error('Geolocation error:', error);
         setIsSearching(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
       }
     );
   };
 
+  const handleAddMunicipality = (municipality: string) => {
+    const newMunicipalities = [...selectedMunicipalities, municipality];
+    setSearchFilters({ kommuner: newMunicipalities });
+    setSearchText('');
+    setShowSuggestions(false);
+  };
+
+  const handleRemoveMunicipality = (municipality: string) => {
+    const newMunicipalities = selectedMunicipalities.filter(m => m !== municipality);
+    setSearchFilters({ kommuner: newMunicipalities.length > 0 ? newMunicipalities : undefined });
+  };
+
   const handleSearch = () => {
-    if (searchText.trim()) {
-      setIsExpanded(true);
-      // Apply search filters
+    if (hasActiveFilters) {
+      // Clear all filters
+      clearSearchFilters();
+      setSearchText('');
+      setMaxChildren([200]);
+      setSelectedHuvudman('alla');
+      setRadius([1000]);
+    } else {
+      // Apply search
+      const filters: any = {};
+      
+      if (selectedHuvudman !== 'alla') {
+        filters.huvudman = selectedHuvudman;
+      }
+      
+      if (maxChildren[0] < 200) {
+        filters.maxChildren = maxChildren[0];
+      }
+      
+      if (Object.keys(filters).length > 0) {
+        setSearchFilters(filters);
+      }
+    }
+  };
+
+  const handleRadiusChange = (newRadius: number[]) => {
+    setRadius(newRadius);
+    if (hasNearbyMode && searchFilters.center) {
       setSearchFilters({
-        query: searchText,
-        huvudman: selectedHuvudman === 'alla' ? undefined : selectedHuvudman,
-        maxChildren: maxChildren[0] < 200 ? maxChildren[0] : undefined
+        ...searchFilters,
+        radius: newRadius[0]
       });
     }
   };
 
-  const handleClearFilters = () => {
-    setSearchText('');
-    setSelectedHuvudman('alla');
-    setMaxChildren([200]);
-    clearSearchFilters();
-    setIsExpanded(false);
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
+    if (e.key === 'Enter' && filteredSuggestions.length > 0) {
+      handleAddMunicipality(filteredSuggestions[0]);
     }
   };
 
+  const getButtonText = () => {
+    if (hasActiveFilters) return 'Rensa';
+    return 'Sök';
+  };
+
+  const getButtonIcon = () => {
+    if (hasActiveFilters) return <Trash2 className="h-4 w-4" />;
+    return <Search className="h-4 w-4" />;
+  };
+
+  if (!isExpanded) {
+    return (
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="absolute top-4 left-4 z-50"
+      >
+        <Card className="bg-card/95 backdrop-blur-lg shadow-nordic border-border/50">
+          <div className="p-2 flex items-center gap-2">
+            <Button
+              onClick={() => setIsExpanded(true)}
+              variant="ghost"
+              size="sm"
+              className="h-8"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Sök förskolor
+            </Button>
+            
+            <Button
+              onClick={handleLocationSearch}
+              variant="outline"
+              size="sm"
+              disabled={isSearching}
+              className="h-8"
+            >
+              <Locate className="h-4 w-4 mr-1" />
+              {isSearching ? 'Söker...' : 'Nära mig'}
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="absolute top-4 left-4 z-30"
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="absolute top-4 left-4 z-50 w-80"
     >
-      <Card className={`bg-card/95 backdrop-blur-lg border-border/50 shadow-nordic transition-all duration-300 ${
-        isExpanded ? 'w-80' : 'w-64'
-      }`}>
-        {/* Main search bar */}
-        <div className="p-3 space-y-3">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Card className="bg-card/95 backdrop-blur-lg shadow-nordic border-border/50">
+        <div className="p-4 space-y-4">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-sm flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Sök förskolor
+            </h3>
+            <Button
+              onClick={() => setIsExpanded(false)}
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+
+          {/* Municipality Search */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">
+              Sök kommun
+            </label>
+            <div className="relative">
               <Input
                 ref={searchInputRef}
-                placeholder="Sök kommun, förskola..."
                 value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setShowSuggestions(e.target.value.length > 0);
+                }}
                 onKeyPress={handleKeyPress}
-                className="pl-10 pr-4 h-9 text-sm bg-background/50"
+                onFocus={() => setShowSuggestions(searchText.length > 0)}
+                placeholder="Skriv kommunnamn..."
+                className="h-8 text-sm"
               />
+              
+              {/* Suggestions dropdown */}
+              <AnimatePresence>
+                {showSuggestions && filteredSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-50"
+                  >
+                    {filteredSuggestions.map((municipality) => (
+                      <button
+                        key={municipality}
+                        onClick={() => handleAddMunicipality(municipality)}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                      >
+                        {municipality}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <Button
-              onClick={hasActiveFilters ? handleClearFilters : handleSearch}
-              variant={hasActiveFilters ? "destructive" : "default"}
-              size="sm"
-              className="h-9 px-3"
-            >
-              {hasActiveFilters ? (
-                <>
-                  <X className="h-3 w-3 mr-1" />
-                  Rensa
-                </>
-              ) : (
-                <>
-                  <Search className="h-3 w-3 mr-1" />
-                  {searchText ? 'Sök' : 'Sök'}
-                </>
-              )}
-            </Button>
+
+            {/* Selected municipalities */}
+            {selectedMunicipalities.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedMunicipalities.map((municipality) => (
+                  <Badge
+                    key={municipality}
+                    variant="secondary"
+                    className="text-xs px-2 py-1 flex items-center gap-1"
+                  >
+                    {municipality}
+                    <button
+                      onClick={() => handleRemoveMunicipality(municipality)}
+                      className="hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Location button */}
@@ -135,87 +289,101 @@ export const EnhancedSearchBox: React.FC<EnhancedSearchBoxProps> = ({ onLocation
             variant="outline"
             size="sm"
             disabled={isSearching}
-            className="w-full h-9 justify-start bg-background/50"
+            className="w-full h-8"
           >
             <MapPin className="h-4 w-4 mr-2" />
-            {isSearching ? 'Hämtar position...' : 'Förskolor nära mig'}
+            {isSearching ? 'Hittar din position...' : 'Förskolor nära mig'}
           </Button>
 
-          {/* Expand/collapse button */}
-          <Button
-            onClick={() => setIsExpanded(!isExpanded)}
-            variant="ghost"
-            size="sm"
-            className="w-full h-8 text-xs"
-          >
-            <Filter className="h-3 w-3 mr-1" />
-            {isExpanded ? 'Färre filter' : 'Fler filter'}
-          </Button>
-        </div>
-
-        {/* Expanded filters */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-border/50"
-            >
-              <div className="p-3 space-y-4">
-                {/* Huvudman filter */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-foreground flex items-center gap-1">
-                    <GraduationCap className="h-3 w-3" />
-                    Huvudman
-                  </label>
-                  <Select value={selectedHuvudman} onValueChange={setSelectedHuvudman}>
-                    <SelectTrigger className="h-8 text-xs bg-background/50">
-                      <SelectValue placeholder="Välj huvudman" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="alla">Alla</SelectItem>
-                      <SelectItem value="Kommunal">Kommunal</SelectItem>
-                      <SelectItem value="Privat">Privat</SelectItem>
-                      <SelectItem value="Enskild">Enskild</SelectItem>
-                      <SelectItem value="Kooperativ">Kooperativ</SelectItem>
-                    </SelectContent>
-                  </Select>
+          {/* Radius slider - only show when nearby mode is active */}
+          <AnimatePresence>
+            {hasNearbyMode && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-2"
+              >
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                  <MapPin className="h-3 w-3" />
+                  Sökradie: {radius[0]}m
+                </label>
+                <Slider
+                  value={radius}
+                  onValueChange={handleRadiusChange}
+                  max={5000}
+                  min={500}
+                  step={250}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>500m</span>
+                  <span>5km</span>
                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-                {/* Max children slider */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-foreground flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    Max antal barn: {maxChildren[0] >= 200 ? 'Alla' : maxChildren[0]}
-                  </label>
-                  <Slider
-                    value={maxChildren}
-                    onValueChange={setMaxChildren}
-                    max={200}
-                    min={10}
-                    step={10}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>10</span>
-                    <span>200+</span>
-                  </div>
-                </div>
+          {/* Filters */}
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <Filter className="h-3 w-3" />
+                Huvudman
+              </label>
+              <Select value={selectedHuvudman} onValueChange={setSelectedHuvudman}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="alla">Alla</SelectItem>
+                  <SelectItem value="Kommunal">Kommunal</SelectItem>
+                  <SelectItem value="Privat">Privat</SelectItem>
+                  <SelectItem value="Fristående">Fristående</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                {/* Apply filters button */}
-                <Button
-                  onClick={handleSearch}
-                  className="w-full h-8 text-xs"
-                  disabled={!searchText && selectedHuvudman === 'alla' && maxChildren[0] >= 200}
-                >
-                  Tillämpa filter
-                </Button>
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <Users className="h-3 w-3" />
+                Max antal barn: {maxChildren[0]}
+              </label>
+              <Slider
+                value={maxChildren}
+                onValueChange={setMaxChildren}
+                max={200}
+                min={20}
+                step={10}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>20</span>
+                <span>200+</span>
               </div>
-            </motion.div>
+            </div>
+          </div>
+
+          {/* Search button */}
+          <Button 
+            onClick={handleSearch}
+            className="w-full h-8"
+            variant={hasActiveFilters ? "destructive" : "default"}
+          >
+            {getButtonIcon()}
+            <span className="ml-2">{getButtonText()}</span>
+          </Button>
+
+          {/* Active filters indicator */}
+          {hasActiveFilters && (
+            <div className="text-xs text-muted-foreground">
+              {selectedMunicipalities.length > 0 && `${selectedMunicipalities.length} kommuner valda`}
+              {hasNearbyMode && ' • Närområde aktivt'}
+              {selectedHuvudman !== 'alla' && ` • ${selectedHuvudman}`}
+              {maxChildren[0] < 200 && ` • Max ${maxChildren[0]} barn`}
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </Card>
     </motion.div>
   );

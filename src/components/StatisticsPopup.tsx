@@ -89,8 +89,8 @@ export const StatisticsPopup: React.FC<StatisticsPopupProps> = ({ className }) =
   };
 
   const getContextTitle = () => {
-    if (searchFilters.kommun) {
-      return `${searchFilters.kommun} vs Riket`;
+    if (searchFilters.kommuner && searchFilters.kommuner.length > 0) {
+      return `${searchFilters.kommuner[0]} vs Riket`;
     }
     if (mapZoom > 8) {
       return 'Synliga vs Riket';

@@ -17,7 +17,7 @@ export const StatisticsButton: React.FC = () => {
   if (!hasActiveFilters) return null;
 
   const getButtonText = () => {
-    if (searchFilters.kommun) return `Statistik för ${searchFilters.kommun}`;
+    if (searchFilters.kommuner && searchFilters.kommuner.length > 0) return `Statistik för ${searchFilters.kommuner[0]}`;
     if (searchFilters.radius) return 'Statistik för närområdet';
     if (searchFilters.huvudman) return `Statistik för ${searchFilters.huvudman.toLowerCase()}a`;
     return 'Statistik för filter';

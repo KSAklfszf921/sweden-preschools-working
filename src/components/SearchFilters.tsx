@@ -49,7 +49,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
           k.toLowerCase().includes(searchQuery.toLowerCase())
         );
         if (kommun) {
-          setSearchFilters({ kommun });
+          setSearchFilters({ kommuner: kommun ? [kommun] : undefined });
         }
       }
     } catch (error) {
@@ -198,8 +198,8 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Kommun</label>
                 <Select
-                  value={searchFilters.kommun || ''}
-                  onValueChange={(value) => setSearchFilters({ kommun: value || undefined })}
+                  value={searchFilters.kommuner?.[0] || ''}
+                  onValueChange={(value) => setSearchFilters({ kommuner: value ? [value] : undefined })}
                 >
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Välj kommun" />
