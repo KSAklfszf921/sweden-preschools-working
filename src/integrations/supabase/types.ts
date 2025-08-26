@@ -53,6 +53,87 @@ export type Database = {
         }
         Relationships: []
       }
+      data_categories: {
+        Row: {
+          category: string
+          has_data: boolean | null
+          id: number
+          last_updated: string | null
+          municipality_id: number | null
+        }
+        Insert: {
+          category: string
+          has_data?: boolean | null
+          id?: number
+          last_updated?: string | null
+          municipality_id?: number | null
+        }
+        Update: {
+          category?: string
+          has_data?: boolean | null
+          id?: number
+          last_updated?: string | null
+          municipality_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_categories_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_categories_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipality_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forskolor: {
+        Row: {
+          andel_forskollararexamen_pct: number | null
+          barn_andel_enskild_regi_pct: number | null
+          barn_totalt_inskrivna: number | null
+          created_at: string | null
+          id: number
+          kommun_kod: number | null
+          kommun_namn: string | null
+          kommun_storlek: string | null
+          kvalitet_personal: string | null
+          lan: string | null
+          personaltaethet_barn_per_heltidstjaenst: number | null
+        }
+        Insert: {
+          andel_forskollararexamen_pct?: number | null
+          barn_andel_enskild_regi_pct?: number | null
+          barn_totalt_inskrivna?: number | null
+          created_at?: string | null
+          id?: number
+          kommun_kod?: number | null
+          kommun_namn?: string | null
+          kommun_storlek?: string | null
+          kvalitet_personal?: string | null
+          lan?: string | null
+          personaltaethet_barn_per_heltidstjaenst?: number | null
+        }
+        Update: {
+          andel_forskollararexamen_pct?: number | null
+          barn_andel_enskild_regi_pct?: number | null
+          barn_totalt_inskrivna?: number | null
+          created_at?: string | null
+          id?: number
+          kommun_kod?: number | null
+          kommun_namn?: string | null
+          kommun_storlek?: string | null
+          kvalitet_personal?: string | null
+          lan?: string | null
+          personaltaethet_barn_per_heltidstjaenst?: number | null
+        }
+        Relationships: []
+      }
       Förskolor: {
         Row: {
           Adress: string | null
@@ -124,6 +205,93 @@ export type Database = {
           y_sweref?: number | null
         }
         Relationships: []
+      }
+      municipalities: {
+        Row: {
+          created_at: string | null
+          id: number
+          kommun_kod: number
+          kommun_namn: string
+          kommun_storlek: string | null
+          lan: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          kommun_kod: number
+          kommun_namn: string
+          kommun_storlek?: string | null
+          lan: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          kommun_kod?: number
+          kommun_namn?: string
+          kommun_storlek?: string | null
+          lan?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      preschool_basic_stats: {
+        Row: {
+          barn_1_5_ar_andel_befolkning_pct: number | null
+          barn_1_5_ar_annat_modersmaal_pct: number | null
+          barn_1_5_ar_antal_kommun: number | null
+          barn_per_barngrupp: number | null
+          barn_totalt_inskrivna: number | null
+          barngrupper_totalt: number | null
+          created_at: string | null
+          data_year: number | null
+          forskoleenheter_totalt: number | null
+          id: number
+          municipality_id: number | null
+        }
+        Insert: {
+          barn_1_5_ar_andel_befolkning_pct?: number | null
+          barn_1_5_ar_annat_modersmaal_pct?: number | null
+          barn_1_5_ar_antal_kommun?: number | null
+          barn_per_barngrupp?: number | null
+          barn_totalt_inskrivna?: number | null
+          barngrupper_totalt?: number | null
+          created_at?: string | null
+          data_year?: number | null
+          forskoleenheter_totalt?: number | null
+          id?: number
+          municipality_id?: number | null
+        }
+        Update: {
+          barn_1_5_ar_andel_befolkning_pct?: number | null
+          barn_1_5_ar_annat_modersmaal_pct?: number | null
+          barn_1_5_ar_antal_kommun?: number | null
+          barn_per_barngrupp?: number | null
+          barn_totalt_inskrivna?: number | null
+          barngrupper_totalt?: number | null
+          created_at?: string | null
+          data_year?: number | null
+          forskoleenheter_totalt?: number | null
+          id?: number
+          municipality_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preschool_basic_stats_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preschool_basic_stats_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipality_summary"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       preschool_google_data: {
         Row: {
@@ -251,6 +419,60 @@ export type Database = {
           },
         ]
       }
+      public_private_provision: {
+        Row: {
+          barn_andel_enskild_regi_pct: number | null
+          barn_andel_kommunal_regi_pct: number | null
+          barngrupper_enskild_regi: number | null
+          barngrupper_kommunal_regi: number | null
+          created_at: string | null
+          data_year: number | null
+          forskoleenheter_enskild_regi: number | null
+          forskoleenheter_kommunal_regi: number | null
+          id: number
+          municipality_id: number | null
+        }
+        Insert: {
+          barn_andel_enskild_regi_pct?: number | null
+          barn_andel_kommunal_regi_pct?: number | null
+          barngrupper_enskild_regi?: number | null
+          barngrupper_kommunal_regi?: number | null
+          created_at?: string | null
+          data_year?: number | null
+          forskoleenheter_enskild_regi?: number | null
+          forskoleenheter_kommunal_regi?: number | null
+          id?: number
+          municipality_id?: number | null
+        }
+        Update: {
+          barn_andel_enskild_regi_pct?: number | null
+          barn_andel_kommunal_regi_pct?: number | null
+          barngrupper_enskild_regi?: number | null
+          barngrupper_kommunal_regi?: number | null
+          created_at?: string | null
+          data_year?: number | null
+          forskoleenheter_enskild_regi?: number | null
+          forskoleenheter_kommunal_regi?: number | null
+          id?: number
+          municipality_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_private_provision_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_private_provision_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipality_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -274,6 +496,156 @@ export type Database = {
           srtext?: string | null
         }
         Relationships: []
+      }
+      special_services: {
+        Row: {
+          created_at: string | null
+          data_year: number | null
+          id: number
+          municipality_id: number | null
+          obekvaema_tider_platser: number | null
+          oppen_forskola_antal_verksamheter: number | null
+          oppen_forskola_heltidstjanster: number | null
+          oppen_forskola_pedagogisk_utb_pct: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_year?: number | null
+          id?: number
+          municipality_id?: number | null
+          obekvaema_tider_platser?: number | null
+          oppen_forskola_antal_verksamheter?: number | null
+          oppen_forskola_heltidstjanster?: number | null
+          oppen_forskola_pedagogisk_utb_pct?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          data_year?: number | null
+          id?: number
+          municipality_id?: number | null
+          obekvaema_tider_platser?: number | null
+          oppen_forskola_antal_verksamheter?: number | null
+          oppen_forskola_heltidstjanster?: number | null
+          oppen_forskola_pedagogisk_utb_pct?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_services_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "special_services_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipality_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_qualifications: {
+        Row: {
+          andel_forskollararexamen_pct: number | null
+          andel_forskollararlegitimation_pct: number | null
+          barn_per_forskollare: number | null
+          created_at: string | null
+          data_year: number | null
+          id: number
+          kvalitet_personal: string | null
+          municipality_id: number | null
+          personaltaethet_barn_per_heltidstjaenst: number | null
+        }
+        Insert: {
+          andel_forskollararexamen_pct?: number | null
+          andel_forskollararlegitimation_pct?: number | null
+          barn_per_forskollare?: number | null
+          created_at?: string | null
+          data_year?: number | null
+          id?: number
+          kvalitet_personal?: string | null
+          municipality_id?: number | null
+          personaltaethet_barn_per_heltidstjaenst?: number | null
+        }
+        Update: {
+          andel_forskollararexamen_pct?: number | null
+          andel_forskollararlegitimation_pct?: number | null
+          barn_per_forskollare?: number | null
+          created_at?: string | null
+          data_year?: number | null
+          id?: number
+          kvalitet_personal?: string | null
+          municipality_id?: number | null
+          personaltaethet_barn_per_heltidstjaenst?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_qualifications_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_qualifications_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipality_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_ratios_by_type: {
+        Row: {
+          andel_forskollararexamen_pct: number | null
+          barn_per_barngrupp: number | null
+          barn_per_forskollare: number | null
+          created_at: string | null
+          data_year: number | null
+          id: number
+          municipality_id: number | null
+          personaltaethet_barn_per_heltidstjaenst: number | null
+          provider_type: string | null
+        }
+        Insert: {
+          andel_forskollararexamen_pct?: number | null
+          barn_per_barngrupp?: number | null
+          barn_per_forskollare?: number | null
+          created_at?: string | null
+          data_year?: number | null
+          id?: number
+          municipality_id?: number | null
+          personaltaethet_barn_per_heltidstjaenst?: number | null
+          provider_type?: string | null
+        }
+        Update: {
+          andel_forskollararexamen_pct?: number | null
+          barn_per_barngrupp?: number | null
+          barn_per_forskollare?: number | null
+          created_at?: string | null
+          data_year?: number | null
+          id?: number
+          municipality_id?: number | null
+          personaltaethet_barn_per_heltidstjaenst?: number | null
+          provider_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_ratios_by_type_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_ratios_by_type_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipality_summary"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_favorites: {
         Row: {
@@ -376,6 +748,27 @@ export type Database = {
           f_table_schema?: unknown | null
           srid?: number | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      municipality_summary: {
+        Row: {
+          andel_forskollararexamen_pct: number | null
+          barn_andel_enskild_regi_pct: number | null
+          barn_andel_kommunal_regi_pct: number | null
+          barn_totalt_inskrivna: number | null
+          created_at: string | null
+          forskoleenheter_totalt: number | null
+          id: number | null
+          kommun_kod: number | null
+          kommun_namn: string | null
+          kommun_storlek: string | null
+          kvalitet_personal: string | null
+          lan: string | null
+          obekvaema_tider_platser: number | null
+          oppen_forskola_antal_verksamheter: number | null
+          personaltaethet_barn_per_heltidstjaenst: number | null
+          updated_at: string | null
         }
         Relationships: []
       }
@@ -1113,6 +1506,10 @@ export type Database = {
       postgis_wagyu_version: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      refresh_municipality_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       spheroid_in: {
         Args: { "": unknown }
