@@ -26,12 +26,17 @@ import {
   Clock,
   FileText,
   Map,
-  Globe
+  Globe,
+  Play,
+  Square,
+  Pause
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMapStore } from '@/stores/mapStore';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -74,10 +79,13 @@ interface AdminStats {
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodingProgress, setGeocodingProgress] = useState(0);
+  const [geocodingBatchSize, setGeocodingBatchSize] = useState(5);
+  const [geocodingDryRun, setGeocodingDryRun] = useState(true);
+  const [geocodingResults, setGeocodingResults] = useState<any[]>([]);
+  const [geocodingInProgress, setGeocodingInProgress] = useState(false);
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [geocodingResults, setGeocodingResults] = useState<any>(null);
   const [dryRun, setDryRun] = useState(true);
   const { preschools } = useMapStore();
   const { toast } = useToast();
@@ -118,46 +126,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleGeocoding = async (batchSize = 10) => {
-    if (missingCoords.length === 0) return;
+  const handleGeocoding = async (batchSize = geocodingBatchSize) => {
+    if (geocodingInProgress) return;
 
+    setGeocodingInProgress(true);
     setIsGeocoding(true);
     setGeocodingProgress(0);
-    setGeocodingResults(null);
+    setGeocodingResults([]);
     
     try {
       const { data, error } = await supabase.functions.invoke('fix-missing-geocoding', {
         body: { 
           batchSize,
-          dryRun 
+          dryRun: geocodingDryRun
         }
       });
 
       if (error) throw error;
 
-      setGeocodingResults(data);
+      setGeocodingResults(data.results || []);
       setGeocodingProgress(100);
 
       toast({
-        title: dryRun ? "Geocoding simulering klar" : "Geocoding klar",
+        title: geocodingDryRun ? "Geocoding simulering klar" : "Geocoding klar",
         description: `${data.success} lyckades, ${data.errors} misslyckades av ${data.processed} behandlade.`,
         variant: data.errors > 0 ? "destructive" : "default"
       });
 
-      // Reload stats after geocoding
-      if (!dryRun && data.success > 0) {
+      // Reload stats after successful geocoding
+      if (!geocodingDryRun && data.success > 0) {
         setTimeout(loadAdminStats, 1000);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Geocoding error:', error);
       toast({
         title: "Geocoding misslyckades",
-        description: "Kontrollera att Google Maps API-nyckeln är konfigurerad.",
+        description: error.message || "Kontrollera att Google Maps API-nyckeln är konfigurerad.",
         variant: "destructive"
       });
     } finally {
       setIsGeocoding(false);
+      setGeocodingInProgress(false);
     }
   };
 
@@ -444,104 +454,172 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   </TabsContent>
 
                   <TabsContent value="geocoding" className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-orange-500" />
-                          Förskolor utan koordinater
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {adminStats?.database.missingCoordinates || missingCoords.length} förskolor kan inte visas på kartan
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={dryRun}
-                            onCheckedChange={setDryRun}
-                            disabled={isGeocoding}
-                          />
-                          <span className="text-sm">Testkörning</span>
-                        </div>
-                        <Button 
-                          onClick={() => handleGeocoding(10)}
-                          disabled={isGeocoding || (adminStats?.database.missingCoordinates || missingCoords.length) === 0}
-                          size="sm"
-                        >
-                          {isGeocoding ? (
-                            <>
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                              Bearbetar...
-                            </>
-                          ) : (
-                            <>
-                              <MapPin className="w-4 h-4 mr-2" />
-                              {dryRun ? 'Testa' : 'Fixa'} koordinater (10st)
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {isGeocoding && (
-                      <Card className="p-4 bg-muted/30">
-                        <Progress value={geocodingProgress} className="mb-2" />
-                        <p className="text-sm text-muted-foreground">Bearbetar geocoding...</p>
-                      </Card>
-                    )}
-
-                    {geocodingResults && (
-                      <Card className="p-4 bg-muted/30">
-                        <h4 className="font-medium mb-3 flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                          Geocoding-resultat
-                        </h4>
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">{geocodingResults.success}</div>
-                            <div className="text-sm text-muted-foreground">Lyckades</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-red-600">{geocodingResults.errors}</div>
-                            <div className="text-sm text-muted-foreground">Misslyckades</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-blue-600">{geocodingResults.processed}</div>
-                            <div className="text-sm text-muted-foreground">Behandlade</div>
-                          </div>
-                        </div>
-                        {geocodingResults.dryRun && (
-                          <Badge variant="outline" className="mb-3">Testkörning - Inga ändringar sparades</Badge>
-                        )}
-                      </Card>
-                    )}
-
-                    <Card className="bg-muted/30">
-                      <ScrollArea className="h-64 p-4">
-                        <div className="space-y-2">
-                          {missingCoords.slice(0, 50).map((preschool) => (
-                            <div
-                              key={preschool.id}
-                              className="p-3 rounded-lg bg-background/50 border border-border/30"
-                            >
-                              <div className="font-medium text-sm">{preschool.namn}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {preschool.adress}, {preschool.kommun}
+                    {adminStats?.database ? (
+                      <div className="space-y-6">
+                        {/* Geocoding Status */}
+                        <div className="bg-muted/30 rounded-lg p-4">
+                          <h3 className="font-medium mb-3 flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            Geocoding Status
+                          </h3>
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-green-600">
+                                {adminStats.database.totalPreschools - adminStats.database.missingCoordinates}
                               </div>
-                              <Badge variant="outline" className="mt-1 text-xs">
-                                {preschool.huvudman}
-                              </Badge>
+                              <div className="text-sm text-muted-foreground">Med koordinater</div>
                             </div>
-                          ))}
-                          {missingCoords.length > 50 && (
-                            <div className="text-center py-2 text-sm text-muted-foreground">
-                              ... och {missingCoords.length - 50} till
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-red-600">
+                                {adminStats.database.missingCoordinates}
+                              </div>
+                              <div className="text-sm text-muted-foreground">Saknar koordinater</div>
+                            </div>
+                          </div>
+                          <Progress value={adminStats.database.coordinatesCoverage} className="mb-2" />
+                          <div className="text-sm text-muted-foreground text-center">
+                            {adminStats.database.coordinatesCoverage.toFixed(1)}% har koordinater
+                          </div>
+                        </div>
+
+                        {/* Geocoding Controls */}
+                        <div className="bg-muted/30 rounded-lg p-4">
+                          <h4 className="font-medium mb-3 flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Geocoding Kontroller
+                          </h4>
+                          
+                          {/* Batch Size and Mode Controls */}
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="batchSize">Batch-storlek</Label>
+                              <Select value={geocodingBatchSize.toString()} onValueChange={(value) => setGeocodingBatchSize(parseInt(value))}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1">1 (Långsam, säker)</SelectItem>
+                                  <SelectItem value="5">5 (Rekommenderad)</SelectItem>
+                                  <SelectItem value="10">10 (Snabb)</SelectItem>
+                                  <SelectItem value="20">20 (Mycket snabb)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Testkörning</Label>
+                              <div className="flex items-center space-x-2">
+                                <Switch 
+                                  checked={geocodingDryRun} 
+                                  onCheckedChange={setGeocodingDryRun}
+                                />
+                                <span className="text-sm">{geocodingDryRun ? 'Test' : 'Verklig körning'}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="grid grid-cols-2 gap-2 mb-4">
+                            <Button
+                              onClick={() => handleGeocoding()}
+                              disabled={geocodingInProgress || adminStats.database.missingCoordinates === 0}
+                              variant="default"
+                              className="w-full"
+                            >
+                              {geocodingInProgress ? (
+                                <>
+                                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                  Kör geocoding...
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="w-4 h-4 mr-2" />
+                                  Starta Geocoding
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setGeocodingInProgress(false);
+                                setIsGeocoding(false);
+                              }}
+                              disabled={!geocodingInProgress}
+                              variant="destructive"
+                              className="w-full"
+                            >
+                              <Square className="w-4 h-4 mr-2" />
+                              Stoppa
+                            </Button>
+                          </div>
+
+                          {/* Progress Display */}
+                          {geocodingInProgress && (
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span>Progress</span>
+                                <span>{geocodingProgress.toFixed(1)}%</span>
+                              </div>
+                              <Progress value={geocodingProgress} className="mb-2" />
+                              <div className="text-xs text-muted-foreground">
+                                {geocodingResults.filter((r: any) => r.status === 'success').length} lyckade, {' '}
+                                {geocodingResults.filter((r: any) => r.status === 'error').length} misslyckade
+                              </div>
                             </div>
                           )}
+
+                          {geocodingDryRun && (
+                            <Badge variant="outline" className="mb-3">Testkörning - Inga ändringar sparades</Badge>
+                          )}
                         </div>
-                      </ScrollArea>
-                    </Card>
+
+                        {/* Recent Results */}
+                        {geocodingResults.length > 0 && (
+                          <div className="bg-muted/30 rounded-lg p-4">
+                            <h4 className="font-medium mb-3 flex items-center gap-2">
+                              <BarChart3 className="w-4 h-4" />
+                              Senaste Resultat ({geocodingResults.length})
+                            </h4>
+                            <div className="max-h-40 overflow-y-auto space-y-1">
+                              {geocodingResults.slice(-10).map((result: any, index: number) => (
+                                <div 
+                                  key={index}
+                                  className={`text-xs p-2 rounded border-l-2 ${
+                                    result.status === 'success' 
+                                      ? 'border-green-500 bg-green-50 dark:bg-green-950' 
+                                      : 'border-red-500 bg-red-50 dark:bg-red-950'
+                                  }`}
+                                >
+                                  <div className="font-medium">{result.name}</div>
+                                  {result.status === 'success' ? (
+                                    <div className="text-muted-foreground">
+                                      ✓ {result.coordinates?.lat.toFixed(6)}, {result.coordinates?.lng.toFixed(6)}
+                                    </div>
+                                  ) : (
+                                    <div className="text-red-600">✗ {result.error}</div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            <div className="mt-3 pt-3 border-t">
+                              <Button
+                                onClick={() => setGeocodingResults([])}
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                              >
+                                Rensa Resultat
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-muted-foreground">Laddar geocoding-information...</p>
+                      </div>
+                    )}
                   </TabsContent>
+
 
                   <TabsContent value="activity" className="space-y-4">
                     <Card className="p-4 bg-muted/30">

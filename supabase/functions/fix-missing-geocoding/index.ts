@@ -82,8 +82,8 @@ serve(async (req) => {
             const { error: updateError } = await supabase
               .from('Förskolor')
               .update({
-                Latitud: lat,
-                Longitud: lng
+                'Latitud': lat,
+                'Longitud': lng
               })
               .eq('id', preschool.id)
             
