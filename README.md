@@ -1,73 +1,179 @@
-# Welcome to your Lovable project
+# Swedish Preschool Map 🏫
 
-## Project info
+En interaktiv karttjänst för att utforska förskolors i Sverige med 3D-visualisering och omfattande statistik.
 
-**URL**: https://lovable.dev/projects/eb4eaaaa-7bd9-4783-8cbe-a6c547265ba3
+## 🚀 Funktioner
 
-## How can I edit this code?
+- **3D Interaktiv Karta** - Utforska förskolor med Mapbox 3D-rendering
+- **Omfattande Statistik** - Personaltäthet, lärarexamen, betyg och mer
+- **Smart Filtrering** - Sök efter kommun, betyg, personalstatistik
+- **Google Integration** - Betyg, bilder och kontaktinformation
+- **Real-time Data** - Uppdaterad data från Skolverket
 
-There are several ways of editing your application.
+## 🛠️ Teknisk Stack
 
-**Use Lovable**
+- **Frontend**: React + TypeScript + Vite
+- **UI**: Tailwind CSS + shadcn/ui
+- **Karta**: Mapbox GL JS med 3D-terrain
+- **Backend**: Supabase (databas + edge functions)
+- **Deployment**: GitHub Actions → GitHub Pages / Netlify / Vercel
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/eb4eaaaa-7bd9-4783-8cbe-a6c547265ba3) and start prompting.
+## 📦 Installation
 
-Changes made via Lovable will be committed automatically to this repo.
+### Lokalt Development
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+git clone https://github.com/your-username/swedish-preschool-map.git
+cd swedish-preschool-map
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Kopiera `.env.example` till `.env` och konfigurera:
 
-**Use GitHub Codespaces**
+```bash
+cp .env.example .env
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Fyll i dina Supabase-uppgifter i `.env`.
 
-## What technologies are used for this project?
+## 🚀 Deployment
 
-This project is built with:
+### GitHub Pages (Automatisk)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Forka repot
+2. Aktivera GitHub Pages i repo settings
+3. Push till `main` branch - deployment sker automatiskt via GitHub Actions
 
-## How can I deploy this project?
+### Netlify
 
-Simply open [Lovable](https://lovable.dev/projects/eb4eaaaa-7bd9-4783-8cbe-a6c547265ba3) and click on Share -> Publish.
+1. Koppla ditt GitHub repo till Netlify
+2. Build command: `npm run build`
+3. Publish directory: `dist`
 
-## Can I connect a custom domain to my Lovable project?
+### Vercel
 
-Yes, you can!
+1. Importera ditt GitHub repo till Vercel
+2. Framework preset: Vite
+3. Deployment sker automatiskt
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🔐 API Keys & Secrets
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+För produktion behöver följande konfigureras i Supabase Edge Function Secrets:
+
+- `MAPBOX_TOKEN` - Din Mapbox public token
+- `GOOGLE_GEOCODING_API_KEY` - Google Maps Geocoding API
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
+
+### Hämta API Keys
+
+**Mapbox Token:**
+1. Gå till [mapbox.com](https://mapbox.com)
+2. Skapa konto och navigera till "Tokens"
+3. Kopiera din "Default public token"
+
+**Google Geocoding API:**
+1. Gå till [Google Cloud Console](https://console.cloud.google.com)
+2. Aktivera "Geocoding API"
+3. Skapa API key under "Credentials"
+
+## 📊 Datastruktur
+
+Applikationen använder data från Skolverket och Google Places API:
+
+### Förskolor (Huvudtabell)
+- Skolverkets officiella data
+- Geografiska koordinater
+- Personalstatistik
+- Barn- och gruppinformation
+
+### Google Data (Berikad)
+- Betyg och recensioner
+- Kontaktinformation
+- Bilder från Google Places
+- Street View integration
+
+## 🔧 Utveckling
+
+### Viktiga Filer
+
+- `src/components/Map3D.tsx` - Huvudkartkomponent
+- `src/stores/mapStore.ts` - Global state management
+- `supabase/functions/` - Backend edge functions
+- `src/components/enhanced/` - Förbättrade UI-komponenter
+
+### Kodstruktur
+
+```
+src/
+├── components/          # React komponenter
+├── stores/             # Zustand state management
+├── utils/              # Hjälpfunktioner
+├── hooks/              # Custom React hooks
+└── integrations/       # Supabase integration
+
+supabase/
+├── functions/          # Edge functions
+└── migrations/         # Database migrations
+```
+
+## 🐛 Troubleshooting
+
+### Vanliga Problem
+
+**Kartan laddar inte:**
+- Kontrollera Mapbox token i browser dev tools
+- Verifiera att token har rätt scope
+
+**Geocoding fungerar inte:**
+- Kontrollera Google API key i Supabase secrets
+- Verifiera att Geocoding API är aktiverat
+
+**Build errors:**
+- Kör `npm ci` för clean install
+- Kontrollera Node.js version (rekommenderat: 18+)
+
+### Debug Tools
+
+```bash
+# Visa console logs
+npm run dev
+
+# Build för produktion
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## 📈 Performance
+
+- **Lazy loading** för bilder och komponenter
+- **Code splitting** för optimal bundle size
+- **Caching** av API-anrop och statisk data
+- **CDN** för assets via GitHub Pages/Netlify
+
+## 🤝 Bidrag
+
+1. Forka projektet
+2. Skapa feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit dina ändringar (`git commit -m 'Add amazing feature'`)
+4. Push till branch (`git push origin feature/amazing-feature`)
+5. Öppna en Pull Request
+
+## 📄 Licens
+
+Detta projekt är licensierat under MIT License - se [LICENSE](LICENSE) filen för detaljer.
+
+## 🙏 Acknowledgments
+
+- **Skolverket** för tillhandahållande av öppen förskoledata
+- **Mapbox** för 3D-kartteknologi
+- **Supabase** för backend-infrastruktur
+- **Google Places API** för berikad data
+
+---
+
+Utvecklat med ❤️ för svenska föräldrar och förskolor.

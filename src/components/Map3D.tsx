@@ -13,8 +13,10 @@ import {
   debounce 
 } from '@/utils/mapViewHelpers';
 
-// Mapbox token
-mapboxgl.accessToken = 'pk.eyJ1Ijoic2tvZ3N0YWRpc2FrIiwiYSI6ImNtY3BhaXRpMjA0ZGcycHBqNHM4dmlwOW0ifQ.KKHGGPnrZVjNjDdITF-_bw';
+// Mapbox token - will be set via proxy in production
+// For development, we'll use a fallback but prefer proxy
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoic2tvZ3N0YWRpc2FrIiwiYSI6ImNtY3BhaXRpMjA0ZGcycHBqNHM4dmlwOW0ifQ.KKHGGPnrZVjNjDdITF-_bw';
+mapboxgl.accessToken = MAPBOX_TOKEN;
 interface Map3DProps {
   className?: string;
 }

@@ -217,17 +217,25 @@ async function updateCoordinatesInDatabase(results: GeocodeResult[], supabase: a
   console.log(`💾 Updating ${successfulResults.length} preschools in database...`);
 
   try {
-    // Use the bulk update function we created
-    const { error } = await supabase.rpc('bulk_update_coordinates', {
-      updates: successfulResults.map(result => ({
-        id: result.id,
-        latitude: result.latitude,
-        longitude: result.longitude
-      }))
-    });
+    // Use direct table updates instead of RPC function that may not exist
+    let errors = [];
+    for (const result of successfulResults) {
+      const { error } = await supabase
+        .from('Förskolor')
+        .update({
+          Latitud: result.latitude,
+          Longitud: result.longitude
+        })
+        .eq('id', result.id);
+        
+      if (error) {
+        console.error(`Failed to update preschool ${result.id}:`, error);
+        errors.push(error);
+      }
+    }
 
-    if (error) {
-      throw new Error(`Database update failed: ${error.message}`);
+    if (errors.length > 0) {
+      throw new Error(`Database update failed for ${errors.length} items: ${errors[0].message}`);
     }
 
     console.log(`✅ Successfully updated ${successfulResults.length} coordinates`);
@@ -255,7 +263,7 @@ serve(async (req) => {
     
     // Validate environment variables first
     const googleApiKey = Deno.env.get('GOOGLE_GEOCODING_API_KEY');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://zfeqsdtddvelapbrwlol.supabase.co';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     console.log('🔍 Environment check:', {
