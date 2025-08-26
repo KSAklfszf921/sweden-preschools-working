@@ -117,6 +117,7 @@ interface MapState {
   setSearchFilters: (filters: Partial<SearchFilters>) => void;
   clearFilters: () => void;
   clearSearchFilters: () => void;
+  clearSpecificFilter: (filterKey: keyof SearchFilters) => void;
   hasActiveFilters: boolean;
   setLoading: (loading: boolean) => void;
   
@@ -208,18 +209,73 @@ export const useMapStore = create<MapState>((set, get) => ({
   setSelectedPreschool: (selectedPreschool) => set({ selectedPreschool }),
 
   setSearchFilters: (filters) => {
-    set({ searchFilters: { ...get().searchFilters, ...filters } });
-    get().applyFilters();
+    const state = get();
+    const newFilters = { ...state.searchFilters, ...filters };
+    set({ searchFilters: newFilters });
+    
+    // Auto-center map based on filters
+    if (filters.kommuner && filters.kommuner.length > 0) {
+      const kommun = filters.kommuner[0];
+      const kommunCenter = getKommunCenter(kommun);
+      if (kommunCenter) {
+        set({ mapCenter: kommunCenter, mapZoom: 9 });
+      }
+    } else if (filters.center && filters.nearbyMode) {
+      // Center on user location with appropriate zoom
+      set({ mapCenter: filters.center, mapZoom: 12 });
+    } else if (filters.query && !filters.kommuner) {
+      // If searching by text, try to find a preschool to center on
+      const filteredPreschools = state.preschools.filter(p => 
+        p.namn.toLowerCase().includes(filters.query!.toLowerCase())
+      );
+      if (filteredPreschools.length > 0) {
+        const preschool = filteredPreschools[0];
+        if (preschool.longitud && preschool.latitud) {
+          set({ mapCenter: [preschool.longitud, preschool.latitud], mapZoom: 14 });
+        }
+      }
+    }
+    
+    state.applyFilters();
   },
 
   clearFilters: () => {
-    set({ searchFilters: {} });
+    set({ 
+      searchFilters: {},
+      mapCenter: [15.0, 62.0], // Reset to Sweden center
+      mapZoom: 5 // Reset to country view
+    });
     get().applyFilters();
   },
 
   clearSearchFilters: () => {
-    set({ searchFilters: {} });
+    set({ 
+      searchFilters: {},
+      mapCenter: [15.0, 62.0], // Reset to Sweden center
+      mapZoom: 5 // Reset to country view
+    });
     get().applyFilters();
+  },
+
+  clearSpecificFilter: (filterKey: keyof SearchFilters) => {
+    const state = get();
+    const newFilters = { ...state.searchFilters };
+    delete newFilters[filterKey];
+    
+    // If clearing nearbyMode, also clear center and radius
+    if (filterKey === 'nearbyMode') {
+      delete newFilters.center;
+      delete newFilters.radius;
+      set({ 
+        searchFilters: newFilters,
+        mapCenter: [15.0, 62.0],
+        mapZoom: 5 
+      });
+    } else {
+      set({ searchFilters: newFilters });
+    }
+    
+    state.applyFilters();
   },
 
   get hasActiveFilters() {
@@ -442,4 +498,50 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): nu
 
 function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
+}
+
+// Swedish municipality center coordinates (approximate)
+function getKommunCenter(kommun: string): [number, number] | null {
+  const kommunCoordinates: Record<string, [number, number]> = {
+    'Stockholm': [18.0686, 59.3293],
+    'Göteborg': [11.9746, 57.7089],
+    'Malmö': [13.0034, 55.6050],
+    'Uppsala': [17.6389, 59.8585],
+    'Västerås': [16.5554, 59.6099],
+    'Örebro': [15.2066, 59.2741],
+    'Linköping': [15.6214, 58.4108],
+    'Helsingborg': [12.6945, 56.0465],
+    'Jönköping': [14.1618, 57.7826],
+    'Norrköping': [16.1926, 58.5877],
+    'Lund': [13.1910, 55.7047],
+    'Umeå': [20.2630, 63.8258],
+    'Gävle': [17.1414, 60.6749],
+    'Borås': [12.9401, 57.7210],
+    'Eskilstuna': [16.5077, 59.3706],
+    'Södertälje': [17.6253, 59.1955],
+    'Karlstad': [13.5034, 59.3793],
+    'Täby': [18.0631, 59.4439],
+    'Växjö': [14.8059, 56.8777],
+    'Halmstad': [12.8580, 56.6745],
+    'Sundsvall': [17.3063, 62.3908],
+    'Luleå': [22.1567, 65.5848],
+    'Trollhättan': [12.2886, 58.2837],
+    'Östersund': [14.6357, 63.1792],
+    'Borlänge': [15.4357, 60.4858],
+    'Falun': [15.6356, 60.6066],
+    'Skövde': [13.8454, 58.3914],
+    'Karlskrona': [15.5866, 56.1612],
+    'Kristianstad': [14.1591, 56.0294],
+    'Kalmar': [16.3614, 56.6634],
+    'Vänersborg': [12.3225, 58.3789],
+    'Varberg': [12.2504, 57.1057],
+    'Trelleborg': [13.1567, 55.3753],
+    'Åkersberga': [18.2878, 59.4797],
+    'Visby': [18.2948, 57.6348],
+    'Mora': [14.5389, 61.0088],
+    'Sandviken': [16.7725, 60.6184],
+    'Kiruna': [20.2253, 67.8558],
+  };
+  
+  return kommunCoordinates[kommun] || null;
 }

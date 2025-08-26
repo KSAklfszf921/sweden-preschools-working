@@ -4,7 +4,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronUp, MapPin, Star, Users, GraduationCap, Building2, Home } from 'lucide-react';
+import { ChevronUp, MapPin, Star, Users, GraduationCap, Building2, Home, X } from 'lucide-react';
 interface PreschoolListPanelProps {
   className?: string;
 }
@@ -20,7 +20,9 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
     listContext,
     listSortOrder,
     setListSortOrder,
-    mapZoom
+    mapZoom,
+    hasActiveFilters,
+    clearFilters
   } = useMapStore();
   const [displayedItems, setDisplayedItems] = useState(ITEMS_PER_PAGE);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -93,17 +95,32 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
             </div>
             <div>
               <h3 className="text-gray-900 font-bold text-lg font-heading">{getContextTitle()}</h3>
-              <p className="text-xs text-gray-600 font-medium">{visiblePreschools.length}</p>
+              <p className="text-xs text-gray-600 font-medium">
+                {visiblePreschools.length} {hasActiveFilters ? 'matchade' : 'förskolor'}
+              </p>
             </div>
           </div>
-          <Button 
-            onClick={() => setIsExpanded(false)} 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0 hover:bg-gray-100 rounded-lg transition-smooth"
-          >
-            <ChevronUp className="h-4 w-4 text-gray-600" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {hasActiveFilters && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={clearFilters}
+                className="h-7 px-2 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-md"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Rensa
+              </Button>
+            )}
+            <Button 
+              onClick={() => setIsExpanded(false)} 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0 hover:bg-gray-100 rounded-lg transition-smooth"
+            >
+              <ChevronUp className="h-4 w-4 text-gray-600" />
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -19,6 +19,7 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
     searchFilters,
     setSearchFilters,
     clearFilters,
+    clearSpecificFilter,
     setMapCenter,
     setMapZoom,
     filteredPreschools
@@ -182,6 +183,77 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
             )}
           </div>
 
+          {/* Active filters display */}
+          {hasActiveFilters && (
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-gray-900 block">Aktiva filter</label>
+              <div className="flex flex-wrap gap-1">
+                {searchFilters.kommuner && searchFilters.kommuner.length > 0 && (
+                  <Badge variant="secondary" className="h-6 px-2 bg-gray-100 text-gray-800 border-gray-200 rounded-md text-xs flex items-center gap-1">
+                    {searchFilters.kommuner[0]}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => clearSpecificFilter('kommuner')}
+                      className="h-3 w-3 p-0 hover:bg-red-100 rounded-full"
+                    >
+                      <X className="h-2 w-2 text-red-500" />
+                    </Button>
+                  </Badge>
+                )}
+                {searchFilters.huvudman && (
+                  <Badge variant="secondary" className="h-6 px-2 bg-gray-100 text-gray-800 border-gray-200 rounded-md text-xs flex items-center gap-1">
+                    {searchFilters.huvudman}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => clearSpecificFilter('huvudman')}
+                      className="h-3 w-3 p-0 hover:bg-red-100 rounded-full"
+                    >
+                      <X className="h-2 w-2 text-red-500" />
+                    </Button>
+                  </Badge>
+                )}
+                {searchFilters.nearbyMode && (
+                  <Badge variant="secondary" className="h-6 px-2 bg-gray-100 text-gray-800 border-gray-200 rounded-md text-xs flex items-center gap-1">
+                    Nära mig
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => clearSpecificFilter('nearbyMode')}
+                      className="h-3 w-3 p-0 hover:bg-red-100 rounded-full"
+                    >
+                      <X className="h-2 w-2 text-red-500" />
+                    </Button>
+                  </Badge>
+                )}
+                {searchFilters.query && (
+                  <Badge variant="secondary" className="h-6 px-2 bg-gray-100 text-gray-800 border-gray-200 rounded-md text-xs flex items-center gap-1">
+                    "{searchFilters.query}"
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => clearSpecificFilter('query')}
+                      className="h-3 w-3 p-0 hover:bg-red-100 rounded-full"
+                    >
+                      <X className="h-2 w-2 text-red-500" />
+                    </Button>
+                  </Badge>
+                )}
+                {hasActiveFilters && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="h-6 px-2 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-md"
+                  >
+                    Rensa alla
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Quick filters */}
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -247,6 +319,9 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
           </Button>
 
             {/* Results count */}
+            <div className="mt-2 text-xs text-gray-600 text-center">
+              {filteredPreschools.length} förskolor {hasActiveFilters ? 'matchade' : 'totalt'}
+            </div>
             
           </div>
         </div>
