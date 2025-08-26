@@ -161,7 +161,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
   }} exit={{
     opacity: 0,
     y: 20
-  }} className={`fixed left-4 top-80 w-72 z-40 ${className}`} style={{
+  }} className={`fixed left-4 top-96 w-72 z-40 ${className}`} style={{
     height: Math.max(MIN_VISIBLE_ITEMS * 60 + 120, 300) + 'px'
   }}>
       <Card className="h-full glass-search border-0 shadow-lg card-hover transition-all duration-300 flex flex-col rounded-xl">
