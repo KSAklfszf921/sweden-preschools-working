@@ -7,13 +7,10 @@ export const HEATMAP_GRADIENTS = {
     description: 'Antal förskolor per område',
     colors: [
       { stop: 0, color: 'rgba(0, 0, 0, 0)' },           // Transparent
-      { stop: 0.05, color: 'rgba(173, 216, 230, 0.1)' }, // Ice blue
-      { stop: 0.15, color: 'rgba(135, 206, 250, 0.4)' }, // Sky blue
-      { stop: 0.25, color: 'rgba(70, 130, 180, 0.6)' },  // Steel blue
-      { stop: 0.4, color: 'rgba(64, 224, 208, 0.75)' },  // Turquoise
-      { stop: 0.6, color: 'rgba(255, 140, 0, 0.85)' },   // Orange
-      { stop: 0.8, color: 'rgba(255, 69, 0, 0.9)' },     // Red-orange
-      { stop: 1, color: 'rgba(139, 0, 0, 0.95)' }        // Dark red
+      { stop: 0.2, color: 'rgba(0, 255, 0, 0.3)' },     // Light green - low concentration
+      { stop: 0.4, color: 'rgba(255, 255, 0, 0.5)' },   // Yellow - medium concentration  
+      { stop: 0.7, color: 'rgba(255, 165, 0, 0.7)' },   // Orange - high concentration
+      { stop: 1, color: 'rgba(139, 0, 0, 0.9)' }        // Dark red - highest concentration
     ]
   },
   staff: {
@@ -21,12 +18,10 @@ export const HEATMAP_GRADIENTS = {
     description: 'Vuxen-barn ratio (bättre personal = grönare)',
     colors: [
       { stop: 0, color: 'rgba(0, 0, 0, 0)' },           // Transparent
-      { stop: 0.1, color: 'rgba(220, 20, 60, 0.3)' },   // Crimson (low staff)
-      { stop: 0.3, color: 'rgba(255, 165, 0, 0.5)' },   // Orange (medium)
-      { stop: 0.5, color: 'rgba(255, 215, 0, 0.6)' },   // Gold (good)
-      { stop: 0.7, color: 'rgba(154, 205, 50, 0.75)' }, // Yellow-green (better)
-      { stop: 0.85, color: 'rgba(50, 205, 50, 0.85)' }, // Lime green (excellent)
-      { stop: 1, color: 'rgba(34, 139, 34, 0.95)' }     // Forest green (best)
+      { stop: 0.2, color: 'rgba(0, 255, 0, 0.3)' },     // Green - good staff
+      { stop: 0.4, color: 'rgba(255, 255, 0, 0.5)' },   // Yellow - medium
+      { stop: 0.7, color: 'rgba(255, 165, 0, 0.7)' },   // Orange - concerning
+      { stop: 1, color: 'rgba(139, 0, 0, 0.9)' }        // Dark red - poor staff
     ]
   },
   quality: {
@@ -34,12 +29,10 @@ export const HEATMAP_GRADIENTS = {
     description: 'Andel med förskollärarexamen (blå→silver→guld)',
     colors: [
       { stop: 0, color: 'rgba(0, 0, 0, 0)' },           // Transparent
-      { stop: 0.1, color: 'rgba(70, 130, 180, 0.3)' },  // Steel blue (low)
-      { stop: 0.3, color: 'rgba(100, 149, 237, 0.5)' }, // Cornflower blue
-      { stop: 0.5, color: 'rgba(176, 196, 222, 0.7)' }, // Light steel blue
-      { stop: 0.7, color: 'rgba(192, 192, 192, 0.8)' }, // Silver
-      { stop: 0.85, color: 'rgba(255, 215, 0, 0.9)' },  // Gold
-      { stop: 1, color: 'rgba(255, 165, 0, 0.95)' }     // Dark gold
+      { stop: 0.2, color: 'rgba(0, 255, 0, 0.3)' },     // Green - high quality
+      { stop: 0.4, color: 'rgba(255, 255, 0, 0.5)' },   // Yellow - medium
+      { stop: 0.7, color: 'rgba(255, 165, 0, 0.7)' },   // Orange - lower quality
+      { stop: 1, color: 'rgba(139, 0, 0, 0.9)' }        // Dark red - poor quality
     ]
   },
   rating: {
@@ -47,12 +40,10 @@ export const HEATMAP_GRADIENTS = {
     description: 'Höga betyg = guldfärgat',
     colors: [
       { stop: 0, color: 'rgba(0, 0, 0, 0)' },           // Transparent
-      { stop: 0.1, color: 'rgba(128, 128, 128, 0.2)' }, // Gray (no rating)
-      { stop: 0.3, color: 'rgba(169, 169, 169, 0.4)' }, // Dark gray (low)
-      { stop: 0.5, color: 'rgba(255, 140, 0, 0.6)' },   // Dark orange (medium)
-      { stop: 0.7, color: 'rgba(255, 165, 0, 0.8)' },   // Orange (good)
-      { stop: 0.85, color: 'rgba(255, 215, 0, 0.9)' },  // Gold (excellent)
-      { stop: 1, color: 'rgba(255, 223, 0, 0.95)' }     // Bright gold (perfect)
+      { stop: 0.2, color: 'rgba(0, 255, 0, 0.3)' },     // Green - excellent rating
+      { stop: 0.4, color: 'rgba(255, 255, 0, 0.5)' },   // Yellow - good rating
+      { stop: 0.7, color: 'rgba(255, 165, 0, 0.7)' },   // Orange - poor rating
+      { stop: 1, color: 'rgba(139, 0, 0, 0.9)' }        // Dark red - very poor rating
     ]
   }
 } as const;

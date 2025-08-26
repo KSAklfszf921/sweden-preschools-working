@@ -51,7 +51,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map with Sweden focus
+    // Initialize map with Sweden focus - allow full world view
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
@@ -59,8 +59,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       zoom: 5.5,
       pitch: 30,
       bearing: 0,
-      antialias: true,
-      maxBounds: [[10.0, 55.0], [25.0, 70.0]]
+      antialias: true
+      // Removed maxBounds to allow full world view
     });
 
     // Add 3D terrain
@@ -361,82 +361,83 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       });
     }
 
-    // Add enhanced individual markers for high zoom levels (12+)
+    // Add enhanced individual markers with proper styling
     if (shouldShowMarkers || !shouldShowClusters) {
       map.current.addLayer({
         id: 'preschools-unclustered',
         type: 'circle',
         source: 'preschools',
         filter: shouldShowClusters ? ['!', ['has', 'point_count']] : ['all'],
-        minzoom: shouldShowMarkers ? 0 : 12,
+        minzoom: 10, // Show markers from zoom 10+
         paint: {
           'circle-color': [
             'case',
-            ['>', ['get', 'google_rating'], 0],
-            [
-              'interpolate',
-              ['linear'],
-              ['get', 'google_rating'],
-              0, 'hsl(0, 84%, 60%)',
-              2.5, 'hsl(30, 100%, 55%)',
-              3.5, 'hsl(60, 100%, 55%)',
-              4, 'hsl(120, 60%, 50%)',
-              5, 'hsl(120, 80%, 40%)'
-            ],
-            [
-              'case',
-              ['==', ['get', 'huvudman'], 'Kommunal'],
-              'hsl(130, 60%, 50%)', // Green for municipal
-              'hsl(207, 89%, 55%)'  // Blue for private
-            ]
+            ['==', ['get', 'huvudman'], 'Kommunal'],
+            '#22c55e', // Green for municipal
+            '#3b82f6'  // Blue for private
           ],
           'circle-radius': [
             'interpolate',
             ['linear'],
-            ['zoom'],
-            8, [
-              'interpolate',
-              ['linear'],
-              ['coalesce', ['get', 'antal_barn'], 20],
-              0, 3,
-              50, 5,
-              100, 7
-            ],
-            12, [
-              'interpolate', 
-              ['linear'],
-              ['coalesce', ['get', 'antal_barn'], 20],
-              0, 6,
-              50, 8,
-              100, 12
-            ],
-            16, [
-              'interpolate',
-              ['linear'], 
-              ['coalesce', ['get', 'antal_barn'], 20],
-              0, 10,
-              50, 14,
-              100, 18
-            ]
+            ['get', 'antal_barn'],
+            0, 6,
+            50, 8,
+            100, 10,
+            200, 12
           ],
-          'circle-stroke-width': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            8, 1,
-            12, 2,
-            16, 3
-          ],
-          'circle-stroke-color': 'hsl(0, 0%, 100%)',
-          'circle-opacity': [
-            'case',
-            ['>', ['get', 'google_rating'], 4],
-            0.95, // High rating = more opaque
-            0.8
-          ]
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+          'circle-opacity': 0.8
         }
       });
+
+      // Add labels for markers at higher zoom
+      map.current.addLayer({
+        id: 'preschool-labels',
+        type: 'symbol',
+        source: 'preschools',
+        filter: shouldShowClusters ? ['!', ['has', 'point_count']] : ['all'],
+        minzoom: 12,
+        layout: {
+          'text-field': ['get', 'namn'],
+          'text-font': ['Open Sans Regular'],
+          'text-size': 11,
+          'text-anchor': 'top',
+          'text-offset': [0, 1.5],
+          'text-max-width': 12
+        },
+        paint: {
+          'text-color': '#1f2937',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 1
+        }
+        });
     }
+
+    // Add click handlers for individual markers
+    if (map.current.getLayer('preschools-unclustered')) {
+      map.current.on('click', 'preschools-unclustered', (e) => {
+        if (e.features && e.features[0]) {
+          const feature = e.features[0];
+          const preschoolId = feature.properties?.id;
+          const preschool = filteredPreschools.find(p => p.id === preschoolId);
+          
+          if (preschool) {
+            setPopupPreschool(preschool);
+            setShowPopup(true);
+          }
+        }
+      });
+
+      map.current.on('mouseenter', 'preschools-unclustered', () => {
+        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.current.on('mouseleave', 'preschools-unclustered', () => {
+        if (map.current) map.current.getCanvas().style.cursor = '';
+      });
+    }
+  }, [filteredPreschools, layerVisibility, shouldShowClusters, shouldShowMarkers]);
 
     // Add 3D buildings for very high zoom (14+)
     if (currentZoom >= 14 && layerVisibility.markers) {

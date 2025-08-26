@@ -54,7 +54,9 @@ const Index = () => {
                   8,739 förskolor
                 </p>
               </div>
-              <ThemeToggle />
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </motion.header>
