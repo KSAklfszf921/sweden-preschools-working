@@ -35,6 +35,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMapStore } from '@/stores/mapStore';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminRealTimeMonitor } from '@/hooks/useAdminRealTimeMonitor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
@@ -52,6 +53,23 @@ interface AdminStats {
     coordinatesCoverage: number;
     googleDataCoverage: number;
     imagesCoverage: number;
+    userFavorites?: number;
+    searchHistory?: number;
+    googleDataEntries?: number;
+    imagesCount?: number;
+  };
+  storage?: {
+    totalSize: number;
+    totalSizeFormatted: string;
+    buckets: Array<{
+      name: string;
+      fileCount: number;
+      size: number;
+      sizeFormatted: string;
+    }>;
+  };
+  activity?: {
+    recentLogs: any[];
   };
   systemHealth: {
     databaseOnline: boolean;
@@ -81,6 +99,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const { preschools } = useMapStore();
   const { toast } = useToast();
 
+  // Enable real-time monitoring for admin data changes
+  useAdminRealTimeMonitor({
+    onDataChange: loadAdminStats,
+    isEnabled: isOpen
+  });
+
   const missingCoords = preschools.filter(p => 
     !p.latitud || !p.longitud || p.latitud === 0 || p.longitud === 0
   );
@@ -100,60 +124,85 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const loadAdminStats = async () => {
     setStatsLoading(true);
     try {
-      // Get database stats
-      const { data: totalData, error: totalError } = await supabase
-        .from('Förskolor')
-        .select('id', { count: 'exact' });
-
-      if (totalError) throw totalError;
-
-      const { data: missingCoordsData, error: missingError } = await supabase
-        .from('Förskolor')
-        .select('id', { count: 'exact' })
-        .or('Latitud.is.null,Longitud.is.null,Latitud.eq.0,Longitud.eq.0');
-
-      if (missingError) throw missingError;
-
-      const { data: googleData, error: googleError } = await supabase
-        .from('preschool_google_data')
-        .select('id', { count: 'exact' });
-
-      if (googleError) throw googleError;
-
-      const { data: imagesData, error: imagesError } = await supabase
-        .from('preschool_images')
-        .select('id', { count: 'exact' });
-
-      if (imagesError) throw imagesError;
-
-      const total = totalData?.length || 0;
-      const missing = missingCoordsData?.length || 0;
-      const withGoogle = googleData?.length || 0;
-      const withImages = imagesData?.length || 0;
-
-      setAdminStats({
-        database: {
-          totalPreschools: total,
-          missingCoordinates: missing,
-          withGoogleData: withGoogle,
-          withImages: withImages,
-          coordinatesCoverage: total > 0 ? ((total - missing) / total) * 100 : 0,
-          googleDataCoverage: total > 0 ? (withGoogle / total) * 100 : 0,
-          imagesCoverage: total > 0 ? (withImages / total) * 100 : 0,
-        },
-        systemHealth: {
-          databaseOnline: true,
-          lastUpdated: new Date().toISOString(),
-        }
-      });
+      // Use the admin-stats edge function for comprehensive statistics
+      const { data, error } = await supabase.functions.invoke('admin-stats');
+      
+      if (error) throw error;
+      
+      if (data && data.database) {
+        setAdminStats({
+          database: {
+            totalPreschools: data.database.totalPreschools,
+            missingCoordinates: data.database.missingCoordinates,
+            withGoogleData: data.database.withGoogleData,
+            withImages: data.database.withImages,
+            coordinatesCoverage: data.database.coordinatesCoverage,
+            googleDataCoverage: data.database.googleDataCoverage,
+            imagesCoverage: data.database.imagesCoverage,
+            userFavorites: data.database.userFavorites,
+            searchHistory: data.database.searchHistory,
+            googleDataEntries: data.database.googleDataEntries,
+            imagesCount: data.database.imagesCount
+          },
+          storage: data.storage,
+          activity: data.activity,
+          systemHealth: {
+            databaseOnline: data.systemHealth.databaseOnline,
+            lastUpdated: data.systemHealth.lastUpdated,
+          }
+        });
+      }
 
     } catch (error) {
       console.error('Failed to load admin stats:', error);
       toast({
         title: "Fel",
-        description: "Kunde inte ladda administrativa statistik",
+        description: "Kunde inte ladda administrativa statistik via admin-stats funktion",
         variant: "destructive"
       });
+      
+      // Fallback to local queries if edge function fails
+      try {
+        const { data: totalData, count: totalCount } = await supabase
+          .from('Förskolor')
+          .select('id', { count: 'exact', head: true });
+
+        const { count: missingCount } = await supabase
+          .from('Förskolor')
+          .select('id', { count: 'exact', head: true })
+          .or('Latitud.is.null,Longitud.is.null,Latitud.eq.0,Longitud.eq.0');
+
+        const { count: googleCount } = await supabase
+          .from('preschool_google_data')
+          .select('id', { count: 'exact', head: true });
+
+        const { count: imagesCount } = await supabase
+          .from('preschool_images')
+          .select('id', { count: 'exact', head: true });
+
+        const total = totalCount || 0;
+        const missing = missingCount || 0;
+        const withGoogle = googleCount || 0;
+        const withImages = imagesCount || 0;
+
+        setAdminStats({
+          database: {
+            totalPreschools: total,
+            missingCoordinates: missing,
+            withGoogleData: withGoogle,
+            withImages: withImages,
+            coordinatesCoverage: total > 0 ? ((total - missing) / total) * 100 : 0,
+            googleDataCoverage: total > 0 ? (withGoogle / total) * 100 : 0,
+            imagesCoverage: total > 0 ? (withImages / total) * 100 : 0,
+          },
+          systemHealth: {
+            databaseOnline: true,
+            lastUpdated: new Date().toISOString(),
+          }
+        });
+      } catch (fallbackError) {
+        console.error('Fallback stats loading also failed:', fallbackError);
+      }
     } finally {
       setStatsLoading(false);
     }
@@ -393,8 +442,78 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                               <span className="text-muted-foreground">Bildtäckning:</span>
                               <Badge variant="default">{adminStats.database.imagesCoverage.toFixed(1)}%</Badge>
                             </div>
+                            {adminStats.database.imagesCount && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Totalt bilder:</span>
+                                <Badge variant="outline">{adminStats.database.imagesCount.toLocaleString()}</Badge>
+                              </div>
+                            )}
                           </div>
                         </Card>
+
+                        {/* User Activity Cards */}
+                        {adminStats.database.userFavorites !== undefined && (
+                          <Card className="p-6 card-hover">
+                            <div className="flex items-center gap-3 mb-4">
+                              <Users className="h-8 w-8 text-blue-500" />
+                              <h3 className="font-heading font-semibold text-lg">Användaraktivitet</h3>
+                            </div>
+                            <div className="space-y-3">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Favoriter:</span>
+                                <Badge variant="secondary">{adminStats.database.userFavorites.toLocaleString()}</Badge>
+                              </div>
+                              {adminStats.database.searchHistory !== undefined && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Sökhistorik:</span>
+                                  <Badge variant="secondary">{adminStats.database.searchHistory.toLocaleString()}</Badge>
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        )}
+
+                        {/* Storage Information */}
+                        {adminStats.storage && (
+                          <Card className="p-6 card-hover">
+                            <div className="flex items-center gap-3 mb-4">
+                              <HardDrive className="h-8 w-8 text-purple-500" />
+                              <h3 className="font-heading font-semibold text-lg">Lagring</h3>
+                            </div>
+                            <div className="space-y-3">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Total storlek:</span>
+                                <Badge variant="secondary">{adminStats.storage.totalSizeFormatted}</Badge>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Buckets:</span>
+                                <Badge variant="outline">{adminStats.storage.buckets.length}</Badge>
+                              </div>
+                            </div>
+                          </Card>
+                        )}
+
+                        {/* Recent Activity */}
+                        {adminStats.activity && adminStats.activity.recentLogs.length > 0 && (
+                          <Card className="p-6 card-hover col-span-full">
+                            <div className="flex items-center gap-3 mb-4">
+                              <Activity className="h-8 w-8 text-orange-500" />
+                              <h3 className="font-heading font-semibold text-lg">Senaste aktivitet</h3>
+                            </div>
+                            <ScrollArea className="h-40">
+                              <div className="space-y-2">
+                                {adminStats.activity.recentLogs.slice(0, 5).map((log: any, index: number) => (
+                                  <div key={index} className="flex justify-between items-center p-2 rounded bg-muted/30">
+                                    <span className="text-sm text-muted-foreground truncate">{log.message}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {new Date(log.created_at).toLocaleTimeString()}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </Card>
+                        )}
                       </>
                     ) : (
                       <div className="col-span-full text-center py-12 text-muted-foreground">
