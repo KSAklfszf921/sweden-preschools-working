@@ -127,7 +127,7 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
   }} animate={{
     opacity: 1,
     x: 0
-  }} className={`absolute left-4 top-4 z-30 w-96 ${className}`}>
+  }} className={`absolute left-4 top-4 z-30 w-72 ${className}`}>
       <Card className="glass-search border-0 shadow-lg card-hover">
         <div className="p-5">
           {/* Header */}
