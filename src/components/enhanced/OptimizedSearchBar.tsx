@@ -100,9 +100,13 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
   const handleSuggestionClick = useCallback((suggestion: typeof suggestions[0]) => {
     if (suggestion.type === 'kommun') {
       setSearchQuery(suggestion.value);
-      setSearchFilters({
-        kommuner: [suggestion.value]
-      });
+      // Add to existing municipalities instead of replacing
+      const currentKommuner = searchFilters.kommuner || [];
+      if (!currentKommuner.includes(suggestion.value)) {
+        setSearchFilters({
+          kommuner: [...currentKommuner, suggestion.value]
+        });
+      }
     } else {
       setSearchQuery(suggestion.value);
       setSearchFilters({
@@ -110,7 +114,7 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
       });
     }
     setShowSuggestions(false);
-  }, [setSearchFilters]);
+  }, [setSearchFilters, searchFilters.kommuner]);
 
   // Handle click outside to close suggestions
   useEffect(() => {
@@ -129,9 +133,10 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced search effect - simplified since suggestions handle the display
+  // Debounced search effect - only apply when not using suggestions
   useEffect(() => {
-    if (debouncedSearchQuery.length > 0 && !showSuggestions) {
+    if (debouncedSearchQuery.length > 0 && !showSuggestions && suggestions.length === 0) {
+      // Only apply automatic search if no suggestions are being shown
       const kommun = uniqueKommuner.find(k => k.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
       if (kommun) {
         setSearchFilters({
@@ -145,7 +150,7 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
     } else if (debouncedSearchQuery.length === 0 && searchQuery.length === 0) {
       clearFilters();
     }
-  }, [debouncedSearchQuery, uniqueKommuner, setSearchFilters, clearFilters, searchQuery, showSuggestions]);
+  }, [debouncedSearchQuery, uniqueKommuner, setSearchFilters, clearFilters, searchQuery, showSuggestions, suggestions.length]);
   const handleGetCurrentLocation = useCallback(() => {
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(position => {
@@ -184,7 +189,18 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
       return value !== undefined && value !== null && (Array.isArray(value) ? value.length > 0 : typeof value === 'string' ? value.length > 0 : typeof value === 'boolean' ? value : true);
     });
   }, [searchFilters]);
-  const filterCount = useMemo(() => Object.keys(searchFilters).filter(key => searchFilters[key as keyof typeof searchFilters] !== undefined).length, [searchFilters]);
+  const filterCount = useMemo(() => {
+    return Object.keys(searchFilters).filter(key => {
+      const value = searchFilters[key as keyof typeof searchFilters];
+      // Only count meaningful filters, not empty arrays or default values
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === 'string') return value.trim().length > 0;
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'number') return true;
+      if (typeof value === 'object' && value !== null) return true;
+      return false;
+    }).length;
+  }, [searchFilters]);
 
   // Minimized view
   if (!isExpanded) {
@@ -299,23 +315,79 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
             {/* Quick filters */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Kommun</label>
-                <Select value={searchFilters.kommuner?.[0] || 'all'} onValueChange={value => {
-                setSearchFilters({
-                  ...searchFilters,
-                  kommuner: value === 'all' ? undefined : [value]
-                });
-              }}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Välj kommun" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    <SelectItem value="all">Alla kommuner</SelectItem>
-                    {uniqueKommuner.slice(0, 50).map(kommun => <SelectItem key={kommun} value={kommun} className="text-xs">
-                        {kommun}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <label className="text-xs text-muted-foreground mb-1 block">
+                  Kommuner {searchFilters.kommuner && searchFilters.kommuner.length > 0 && (
+                    <span className="text-primary">({searchFilters.kommuner.length})</span>
+                  )}
+                </label>
+                <div className="space-y-2">
+                  {/* Selected municipalities */}
+                  {searchFilters.kommuner && searchFilters.kommuner.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {searchFilters.kommuner.map(kommun => (
+                        <Badge
+                          key={kommun}
+                          variant="secondary"
+                          className="flex items-center gap-1 pr-1 pl-2 py-1 text-xs"
+                        >
+                          <span>{kommun}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const newKommuner = searchFilters.kommuner?.filter(k => k !== kommun);
+                              setSearchFilters({
+                                ...searchFilters,
+                                kommuner: newKommuner?.length ? newKommuner : undefined
+                              });
+                            }}
+                            className="h-3 w-3 p-0 hover:bg-destructive/20"
+                          >
+                            <X className="h-2 w-2" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Add municipality selector */}
+                  <Select 
+                    value="add" 
+                    onValueChange={value => {
+                      if (value !== 'add' && value !== 'all') {
+                        const currentKommuner = searchFilters.kommuner || [];
+                        if (!currentKommuner.includes(value)) {
+                          setSearchFilters({
+                            ...searchFilters,
+                            kommuner: [...currentKommuner, value]
+                          });
+                        }
+                      } else if (value === 'all') {
+                        setSearchFilters({
+                          ...searchFilters,
+                          kommuner: undefined
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="+ Lägg till kommun" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60 overflow-y-auto">
+                      <SelectItem value="all">Rensa alla kommuner</SelectItem>
+                      {uniqueKommuner.slice(0, 50).map(kommun => (
+                        <SelectItem 
+                          key={kommun} 
+                          value={kommun} 
+                          className="text-xs"
+                          disabled={searchFilters.kommuner?.includes(kommun)}
+                        >
+                          {kommun} ({preschools.filter(p => p.kommun === kommun).length})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div>

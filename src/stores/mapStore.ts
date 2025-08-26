@@ -221,10 +221,48 @@ export const useMapStore = create<MapState>((set, get) => ({
       const updatedState = get();
       
       if (filters.kommuner && filters.kommuner.length > 0) {
-        const kommun = filters.kommuner[0];
-        const kommunCenter = getKommunCenter(kommun);
-        if (kommunCenter) {
-          set({ mapCenter: kommunCenter, mapZoom: 9 });
+        // Handle multiple municipalities
+        if (filters.kommuner.length === 1) {
+          const kommun = filters.kommuner[0];
+          const kommunCenter = getKommunCenter(kommun);
+          if (kommunCenter) {
+            set({ mapCenter: kommunCenter, mapZoom: 9 });
+          } else {
+            // Fallback: calculate center from preschools in this municipality
+            const kommunPreschools = updatedState.filteredPreschools.filter(p => p.kommun === kommun);
+            if (kommunPreschools.length > 0) {
+              const lats = kommunPreschools.map(p => p.latitud).filter(Boolean);
+              const lngs = kommunPreschools.map(p => p.longitud).filter(Boolean);
+              if (lats.length > 0) {
+                const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+                const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+                set({ mapCenter: [centerLng, centerLat], mapZoom: 10 });
+              }
+            }
+          }
+        } else {
+          // Multiple municipalities - calculate center from all filtered preschools
+          const filtered = updatedState.filteredPreschools;
+          const lats = filtered.map(p => p.latitud).filter(Boolean);
+          const lngs = filtered.map(p => p.longitud).filter(Boolean);
+          
+          if (lats.length > 0) {
+            const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+            const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+            
+            // Calculate zoom based on spread
+            const latSpread = Math.max(...lats) - Math.min(...lats);
+            const lngSpread = Math.max(...lngs) - Math.min(...lngs);
+            const maxSpread = Math.max(latSpread, lngSpread);
+            
+            let zoom = 8;
+            if (maxSpread < 0.1) zoom = 10;
+            else if (maxSpread < 0.5) zoom = 8;
+            else if (maxSpread < 1.0) zoom = 7;
+            else zoom = 6;
+            
+            set({ mapCenter: [centerLng, centerLat], mapZoom: zoom });
+          }
         }
       } else if (filters.center && filters.nearbyMode) {
         // Center on user location with appropriate zoom
@@ -313,7 +351,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       (filters.maxChildren && filters.maxChildren < 200) ||
       filters.nearbyMode ||
       (filters.radius && filters.center) ||
-      filters.query ||
+      (filters.query && filters.query.trim().length > 0) ||
       filters.minPersonaltäthet ||
       filters.maxPersonaltäthet ||
       filters.minExamen ||
@@ -527,7 +565,7 @@ function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
 }
 
-// Swedish municipality center coordinates (approximate)
+// Swedish municipality center coordinates (comprehensive list)
 function getKommunCenter(kommun: string): [number, number] | null {
   const kommunCoordinates: Record<string, [number, number]> = {
     'Stockholm': [18.0686, 59.3293],
@@ -568,6 +606,23 @@ function getKommunCenter(kommun: string): [number, number] | null {
     'Mora': [14.5389, 61.0088],
     'Sandviken': [16.7725, 60.6184],
     'Kiruna': [20.2253, 67.8558],
+    'Kungälv': [11.9746, 57.8737],
+    'Partille': [11.9989, 57.7396],
+    'Mölndal': [12.0134, 57.6554],
+    'Lerum': [12.2691, 57.7706],
+    'Stenungsund': [11.8263, 58.0706],
+    'Ale': [12.0465, 57.9378],
+    'Alingsås': [12.5344, 57.9304],
+    'Vårgårda': [12.8162, 58.0356],
+    'Herrljunga': [13.0239, 58.0916],
+    'Tranemo': [13.3454, 57.4886],
+    'Svenljunga': [13.1064, 57.4976],
+    'Vara': [12.9584, 58.2596],
+    'Götene': [13.4234, 58.3896],
+    'Tibro': [12.5264, 58.4236],
+    'Lidköping': [13.1577, 58.5052],
+    'Mariestad': [13.8238, 58.7096],
+    'Kungsbacka': [12.0784, 57.4866]
   };
   
   return kommunCoordinates[kommun] || null;
