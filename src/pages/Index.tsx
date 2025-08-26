@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Map3D } from '@/components/Map3D';
-import { SearchFilters } from '@/components/SearchFilters';
+import { SmartSearchBar } from '@/components/SmartSearchBar';
 import { PreschoolDetails } from '@/components/PreschoolDetails';
 import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { AdminPanel } from '@/components/AdminPanel';
-import { StatisticsOverlay } from '@/components/StatisticsOverlay';
+import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LandingAnimation } from '@/components/LandingAnimation';
@@ -42,37 +42,33 @@ const Index = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: showLanding ? 0 : 1, y: 0 }}
           transition={{ delay: showLanding ? 0 : 0.5 }}
-          className="relative z-40 bg-card/95 backdrop-blur-lg border-b border-border/50 shadow-nordic"
+          className="relative z-40 bg-card/90 backdrop-blur-xl border-b border-border/30"
         >
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-nature-lake to-nature-forest bg-clip-text text-transparent">
-                  Sveriges Förskolor
+                <h1 className="text-xl font-bold text-foreground">
+                  Förskolor i Sverige
                 </h1>
-                <p className="text-sm text-muted-foreground">Hitta och jämför förskolor i hela Sverige</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  8,739 förskolor
+                </p>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  Live data från 8,739 förskolor
-                </div>
-                <ThemeToggle />
-              </div>
+              <ThemeToggle />
             </div>
           </div>
         </motion.header>
 
       {/* Main content */}
       <div className="relative">
-          {/* Search filters - overlay on map */}
+          {/* Smart Search Bar */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: showLanding ? 0 : 1, x: 0 }}
             transition={{ delay: showLanding ? 0 : 1.0 }}
-            className="absolute left-4 top-4 z-30 w-80"
+            className="absolute left-4 top-4 z-30"
           >
-            <SearchFilters />
+            <SmartSearchBar />
           </motion.div>
 
           {/* Preschool List Panel - right side */}
@@ -99,7 +95,7 @@ const Index = () => {
             className="h-screen"
           >
             <Map3D className="w-full h-full" />
-            <StatisticsOverlay />
+            <StatisticsPopup />
             <LayerControl />
           </motion.div>
 

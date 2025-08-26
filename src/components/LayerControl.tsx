@@ -26,10 +26,10 @@ const LayerControl: React.FC<LayerControlProps> = ({ className }) => {
   } = useMapStore();
 
   const heatmapTypes = [
-    { value: 'density', label: '🔥 Förskoltäthet', icon: MapPin, description: 'Antal förskolor per område' },
-    { value: 'staff', label: '👥 Personaltäthet', icon: Map, description: 'Vuxen-barn ratio (grön = bättre)' },
-    { value: 'quality', label: '🎓 Lärarexamen %', icon: Square, description: 'Andel med förskollärarexamen' },
-    { value: 'rating', label: '⭐ Google Betyg', icon: Square, description: 'Genomsnittligt betyg' },
+    { value: 'density', label: 'Täthet', icon: MapPin, description: 'Antal förskolor per område' },
+    { value: 'staff', label: 'Personal', icon: Map, description: 'Vuxen-barn ratio' },
+    { value: 'quality', label: 'Kvalitet', icon: Square, description: 'Andel med lärarexamen' },
+    { value: 'rating', label: 'Betyg', icon: Square, description: 'Google betyg' },
   ] as const;
 
   return (
@@ -38,22 +38,22 @@ const LayerControl: React.FC<LayerControlProps> = ({ className }) => {
       animate={{ opacity: 1, x: 0 }}
       className={`absolute top-4 right-4 z-10 ${className}`}
     >
-      <Card className="p-4 bg-card/95 backdrop-blur-sm border-border/50 shadow-nordic">
-        <div className="flex items-center gap-2 mb-4">
-          <Layers className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold text-sm text-foreground">Kartlager</h3>
+      <Card className="p-3 bg-card/80 backdrop-blur-xl border-border/30 shadow-lg">
+        <div className="flex items-center gap-2 mb-3">
+          <Layers className="h-3 w-3 text-primary" />
+          <h3 className="font-medium text-xs text-foreground">Lager</h3>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Heatmap Controls */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Checkbox
                 id="heatmap"
                 checked={showHeatmap}
                 onCheckedChange={(checked) => setShowHeatmap(checked as boolean)}
               />
-              <Label htmlFor="heatmap" className="text-sm font-medium">
+              <Label htmlFor="heatmap" className="text-xs font-medium">
                 Heatmap
               </Label>
             </div>
@@ -62,26 +62,23 @@ const LayerControl: React.FC<LayerControlProps> = ({ className }) => {
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="space-y-3 pl-6"
+                className="space-y-2 pl-4"
               >
                 <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">
-                    Heatmap Typ
+                  <Label className="text-xs mb-1 block">
+                    Typ
                   </Label>
                   <Select 
                     value={heatmapType} 
                     onValueChange={(value) => setHeatmapType(value as HeatmapType)}
                   >
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {heatmapTypes.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{type.label}</span>
-                            <span className="text-xs text-muted-foreground">{type.description}</span>
-                          </div>
+                          <span className="text-xs">{type.label}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -89,8 +86,8 @@ const LayerControl: React.FC<LayerControlProps> = ({ className }) => {
                 </div>
 
                 <div>
-                  <Label className="text-xs text-muted-foreground mb-2 block">
-                    Intensitet: {heatmapIntensity}
+                  <Label className="text-xs mb-1 block">
+                    Intensitet {heatmapIntensity}
                   </Label>
                   <Slider
                     value={[heatmapIntensity]}
@@ -106,8 +103,8 @@ const LayerControl: React.FC<LayerControlProps> = ({ className }) => {
           </div>
 
           {/* Layer Visibility Controls */}
-          <div className="space-y-2 border-t border-border pt-3">
-            <Label className="text-xs text-muted-foreground">Synliga Lager</Label>
+          <div className="space-y-1 border-t border-border/30 pt-2">
+            <Label className="text-xs">Lager</Label>
             
             <div className="flex items-center gap-2">
               <Checkbox
@@ -115,7 +112,7 @@ const LayerControl: React.FC<LayerControlProps> = ({ className }) => {
                 checked={layerVisibility.clusters}
                 onCheckedChange={(checked) => setLayerVisibility('clusters', checked as boolean)}
               />
-              <Label htmlFor="clusters" className="text-sm">
+              <Label htmlFor="clusters" className="text-xs">
                 Kluster
               </Label>
             </div>

@@ -51,16 +51,16 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map with 3D terrain
+    // Initialize map with Sweden focus
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: mapCenter,
-      zoom: mapZoom,
-      pitch: 45,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [15.5, 62.0],
+      zoom: 5.5,
+      pitch: 30,
       bearing: 0,
       antialias: true,
-      projection: 'globe' as any
+      maxBounds: [[10.0, 55.0], [25.0, 70.0]]
     });
 
     // Add 3D terrain
