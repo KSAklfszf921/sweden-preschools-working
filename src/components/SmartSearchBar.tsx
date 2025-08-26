@@ -222,14 +222,14 @@ const SmartSearchBar: React.FC = () => {
         animate={{ opacity: 1, x: 0 }}
         className="absolute left-4 top-4 z-30"
       >
-        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="glass-search border-0 shadow-lg card-hover">
           <div className="p-3">
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => setIsExpanded(true)}
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 hover:scale-105 transition-all duration-200"
+                className="h-8 px-2 hover-scale transition-all duration-200 font-heading"
               >
                 <Search className="h-4 w-4 mr-1 text-primary" />
                 <span className="text-sm font-medium">Sök & Filter</span>
@@ -269,13 +269,13 @@ const SmartSearchBar: React.FC = () => {
       animate={{ opacity: 1, x: 0 }}
       className="absolute left-4 top-4 z-30 w-96"
     >
-      <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-lg">
-        <div className="p-4">
+      <Card className="glass-search border-0 shadow-lg card-hover">
+        <div className="p-5">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-primary" />
-              <h3 className="font-medium">Sök & Filter</h3>
+              <Search className="h-5 w-5 text-primary" />
+              <h3 className="font-heading font-semibold text-lg">Sök & Filter</h3>
               {hasActiveFilters() && (
                 <Badge variant="secondary" className="h-5">
                   {filterCount}
