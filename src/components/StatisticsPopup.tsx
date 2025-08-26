@@ -5,43 +5,33 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMapStore } from '@/stores/mapStore';
-
 interface StatisticsPopupProps {
   className?: string;
 }
-
-export const StatisticsPopup: React.FC<StatisticsPopupProps> = ({ className }) => {
+export const StatisticsPopup: React.FC<StatisticsPopupProps> = ({
+  className
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { 
-    preschools, 
-    filteredPreschools, 
-    visiblePreschools, 
+  const {
+    preschools,
+    filteredPreschools,
+    visiblePreschools,
     searchFilters,
-    mapZoom 
+    mapZoom
   } = useMapStore();
 
   // Calculate statistics based on context
   const stats = useMemo(() => {
     const currentPreschools = mapZoom > 8 ? visiblePreschools : filteredPreschools;
-    
     if (currentPreschools.length === 0) return null;
-
     const totalChildren = currentPreschools.reduce((sum, p) => sum + (p.antal_barn || 0), 0);
     const avgChildren = totalChildren / currentPreschools.length;
-    
     const withStaff = currentPreschools.filter(p => p.personaltäthet && p.personaltäthet > 0);
-    const avgStaff = withStaff.length > 0 
-      ? withStaff.reduce((sum, p) => sum + p.personaltäthet!, 0) / withStaff.length 
-      : 0;
-    
+    const avgStaff = withStaff.length > 0 ? withStaff.reduce((sum, p) => sum + p.personaltäthet!, 0) / withStaff.length : 0;
     const withExam = currentPreschools.filter(p => p.andel_med_förskollärarexamen != null);
-    const avgExam = withExam.length > 0 
-      ? withExam.reduce((sum, p) => sum + (p.andel_med_förskollärarexamen || 0), 0) / withExam.length 
-      : 0;
-
+    const avgExam = withExam.length > 0 ? withExam.reduce((sum, p) => sum + (p.andel_med_förskollärarexamen || 0), 0) / withExam.length : 0;
     const municipal = currentPreschools.filter(p => p.huvudman === 'Kommunal').length;
     const privatCount = currentPreschools.filter(p => p.huvudman === 'Enskild').length;
-
     return {
       total: currentPreschools.length,
       avgChildren: Math.round(avgChildren),
@@ -55,39 +45,25 @@ export const StatisticsPopup: React.FC<StatisticsPopupProps> = ({ className }) =
   // National averages for comparison
   const nationalStats = useMemo(() => {
     if (preschools.length === 0) return null;
-
     const totalChildren = preschools.reduce((sum, p) => sum + (p.antal_barn || 0), 0);
     const avgChildren = totalChildren / preschools.length;
-    
     const withStaff = preschools.filter(p => p.personaltäthet && p.personaltäthet > 0);
-    const avgStaff = withStaff.length > 0 
-      ? withStaff.reduce((sum, p) => sum + p.personaltäthet!, 0) / withStaff.length 
-      : 0;
-    
+    const avgStaff = withStaff.length > 0 ? withStaff.reduce((sum, p) => sum + p.personaltäthet!, 0) / withStaff.length : 0;
     const withExam = preschools.filter(p => p.andel_med_förskollärarexamen != null);
-    const avgExam = withExam.length > 0 
-      ? withExam.reduce((sum, p) => sum + (p.andel_med_förskollärarexamen || 0), 0) / withExam.length 
-      : 0;
-
+    const avgExam = withExam.length > 0 ? withExam.reduce((sum, p) => sum + (p.andel_med_förskollärarexamen || 0), 0) / withExam.length : 0;
     return {
       avgChildren: Math.round(avgChildren),
       avgStaff: Number(avgStaff.toFixed(1)),
       avgExam: Math.round(avgExam)
     };
   }, [preschools]);
-
   const getComparisonIcon = (current: number, national: number, higherIsBetter: boolean = true) => {
     const diff = Math.abs(current - national);
-    if (diff < (national * 0.05)) return <Minus className="w-3 h-3 text-muted-foreground" />;
-    
+    if (diff < national * 0.05) return <Minus className="w-3 h-3 text-muted-foreground" />;
     const isHigher = current > national;
     const isGood = higherIsBetter ? isHigher : !isHigher;
-    
-    return isGood 
-      ? <TrendingUp className="w-3 h-3 text-green-600" />
-      : <TrendingDown className="w-3 h-3 text-orange-500" />;
+    return isGood ? <TrendingUp className="w-3 h-3 text-green-600" /> : <TrendingDown className="w-3 h-3 text-orange-500" />;
   };
-
   const getContextTitle = () => {
     if (searchFilters.kommuner && searchFilters.kommuner.length > 0) {
       return `${searchFilters.kommuner[0]} vs Riket`;
@@ -97,49 +73,45 @@ export const StatisticsPopup: React.FC<StatisticsPopupProps> = ({ className }) =
     }
     return 'Aktuellt urval vs Riket';
   };
-
   if (!stats || !nationalStats) return null;
-
-  return (
-    <div className={`fixed bottom-4 right-4 z-40 ${className}`}>
+  return <div className={`fixed bottom-4 right-4 z-40 ${className}`}>
       <AnimatePresence mode="wait">
-        {!isOpen ? (
-          <motion.div
-            key="button"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Button
-              onClick={() => setIsOpen(true)}
-              variant="outline"
-              size="icon"
-              className="w-12 h-12 rounded-full bg-card/80 backdrop-blur-xl border-border/50 shadow-lg hover:bg-card/90"
-            >
-              <BarChart3 className="w-5 h-5" />
-            </Button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="popup"
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
+        {!isOpen ? <motion.div key="button" initial={{
+        scale: 0.9,
+        opacity: 0
+      }} animate={{
+        scale: 1,
+        opacity: 1
+      }} exit={{
+        scale: 0.9,
+        opacity: 0
+      }} transition={{
+        duration: 0.2
+      }}>
+            
+          </motion.div> : <motion.div key="popup" initial={{
+        scale: 0.9,
+        opacity: 0,
+        y: 20
+      }} animate={{
+        scale: 1,
+        opacity: 1,
+        y: 0
+      }} exit={{
+        scale: 0.9,
+        opacity: 0,
+        y: 20
+      }} transition={{
+        duration: 0.3,
+        ease: "easeInOut"
+      }}>
             <Card className="w-80 p-4 bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" />
                   <h3 className="font-medium text-sm">{getContextTitle()}</h3>
                 </div>
-                <Button
-                  onClick={() => setIsOpen(false)}
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 rounded-full"
-                >
+                <Button onClick={() => setIsOpen(false)} variant="ghost" size="icon" className="w-6 h-6 rounded-full">
                   <X className="w-3 h-3" />
                 </Button>
               </div>
@@ -196,9 +168,7 @@ export const StatisticsPopup: React.FC<StatisticsPopupProps> = ({ className }) =
                 </div>
               </div>
             </Card>
-          </motion.div>
-        )}
+          </motion.div>}
       </AnimatePresence>
-    </div>
-  );
+    </div>;
 };
