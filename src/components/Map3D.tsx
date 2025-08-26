@@ -3,12 +3,9 @@ import mapboxgl from 'mapbox-gl';
 import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapStore, Preschool } from '@/stores/mapStore';
-import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
 import { EnhancedSearchBox } from '@/components/EnhancedSearchBox';
-import { generateHeatmapColorExpression, calculateHeatmapWeight, getAdaptiveIntensity, getAdaptiveRadius } from '@/utils/heatmapGradients';
-import { generateBuildingExtrusionLayer, generateBuildingFootprintLayer, generateTerrainContextLayers, getAddressClusterConfig } from '@/utils/buildingExtrusions';
 import { mapboxConfig } from '@/utils/mapboxConfig';
 
 // Mapbox token
@@ -138,25 +135,30 @@ export const Map3D: React.FC<Map3DProps> = ({
   const shouldShowClusters = currentZoom > 6 && currentZoom <= 11;
   const shouldShowMarkers = currentZoom > 11;
 
-  // Zoom-based layer management and heatmap implementation
+  // Dynamic clustering system based on zoom level
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
     // Remove existing preschool layers and sources
-    const layersToRemove = ['preschools-heatmap', 'preschools-heatmap-pulse', 'preschools-clusters', 'preschools-cluster-count', 'preschools-unclustered', 'preschool-buildings-3d', 'preschool-buildings-footprint', 'parks-context', 'schools-context', 'preschool-labels'];
+    const layersToRemove = ['preschools-clusters', 'preschools-cluster-count', 'preschools-unclustered', 'preschool-labels'];
     layersToRemove.forEach(layerId => {
       if (map.current?.getLayer(layerId)) {
         map.current.removeLayer(layerId);
       }
     });
-    ['preschools', 'preschools-heatmap'].forEach(sourceId => {
-      if (map.current?.getSource(sourceId)) {
-        map.current.removeSource(sourceId);
-      }
-    });
+    
+    if (map.current?.getSource('preschools')) {
+      map.current.removeSource('preschools');
+    }
 
     // Filter out preschools without valid coordinates
-    const validPreschools = filteredPreschools.filter(p => p.latitud && p.longitud && p.latitud !== 0 && p.longitud !== 0 && p.latitud >= 55.0 && p.latitud <= 69.1 && p.longitud >= 10.9 && p.longitud <= 24.2);
+    const validPreschools = filteredPreschools.filter(p => 
+      p.latitud && p.longitud && 
+      p.latitud !== 0 && p.longitud !== 0 && 
+      p.latitud >= 55.0 && p.latitud <= 69.1 && 
+      p.longitud >= 10.9 && p.longitud <= 24.2
+    );
+    
     console.log(`Rendering ${validPreschools.length}/${filteredPreschools.length} preschools on map`);
     if (validPreschools.length === 0) return;
 
@@ -175,9 +177,7 @@ export const Map3D: React.FC<Map3DProps> = ({
           personaltäthet: preschool.personaltäthet || 0,
           andel_med_förskollärarexamen: preschool.andel_med_förskollärarexamen || 0,
           antal_barngrupper: preschool.antal_barngrupper,
-          google_rating: preschool.google_rating || 0,
-          // Enhanced weight calculation
-          weight: calculateHeatmapWeight(preschool, heatmapType, currentZoom)
+          google_rating: preschool.google_rating || 0
         },
         geometry: {
           type: 'Point' as const,
@@ -186,85 +186,47 @@ export const Map3D: React.FC<Map3DProps> = ({
       }))
     };
 
-    // Add revolutionary heatmap for low zoom levels (1-6)
-    if (shouldShowHeatmap) {
-      map.current.addSource('preschools-heatmap', {
-        type: 'geojson',
-        data: geojsonData
-      });
+    // Determine cluster settings based on zoom level
+    const shouldCluster = currentZoom < 10;
+    
+    // Add source with dynamic clustering
+    map.current.addSource('preschools', {
+      type: 'geojson',
+      data: geojsonData,
+      cluster: shouldCluster,
+      clusterMaxZoom: 10, // Max zoom to cluster points on
+      clusterRadius: 50 // Radius of each cluster when clustering points
+    });
 
-      // Enhanced adaptive intensity calculation
-      const dataCount = validPreschools.length;
-      const adaptiveIntensity = getAdaptiveIntensity(dataCount, currentZoom, heatmapIntensity);
-      map.current.addLayer({
-        id: 'preschools-heatmap',
-        type: 'heatmap',
-        source: 'preschools-heatmap',
-        maxzoom: 7,
-        paint: {
-          // Enhanced weight calculation with data-driven expressions
-          'heatmap-weight': ['interpolate', ['exponential', 1.2], ['get', 'weight'], 0, 0.1, 0.5, 0.8, 1, 1.5, 2, 2.5, 5, 4],
-          // Adaptive intensity based on zoom and data density
-          'heatmap-intensity': ['interpolate', ['exponential', 1.5], ['zoom'], 1, adaptiveIntensity * 0.3, 3, adaptiveIntensity * 0.6, 5, adaptiveIntensity * 1.0, 6, adaptiveIntensity * 1.2],
-          // Dynamic gradient based on heatmap type
-          'heatmap-color': generateHeatmapColorExpression(heatmapType) as any,
-          // Smart adaptive radius
-          'heatmap-radius': getAdaptiveRadius(currentZoom, dataCount),
-          // Dynamic opacity that increases with zoom for better visibility
-          'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 1, 0.4, 2, 0.5, 3, 0.65, 4, 0.75, 5, 0.85, 6, 0.9]
-        }
-      });
-
-      // Add pulsing animation overlay for high-intensity areas
-      if (layerVisibility.heatmap && currentZoom >= 4) {
-        map.current.addLayer({
-          id: 'preschools-heatmap-pulse',
-          type: 'heatmap',
-          source: 'preschools-heatmap',
-          maxzoom: 7,
-          paint: {
-            'heatmap-weight': ['case', ['>', ['get', 'weight'], 2], ['*', ['get', 'weight'], 1.5], 0],
-            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.3, 6, 0.6],
-            'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(255, 255, 255, 0)', 0.5, 'rgba(255, 255, 255, 0.1)', 1, 'rgba(255, 255, 255, 0.3)'],
-            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 4, 15, 6, 25],
-            'heatmap-opacity': 0.6
-          }
-        });
-      }
-    }
-
-    // Add smart clustering with enhanced configuration
-    if (shouldShowClusters || shouldShowMarkers) {
-      const clusterConfig = shouldShowClusters ? getAddressClusterConfig() : {
-        cluster: false
-      };
-      map.current.addSource('preschools', {
-        type: 'geojson',
-        data: geojsonData,
-        ...clusterConfig
-      });
-    }
-
-    // Add cluster visualization for zoom levels 7-11
-    if (shouldShowClusters) {
+    if (shouldCluster) {
+      // Add cluster circles
       map.current.addLayer({
         id: 'preschools-clusters',
         type: 'circle',
         source: 'preschools',
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': ['interpolate', ['linear'], ['get', 'avg_rating'], 0, '#ef4444',
-          // Red for low/no rating
-          2.5, '#f59e0b',
-          // Orange for medium
-          4, '#22c55e',
-          // Green for high quality
-          5, '#059669' // Dark green for excellent
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            'hsl(210, 60%, 55%)', // Small clusters - blue
+            10,
+            'hsl(140, 40%, 45%)', // Medium clusters - green
+            30,
+            'hsl(25, 70%, 55%)'   // Large clusters - orange
           ],
-          'circle-radius': ['interpolate', ['linear'], ['get', 'point_count'], 1, 15, 10, 25, 50, 35, 100, 45, 500, 55, 1000, 65],
-          'circle-stroke-width': 2,
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            25, // Small clusters
+            10,
+            35, // Medium clusters
+            30,
+            50  // Large clusters
+          ],
+          'circle-stroke-width': 3,
           'circle-stroke-color': '#ffffff',
-          'circle-opacity': 0.8
+          'circle-opacity': 0.9
         }
       });
 
@@ -277,76 +239,118 @@ export const Map3D: React.FC<Map3DProps> = ({
         layout: {
           'text-field': '{point_count_abbreviated}',
           'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 12
+          'text-size': 16
         },
         paint: {
           'text-color': '#ffffff'
         }
       });
-    }
 
-    // Add enhanced individual markers with proper styling
-    if (shouldShowMarkers || !shouldShowClusters) {
-      map.current.addLayer({
-        id: 'preschools-unclustered',
-        type: 'circle',
-        source: 'preschools',
-        filter: shouldShowClusters ? ['!', ['has', 'point_count']] : ['all'],
-        minzoom: 10,
-        // Show markers from zoom 10+
-        paint: {
-          'circle-color': ['case', ['==', ['get', 'huvudman'], 'Kommunal'], mapboxConfig.swedenStyle.preschoolColors.municipal, ['==', ['get', 'huvudman'], 'Privat'], mapboxConfig.swedenStyle.preschoolColors.private, ['==', ['get', 'huvudman'], 'Kooperativ'], mapboxConfig.swedenStyle.preschoolColors.cooperative, mapboxConfig.swedenStyle.preschoolColors.unknown],
-          'circle-radius': ['interpolate', ['linear'], ['get', 'antal_barn'], 0, mapboxConfig.settings.markerSizes.small, 20, mapboxConfig.settings.markerSizes.small, 50, mapboxConfig.settings.markerSizes.medium, 100, mapboxConfig.settings.markerSizes.large],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
-          'circle-opacity': 0.8
-        }
+      // Add click handler for clusters to zoom in
+      map.current.on('click', 'preschools-clusters', (e) => {
+        const features = map.current!.queryRenderedFeatures(e.point, {
+          layers: ['preschools-clusters']
+        });
+        
+        const clusterId = features[0].properties!.cluster_id;
+        const source = map.current!.getSource('preschools') as mapboxgl.GeoJSONSource;
+        
+        source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+          
+          map.current!.easeTo({
+            center: (features[0].geometry as any).coordinates,
+            zoom: zoom
+          });
+        });
       });
 
-      // Add labels for markers at higher zoom
-      map.current.addLayer({
-        id: 'preschool-labels',
-        type: 'symbol',
-        source: 'preschools',
-        filter: shouldShowClusters ? ['!', ['has', 'point_count']] : ['all'],
-        minzoom: 12,
-        layout: {
-          'text-field': ['get', 'namn'],
-          'text-font': ['Open Sans Regular'],
-          'text-size': 11,
-          'text-anchor': 'top',
-          'text-offset': [0, 1.5],
-          'text-max-width': 12
-        },
-        paint: {
-          'text-color': '#1f2937',
-          'text-halo-color': '#ffffff',
-          'text-halo-width': 1
-        }
-      });
-    }
-
-    // Add click handlers for individual markers
-    if (map.current.getLayer('preschools-unclustered')) {
-      map.current.on('click', 'preschools-unclustered', e => {
-        if (e.features && e.features[0]) {
-          const feature = e.features[0];
-          const preschoolId = feature.properties?.id;
-          const preschool = filteredPreschools.find(p => p.id === preschoolId);
-          if (preschool) {
-            setPopupPreschool(preschool);
-            setShowPopup(true);
-          }
-        }
-      });
-      map.current.on('mouseenter', 'preschools-unclustered', () => {
+      map.current.on('mouseenter', 'preschools-clusters', () => {
         if (map.current) map.current.getCanvas().style.cursor = 'pointer';
       });
-      map.current.on('mouseleave', 'preschools-unclustered', () => {
+
+      map.current.on('mouseleave', 'preschools-clusters', () => {
         if (map.current) map.current.getCanvas().style.cursor = '';
       });
     }
-  }, [filteredPreschools, layerVisibility, mapZoom, heatmapType, heatmapIntensity, setSelectedPreschool]);
+
+    // Add individual markers (shown when not clustering or unclustered points)
+    map.current.addLayer({
+      id: 'preschools-unclustered',
+      type: 'circle',
+      source: 'preschools',
+      filter: shouldCluster ? ['!', ['has', 'point_count']] : ['all'],
+      paint: {
+        'circle-color': [
+          'case',
+          ['==', ['get', 'huvudman'], 'Kommunal'],
+          'hsl(210, 70%, 50%)', // Blue for municipal
+          ['==', ['get', 'huvudman'], 'Privat'],
+          'hsl(140, 60%, 45%)', // Green for private
+          ['==', ['get', 'huvudman'], 'Fristående'],
+          'hsl(140, 60%, 45%)', // Green for independent (same as private)
+          'hsl(25, 70%, 55%)'   // Orange for others/unknown
+        ],
+        'circle-radius': [
+          'interpolate',
+          ['linear'],
+          ['get', 'antal_barn'],
+          0, 18,    // Minimum large size
+          20, 20,   // Small preschools
+          50, 25,   // Medium preschools  
+          100, 30,  // Large preschools
+          200, 35   // Very large preschools
+        ],
+        'circle-stroke-width': 3,
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.85
+      }
+    });
+
+    // Add labels for individual markers
+    map.current.addLayer({
+      id: 'preschool-labels',
+      type: 'symbol',
+      source: 'preschools',
+      filter: shouldCluster ? ['!', ['has', 'point_count']] : ['all'],
+      minzoom: 11,
+      layout: {
+        'text-field': ['get', 'namn'],
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+        'text-size': 12,
+        'text-anchor': 'top',
+        'text-offset': [0, 2],
+        'text-max-width': 12
+      },
+      paint: {
+        'text-color': '#1f2937',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 2
+      }
+    });
+
+    // Add click handlers for individual markers
+    map.current.on('click', 'preschools-unclustered', (e) => {
+      if (e.features && e.features[0]) {
+        const feature = e.features[0];
+        const preschoolId = feature.properties?.id;
+        const preschool = filteredPreschools.find(p => p.id === preschoolId);
+        if (preschool) {
+          setPopupPreschool(preschool);
+          setShowPopup(true);
+        }
+      }
+    });
+
+    map.current.on('mouseenter', 'preschools-unclustered', () => {
+      if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.current.on('mouseleave', 'preschools-unclustered', () => {
+      if (map.current) map.current.getCanvas().style.cursor = '';
+    });
+
+  }, [filteredPreschools, layerVisibility, mapZoom, setSelectedPreschool]);
 
   // Calculate national averages for popup comparisons
   const nationalAverage = React.useMemo(() => {
