@@ -14,7 +14,7 @@ import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
 import { SmartNotificationSystem } from '@/components/enhanced/SmartNotificationSystem';
-import { OfflineSupport } from '@/components/enhanced/OfflineSupport';
+
 import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
@@ -136,20 +136,6 @@ const Index = () => {
               🔍 Sök förskolor
             </button>}
 
-          {/* Admin Panel Toggle - Bottom Right */}
-          <motion.div initial={{
-          opacity: 0,
-          scale: 0
-        }} animate={{
-          opacity: showLanding ? 0 : 1,
-          scale: showLanding ? 0 : 1
-        }} transition={{
-          delay: showLanding ? 0 : 2.0
-        }} className="absolute bottom-6 right-6 z-40">
-            <Button variant="outline" size="icon" onClick={() => setShowAdmin(true)} className="bg-card/95 backdrop-blur-lg border-border/50 shadow-nordic hover:bg-accent/80 transition-all duration-300 hover:scale-110" title="Administratörspanel">
-              <Settings className="w-4 h-4" />
-            </Button>
-          </motion.div>
 
           {/* Preschool details panel */}
           <PreschoolDetails />
@@ -163,7 +149,24 @@ const Index = () => {
 
           {/* Enhanced features */}
           <SmartNotificationSystem />
-          <OfflineSupport />
+          
+          {/* Admin Button */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: showLanding ? 0 : 1, y: 0 }}
+            transition={{ delay: showLanding ? 0 : 1.4 }}
+            className="fixed bottom-4 right-4 z-40"
+          >
+            <Button
+              onClick={() => setShowAdmin(true)}
+              variant="outline"
+              size="sm"
+              className="bg-card/95 backdrop-blur-sm hover:bg-accent/50"
+              title="Öppna adminpanel"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+          </motion.div>
 
           {/* Loading overlay */}
           {isLoading && !showLanding && <motion.div initial={{
