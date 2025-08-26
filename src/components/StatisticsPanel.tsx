@@ -107,7 +107,7 @@ const StatisticsPanel: React.FC<StatisticsPanelProps> = ({ className }) => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -300 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className={`fixed left-4 top-20 bottom-4 w-96 z-20 ${className}`}
+          className={`fixed left-4 top-20 bottom-4 w-96 z-60 ${className}`}
         >
           <Card className="h-full bg-card/95 backdrop-blur-sm border-border/50 shadow-nordic overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">

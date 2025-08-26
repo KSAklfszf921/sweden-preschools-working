@@ -74,7 +74,7 @@ export const StatisticsPopup: React.FC<StatisticsPopupProps> = ({
     return 'Aktuellt urval vs Riket';
   };
   if (!stats || !nationalStats) return null;
-  return <div className={`fixed bottom-4 right-4 z-40 ${className}`}>
+  return <div className={`fixed bottom-4 right-4 z-60 ${className}`}>
       <AnimatePresence mode="wait">
         {!isOpen ? <motion.div key="button" initial={{
         scale: 0.9,

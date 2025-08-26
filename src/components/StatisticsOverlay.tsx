@@ -79,7 +79,7 @@ export const StatisticsOverlay: React.FC<StatisticsOverlayProps> = ({ className 
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`absolute top-20 left-4 z-20 ${className}`}
+      className={`absolute top-20 left-4 z-60 ${className}`}
     >
       <Card className="bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 p-4 w-80">
         <div className="flex items-center gap-2 mb-3">

@@ -9,6 +9,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { motion } from 'framer-motion';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ActiveFiltersDisplay } from './ActiveFiltersDisplay';
+import { SWEDISH_MUNICIPALITIES } from '@/data/municipalities';
 interface OptimizedSearchBarProps {
   className?: string;
 }
@@ -43,7 +44,8 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
 
   // Memoized unique values for performance
-  const uniqueKommuner = useMemo(() => [...new Set(preschools.map(p => p.kommun))].filter(Boolean).sort(), [preschools]);
+  // Use comprehensive list of all Swedish municipalities
+  const uniqueKommuner = useMemo(() => SWEDISH_MUNICIPALITIES, []);
 
   // Generate suggestions based on search query
   const generateSuggestions = useCallback((query: string) => {
@@ -397,7 +399,7 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
                     </SelectTrigger>
                     <SelectContent className="max-h-60 overflow-y-auto">
                       <SelectItem value="all">Rensa alla kommuner</SelectItem>
-                      {uniqueKommuner.slice(0, 50).map(kommun => (
+                      {uniqueKommuner.map(kommun => (
                         <SelectItem 
                           key={kommun} 
                           value={kommun} 

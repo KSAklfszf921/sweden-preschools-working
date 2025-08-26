@@ -21,7 +21,7 @@ import { ComparisonModal } from '@/components/ComparisonModal';
 import { MobileNavigation } from '@/components/enhanced/MobileNavigation';
 import EnhancedStatisticsPanel from '@/components/enhanced/EnhancedStatisticsPanel';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
-import { SmartNotificationSystem } from '@/components/enhanced/SmartNotificationSystem';
+
 import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
@@ -186,7 +186,7 @@ const Index = () => {
           <ComparisonModal />
 
           {/* Enhanced features */}
-          <SmartNotificationSystem />
+          
           <EnhancedStatisticsPanel />
           
           {/* Mobile Navigation */}

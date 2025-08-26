@@ -90,10 +90,15 @@ export const Map3D: React.FC<Map3DProps> = ({
       setIsLoading(false);
     });
 
-    // Add Swedish language support
-    map.current.addControl(new MapboxLanguage({
-      defaultLanguage: 'sv'
-    }));
+    // Add Swedish language support with fallback to English
+    try {
+      const language = new MapboxLanguage({
+        defaultLanguage: 'en' // Fallback to English since 'sv' isn't supported
+      });
+      map.current.addControl(language);
+    } catch (error) {
+      console.warn('Language control not available:', error);
+    }
 
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl({
