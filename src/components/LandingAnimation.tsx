@@ -25,10 +25,10 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
     return () => clearTimeout(timer);
   }, [stage, onComplete, preschoolCount, totalPreschools]);
 
-  // Counting animation effect - starts after stage 2 (when loading preschools)
+  // Counting animation effect - starts exactly at stage 2 (when loading preschools)
   useEffect(() => {
-    if (stage >= 2) {
-      const duration = 1500; // 1.5 seconds to count up
+    if (stage === 2 && preschoolCount === 0) {
+      const duration = 2000; // 2 seconds to count up (matches progress bar timing)
       const startTime = Date.now();
 
       const countTimer = setInterval(() => {
@@ -49,7 +49,7 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
 
       return () => clearInterval(countTimer);
     }
-  }, [stage, totalPreschools]);
+  }, [stage, preschoolCount, totalPreschools]);
 
   return (
     <AnimatePresence>
