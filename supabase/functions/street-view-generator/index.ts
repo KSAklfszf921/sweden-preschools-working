@@ -43,17 +43,24 @@ serve(async (req) => {
 
     // Store the street view URL in the database if preschool_id is provided
     if (preschoolId) {
-      const { error: updateError } = await supabase
+      console.log(`Storing street view data for preschool: ${preschoolId}`);
+      
+      // Use upsert to insert or update
+      const { error: upsertError } = await supabase
         .from('preschool_google_data')
-        .update({
+        .upsert({
+          preschool_id: preschoolId,
           street_view_static_url: staticUrl,
           street_view_pano_id: panoId || null,
           last_updated: new Date().toISOString()
-        })
-        .eq('preschool_id', preschoolId);
+        }, {
+          onConflict: 'preschool_id'
+        });
 
-      if (updateError) {
-        console.error('Error updating street view data:', updateError);
+      if (upsertError) {
+        console.error('Error upserting street view data:', upsertError);
+      } else {
+        console.log(`Successfully stored street view data for preschool: ${preschoolId}`);
       }
     }
 

@@ -33,6 +33,22 @@ export const StreetViewPanel: React.FC<StreetViewPanelProps> = ({
     setError('');
     
     try {
+      // Check if we have existing street view data first
+      const { data: existingData } = await supabase
+        .from('preschool_google_data')
+        .select('street_view_static_url, street_view_pano_id')
+        .eq('preschool_id', preschool.id)
+        .single();
+
+      if (existingData?.street_view_static_url) {
+        setStreetViewUrl(existingData.street_view_static_url);
+        const googleMapsUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${preschool.latitud},${preschool.longitud}`;
+        setPanoramaUrl(googleMapsUrl);
+        setLoading(false);
+        return;
+      }
+
+      // Generate new street view data
       const { data, error: functionError } = await supabase.functions.invoke('street-view-generator', {
         body: {
           lat: preschool.latitud,
@@ -40,7 +56,8 @@ export const StreetViewPanel: React.FC<StreetViewPanelProps> = ({
           size: '640x400',
           heading: 0,
           pitch: 0,
-          fov: 90
+          fov: 90,
+          preschoolId: preschool.id
         }
       });
 

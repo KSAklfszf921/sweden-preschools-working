@@ -147,11 +147,25 @@ export const PreschoolDetailsModal: React.FC<PreschoolDetailsModalProps> = ({
     if (!preschool) return;
 
     try {
+      // Check for existing street view data first
+      const { data: existingData } = await supabase
+        .from('preschool_google_data')
+        .select('street_view_static_url')
+        .eq('preschool_id', preschool.id)
+        .single();
+
+      if (existingData?.street_view_static_url) {
+        setStreetViewUrl(existingData.street_view_static_url);
+        return;
+      }
+
+      // Generate new street view
       const response = await supabase.functions.invoke('street-view-generator', {
         body: {
           lat: preschool.latitud,
           lng: preschool.longitud,
-          size: '600x400'
+          size: '600x400',
+          preschoolId: preschool.id
         }
       });
 
