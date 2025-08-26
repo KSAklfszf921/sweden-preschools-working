@@ -99,27 +99,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const { preschools } = useMapStore();
   const { toast } = useToast();
 
-  // Enable real-time monitoring for admin data changes
-  useAdminRealTimeMonitor({
-    onDataChange: loadAdminStats,
-    isEnabled: isOpen
-  });
-
   const missingCoords = preschools.filter(p => 
     !p.latitud || !p.longitud || p.latitud === 0 || p.longitud === 0
   );
-
-  const checkApiStatus = async () => {
-    setApiStatus('checking');
-    try {
-      const { data, error } = await supabase.from('Förskolor').select('count').limit(1);
-      if (error) throw error;
-      setApiStatus('online');
-    } catch (error) {
-      console.error('API Status check failed:', error);
-      setApiStatus('offline');
-    }
-  };
 
   const loadAdminStats = async () => {
     setStatsLoading(true);
@@ -205,6 +187,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       }
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  // Enable real-time monitoring for admin data changes
+  useAdminRealTimeMonitor({
+    onDataChange: loadAdminStats,
+    isEnabled: isOpen
+  });
+  const checkApiStatus = async () => {
+    setApiStatus('checking');
+    try {
+      const { data, error } = await supabase.from('Förskolor').select('count').limit(1);
+      if (error) throw error;
+      setApiStatus('online');
+    } catch (error) {
+      console.error('API Status check failed:', error);
+      setApiStatus('offline');
     }
   };
 
