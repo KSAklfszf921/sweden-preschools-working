@@ -132,6 +132,12 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     };
   }, []);
 
+  // Calculate display logic outside useEffect to prevent undefined variable errors
+  const currentZoom = mapZoom;
+  const shouldShowHeatmap = currentZoom <= 6;
+  const shouldShowClusters = currentZoom > 6 && currentZoom <= 11;
+  const shouldShowMarkers = currentZoom > 11;
+
   // Zoom-based layer management and heatmap implementation
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
@@ -141,7 +147,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       'preschools-heatmap', 'preschools-heatmap-pulse', 
       'preschools-clusters', 'preschools-cluster-count', 
       'preschools-unclustered', 'preschool-buildings-3d',
-      'preschool-buildings-footprint', 'parks-context', 'schools-context'
+      'preschool-buildings-footprint', 'parks-context', 'schools-context', 'preschool-labels'
     ];
     
     layersToRemove.forEach(layerId => {
@@ -167,12 +173,6 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     console.log(`Rendering ${validPreschools.length}/${filteredPreschools.length} preschools on map`);
 
     if (validPreschools.length === 0) return;
-
-    // Determine which visualization to show based on zoom level
-    const currentZoom = mapZoom;
-    const shouldShowHeatmap = currentZoom <= 6;
-    const shouldShowClusters = currentZoom > 6 && currentZoom <= 11;
-    const shouldShowMarkers = currentZoom > 11;
 
     // Create GeoJSON data from valid preschools
     const geojsonData = {
