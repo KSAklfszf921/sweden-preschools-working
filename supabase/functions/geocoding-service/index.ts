@@ -31,11 +31,14 @@ serve(async (req) => {
       );
     }
 
-    const googleApiKey = Deno.env.get('GOOGLE_GEOCODING_API_KEY');
+    const googleApiKey = Deno.env.get('GOOGLE_GEOCODING_API_KEY') || Deno.env.get('GOOGLE_PLACES_API_KEY');
     if (!googleApiKey) {
-      console.error('Missing GOOGLE_GEOCODING_API_KEY');
+      console.error('Missing GOOGLE_GEOCODING_API_KEY or GOOGLE_PLACES_API_KEY');
       return new Response(
-        JSON.stringify({ error: 'Missing API key' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'Missing Google API key. Please configure GOOGLE_GEOCODING_API_KEY secret.' 
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -53,34 +56,44 @@ serve(async (req) => {
       
       for (const preschool of batch) {
         try {
-          // Skip if already has coordinates
-          if (preschool.Latitud && preschool.Longitud) {
+          // Skip if already has valid coordinates
+          if (preschool.Latitud && preschool.Longitud && 
+              preschool.Latitud !== 0 && preschool.Longitud !== 0) {
+            console.log(`⏭️ Skipping ${preschool.Namn} - already has coordinates`);
             continue;
           }
 
-          // Construct address for geocoding
-          const address = `${preschool.Adress}, ${preschool.Kommun}, Sweden`;
+          // Construct address for geocoding - more specific Swedish format
+          const address = `${preschool.Adress}, ${preschool.Kommun}, Sverige`;
           const encodedAddress = encodeURIComponent(address);
           
-          // Call Google Geocoding API
-          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${googleApiKey}&region=se&language=sv`;
+          console.log(`🔍 Geocoding: ${preschool.Namn} at ${address}`);
+          
+          // Call Google Geocoding API with proper parameters
+          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${googleApiKey}&region=se&language=sv&components=country:SE`;
           
           const response = await fetch(geocodeUrl);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
           const data = await response.json();
+          console.log(`📍 API Response for ${preschool.Namn}:`, data.status, data.results?.length || 0, 'results');
 
-          if (data.status === 'OK' && data.results.length > 0) {
+          if (data.status === 'OK' && data.results && data.results.length > 0) {
             const location = data.results[0].geometry.location;
-            const lat = location.lat;
-            const lng = location.lng;
+            const lat = parseFloat(location.lat);
+            const lng = parseFloat(location.lng);
 
             // Validate coordinates are within Sweden bounds
             if (lat >= 55.0 && lat <= 69.1 && lng >= 10.9 && lng <= 24.2) {
-              // Update database
+              // Update database with correct column names
               const { error: updateError } = await supabase
                 .from('Förskolor')
                 .update({
-                  'Latitud': lat,
-                  'Longitud': lng
+                  Latitud: lat,
+                  Longitud: lng
                 })
                 .eq('id', preschool.id);
 
@@ -89,65 +102,77 @@ serve(async (req) => {
                   id: preschool.id,
                   namn: preschool.Namn,
                   success: true,
-                  coordinates: { lat, lng }
+                  coordinates: { lat, lng },
+                  address: data.results[0].formatted_address
                 });
-                console.log(`✅ Geocoded: ${preschool.Namn} -> ${lat}, ${lng}`);
+                console.log(`✅ Successfully geocoded: ${preschool.Namn} -> ${lat}, ${lng}`);
               } else {
                 console.error(`❌ DB Update failed for ${preschool.Namn}:`, updateError);
                 results.push({
                   id: preschool.id,
                   namn: preschool.Namn,
                   success: false,
-                  error: 'Database update failed'
+                  error: `Database update failed: ${updateError.message || 'Unknown error'}`
                 });
               }
             } else {
-              console.warn(`⚠️ Invalid coordinates for ${preschool.Namn}: ${lat}, ${lng}`);
+              console.warn(`⚠️ Coordinates outside Sweden bounds for ${preschool.Namn}: ${lat}, ${lng}`);
               results.push({
                 id: preschool.id,
                 namn: preschool.Namn,
                 success: false,
-                error: 'Coordinates outside Sweden'
+                error: `Invalid coordinates (outside Sweden): ${lat}, ${lng}`
               });
             }
+          } else if (data.status === 'ZERO_RESULTS') {
+            console.warn(`⚠️ No geocoding results found for ${preschool.Namn}: ${address}`);
+            results.push({
+              id: preschool.id,
+              namn: preschool.Namn,
+              success: false,
+              error: 'No geocoding results found for this address'
+            });
           } else {
             console.warn(`⚠️ Geocoding failed for ${preschool.Namn}: ${data.status}`);
             results.push({
               id: preschool.id,
               namn: preschool.Namn,
               success: false,
-              error: `Geocoding failed: ${data.status}`
+              error: `Geocoding API error: ${data.status} - ${data.error_message || 'Unknown error'}`
             });
           }
 
-          // Rate limiting - wait 100ms between requests
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Rate limiting - wait between requests to respect Google's limits
+          await new Promise(resolve => setTimeout(resolve, 200));
 
         } catch (error) {
-          console.error(`❌ Error processing ${preschool.Namn}:`, error);
+          console.error(`❌ Exception processing ${preschool.Namn}:`, error);
           results.push({
             id: preschool.id,
             namn: preschool.Namn,
             success: false,
-            error: error.message
+            error: `Processing error: ${error.message}`
           });
         }
       }
 
-      // Wait between batches
+      // Wait between batches to be respectful to Google's API
       if (i + batchSize < preschools.length) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log(`⏸️ Waiting between batches... (${i + batchSize}/${preschools.length})`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
       }
     }
 
-    console.log(`🎯 Geocoding completed: ${results.filter(r => r.success).length}/${results.length} successful`);
+    const successfulCount = results.filter(r => r.success).length;
+    console.log(`🎯 Geocoding completed: ${successfulCount}/${results.length} successful`);
 
     return new Response(
       JSON.stringify({
         success: true,
         processed: results.length,
-        successful: results.filter(r => r.success).length,
-        results
+        successful: successfulCount,
+        results,
+        message: `Geocoding completed: ${successfulCount} successful out of ${results.length} processed`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

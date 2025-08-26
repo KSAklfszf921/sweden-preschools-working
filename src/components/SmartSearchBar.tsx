@@ -104,7 +104,7 @@ const SmartSearchBar: React.FC = () => {
         }
       }
     }
-  }, [searchQuery, uniqueKommuner, preschools]);
+  }, [searchQuery, setSearchFilters]); // Fixed dependencies
 
   const clearSearch = () => {
     setSearchQuery('');
