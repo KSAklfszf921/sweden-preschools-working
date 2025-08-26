@@ -12,6 +12,9 @@ import { StatisticsButton } from '@/components/StatisticsButton';
 import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
+import { SmartNotificationSystem } from '@/components/enhanced/SmartNotificationSystem';
+import { OfflineSupport } from '@/components/enhanced/OfflineSupport';
+import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
 import { motion } from 'framer-motion';
@@ -41,6 +44,7 @@ const Index = () => {
   }
   return <>
       <AccessibilityEnhancements />
+      <MobileOptimizations />
       {/* Landing Animation */}
       {showLanding && <LandingAnimation onComplete={() => setShowLanding(false)} />}
 
@@ -155,6 +159,10 @@ const Index = () => {
           {/* Comparison Panel and Modal */}
           <ComparisonPanel />
           <ComparisonModal />
+
+          {/* Enhanced features */}
+          <SmartNotificationSystem />
+          <OfflineSupport />
 
           {/* Loading overlay */}
           {isLoading && !showLanding && <motion.div initial={{

@@ -376,6 +376,19 @@ export const Map3D: React.FC<Map3DProps> = ({
 
   }, [filteredPreschools, layerVisibility, mapZoom, setSelectedPreschool]);
 
+  // Center map when a preschool is selected
+  useEffect(() => {
+    if (selectedPreschool && map.current && selectedPreschool.latitud && selectedPreschool.longitud) {
+      map.current.flyTo({
+        center: [selectedPreschool.longitud, selectedPreschool.latitud],
+        zoom: 15,
+        pitch: 45,
+        duration: 1500,
+        essential: true
+      });
+    }
+  }, [selectedPreschool]);
+
   // Calculate national averages for popup comparisons
   const nationalAverage = React.useMemo(() => {
     if (preschools.length === 0) return undefined;
