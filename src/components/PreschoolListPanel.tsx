@@ -67,7 +67,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
         onClick={() => setIsExpanded(true)} 
         variant="secondary" 
         size={isMobile ? "default" : "sm"} 
-        className="bg-card/95 backdrop-blur-lg shadow-nordic px-3 py-1.5 hover:scale-110 transition-all duration-200"
+        className="glass-search border-0 shadow-lg card-hover px-3 py-1.5"
       >
         <MapPin className={`${isMobile ? 'h-4 w-4' : 'h-3 w-3'} mr-1`} />
         <span className={`${isMobile ? 'text-sm' : 'text-xs'} font-medium`}>{visiblePreschools.length}</span>
@@ -158,12 +158,12 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
     x: 0
   }} exit={{
     x: '100%'
-  }} className={`fixed top-20 right-4 w-64 z-40 ${className}`} style={{
+  }} className={`fixed top-4 right-4 w-64 z-40 ${className}`} style={{
     height: Math.max(MIN_VISIBLE_ITEMS * 60 + 120, 300) + 'px'
   }}>
-      <Card className="h-full bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300 flex flex-col rounded-xl">
+      <Card className="h-full glass-search border-0 shadow-lg card-hover transition-all duration-300 flex flex-col rounded-xl">
         {/* Header */}
-        <div className="p-2 border-b border-border flex-shrink-0">
+        <div className="p-3 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-foreground font-semibold text-xl text-center">{getContextTitle()}</h3>
             <Button onClick={() => setIsExpanded(false)} variant="ghost" size="sm" className="h-5 w-5 p-0">
