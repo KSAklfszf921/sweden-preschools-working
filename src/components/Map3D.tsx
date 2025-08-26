@@ -5,7 +5,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapStore, Preschool } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
-import { EnhancedSearchBox } from '@/components/EnhancedSearchBox';
 import { mapboxConfig } from '@/utils/mapboxConfig';
 
 // Mapbox token
@@ -429,21 +428,6 @@ export const Map3D: React.FC<Map3DProps> = ({
           </div>
         </motion.div>}
 
-      {/* Enhanced Search Box */}
-      <EnhancedSearchBox 
-        map={map.current}
-        onLocationSearch={(position) => {
-          // Handle location search with radius filter
-          if (map.current) {
-            map.current.flyTo({
-              center: [position.coords.longitude, position.coords.latitude],
-              zoom: 12,
-              pitch: 60,
-              duration: 2000
-            });
-          }
-        }}
-      />
 
       {/* Enhanced preschool count with context */}
       <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg px-4 py-2">

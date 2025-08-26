@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Map3D } from '@/components/Map3D';
 import { SmartSearchBar } from '@/components/SmartSearchBar';
+
 import { PreschoolDetails } from '@/components/PreschoolDetails';
 import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { AdminPanel } from '@/components/AdminPanel';

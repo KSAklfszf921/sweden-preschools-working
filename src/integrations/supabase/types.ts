@@ -139,6 +139,9 @@ export type Database = {
           opening_hours: Json | null
           preschool_id: string
           price_level: number | null
+          reviews: Json | null
+          street_view_pano_id: string | null
+          street_view_static_url: string | null
           types: string[] | null
           website_url: string | null
         }
@@ -155,6 +158,9 @@ export type Database = {
           opening_hours?: Json | null
           preschool_id: string
           price_level?: number | null
+          reviews?: Json | null
+          street_view_pano_id?: string | null
+          street_view_static_url?: string | null
           types?: string[] | null
           website_url?: string | null
         }
@@ -171,6 +177,9 @@ export type Database = {
           opening_hours?: Json | null
           preschool_id?: string
           price_level?: number | null
+          reviews?: Json | null
+          street_view_pano_id?: string | null
+          street_view_static_url?: string | null
           types?: string[] | null
           website_url?: string | null
         }
@@ -2187,6 +2196,23 @@ export type Database = {
           table_name: string
         }
         Returns: string
+      }
+      upsert_google_data: {
+        Args: {
+          p_contact_phone: string
+          p_formatted_address: string
+          p_google_photos: string[]
+          p_google_place_id: string
+          p_google_rating: number
+          p_google_reviews_count: number
+          p_opening_hours: Json
+          p_preschool_id: string
+          p_reviews: Json
+          p_street_view_pano_id: string
+          p_street_view_static_url: string
+          p_website_url: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

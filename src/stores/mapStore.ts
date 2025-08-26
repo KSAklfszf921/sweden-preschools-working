@@ -114,7 +114,8 @@ interface MapState {
   setPreschools: (preschools: Preschool[]) => void;
   setFilteredPreschools: (preschools: Preschool[]) => void;
   setSelectedPreschool: (preschool: Preschool | null) => void;
-  setSearchFilters: (filters: SearchFilters) => void;
+  setSearchFilters: (filters: Partial<SearchFilters>) => void;
+  clearFilters: () => void;
   clearSearchFilters: () => void;
   hasActiveFilters: boolean;
   setLoading: (loading: boolean) => void;
@@ -208,6 +209,11 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   setSearchFilters: (filters) => {
     set({ searchFilters: { ...get().searchFilters, ...filters } });
+    get().applyFilters();
+  },
+
+  clearFilters: () => {
+    set({ searchFilters: {} });
     get().applyFilters();
   },
 

@@ -11,10 +11,10 @@ import { Filter, X, MapPin, Search, ChevronDown, ChevronUp, Settings, Clock } fr
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchFiltersProps {
-  className?: string;
+  onClose?: () => void;
 }
 
-export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
+export const SearchFilters: React.FC<SearchFiltersProps> = ({ onClose }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
@@ -84,7 +84,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
       <motion.div 
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className={`fixed top-4 left-4 z-30 ${className}`}
+        className="fixed top-4 left-4 z-30"
       >
         <Card className="bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300">
           <div className="p-3">
@@ -136,7 +136,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
     <motion.div 
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`fixed top-4 left-4 z-30 w-72 ${className}`}
+      className="fixed top-4 left-4 z-30 w-72"
     >
       <Card className="bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300">
         <div className="p-4">

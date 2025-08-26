@@ -72,9 +72,10 @@ export const PreschoolDetails: React.FC = () => {
             website_url: cachedData.website_url,
             contact_phone: cachedData.contact_phone,
             formatted_address: cachedData.formatted_address,
-            opening_hours: (cachedData as any).opening_hours,
-            reviews: (cachedData as any).reviews,
-            street_view_pano_id: (cachedData as any).street_view_pano_id
+            opening_hours: cachedData.opening_hours,
+            reviews: Array.isArray(cachedData.reviews) ? cachedData.reviews : 
+              (typeof cachedData.reviews === 'string' ? JSON.parse(cachedData.reviews || '[]') : []),
+            street_view_pano_id: cachedData.street_view_pano_id
           });
           
           // Load photo URLs
@@ -108,7 +109,12 @@ export const PreschoolDetails: React.FC = () => {
           .single();
         
         if (refreshedData) {
-          setGoogleData(refreshedData);
+          setGoogleData({
+            ...refreshedData,
+            google_photos: Array.isArray(refreshedData.google_photos) ? refreshedData.google_photos : [],
+            reviews: Array.isArray(refreshedData.reviews) ? refreshedData.reviews : 
+              (typeof refreshedData.reviews === 'string' ? JSON.parse(refreshedData.reviews || '[]') : [])
+          });
           if (refreshedData.google_photos && refreshedData.google_photos.length > 0) {
             loadPhotoUrls(refreshedData.google_photos);
           }

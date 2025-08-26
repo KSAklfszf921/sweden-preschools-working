@@ -75,7 +75,11 @@ export const PreschoolDetailsModal: React.FC<PreschoolDetailsModalProps> = ({
         .single();
 
       if (existingData) {
-        setGoogleData(existingData);
+        setGoogleData({
+          ...existingData,
+          reviews: Array.isArray(existingData.reviews) ? existingData.reviews : 
+            (typeof existingData.reviews === 'string' ? JSON.parse(existingData.reviews || '[]') : [])
+        });
         if (existingData.google_photos && existingData.google_photos.length > 0) {
           loadPhotoUrls(existingData.google_photos);
         }
