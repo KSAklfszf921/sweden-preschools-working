@@ -6,6 +6,7 @@ import { useMapStore, Preschool } from '@/stores/mapStore';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
+import { EnhancedSearchBox } from '@/components/EnhancedSearchBox';
 import { generateHeatmapColorExpression, calculateHeatmapWeight, getAdaptiveIntensity, getAdaptiveRadius } from '@/utils/heatmapGradients';
 import { generateBuildingExtrusionLayer, generateBuildingFootprintLayer, generateTerrainContextLayers, getAddressClusterConfig } from '@/utils/buildingExtrusions';
 import { mapboxConfig } from '@/utils/mapboxConfig';
@@ -387,13 +388,11 @@ export const Map3D: React.FC<Map3DProps> = ({
           </div>
         </motion.div>}
 
-      {/* Map controls */}
-      <div className="absolute top-4 left-4 backdrop-blur-sm p-3 space-y-2 mx-0 px-[10px] my-0 rounded-lg py-[50px] bg-[#000a0e]/[0.31]">
-        
-        
-        <button onClick={() => {
-        // Get user location and fly there
-        navigator.geolocation.getCurrentPosition(position => {
+      {/* Enhanced Search Box */}
+      <EnhancedSearchBox 
+        map={map.current}
+        onLocationSearch={(position) => {
+          // Handle location search with radius filter
           if (map.current) {
             map.current.flyTo({
               center: [position.coords.longitude, position.coords.latitude],
@@ -402,9 +401,8 @@ export const Map3D: React.FC<Map3DProps> = ({
               duration: 2000
             });
           }
-        });
-      }} className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors mx-0 my-0 px-0 py-[5px]">Förskolor nära mig</button>
-      </div>
+        }}
+      />
 
       {/* Enhanced preschool count with context */}
       <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg px-4 py-2">

@@ -30,6 +30,8 @@ export interface SearchFilters {
   maxBarngrupper?: number;
   radius?: number;
   center?: LngLatLike;
+  query?: string;
+  maxChildren?: number;
 }
 
 export type HeatmapType = 'density' | 'staff' | 'quality' | 'rating';
@@ -91,6 +93,8 @@ interface MapState {
   setFilteredPreschools: (preschools: Preschool[]) => void;
   setSelectedPreschool: (preschool: Preschool | null) => void;
   setSearchFilters: (filters: SearchFilters) => void;
+  clearSearchFilters: () => void;
+  hasActiveFilters: boolean;
   setLoading: (loading: boolean) => void;
   setMapCenter: (center: LngLatLike) => void;
   setMapZoom: (zoom: number) => void;
@@ -171,6 +175,17 @@ export const useMapStore = create<MapState>((set, get) => ({
     get().applyFilters();
   },
 
+  clearSearchFilters: () => {
+    set({ searchFilters: {} });
+    get().applyFilters();
+  },
+
+  get hasActiveFilters() {
+    const filters = get().searchFilters;
+    return Object.keys(filters).length > 0 && 
+           Object.values(filters).some(value => value !== undefined && value !== null);
+  },
+
   setLoading: (isLoading) => set({ isLoading }),
 
   setMapCenter: (mapCenter) => set({ mapCenter }),
@@ -247,6 +262,21 @@ export const useMapStore = create<MapState>((set, get) => ({
     const { preschools, searchFilters } = get();
     
     let filtered = preschools.filter(preschool => {
+      // Query filter (search in name and kommun)
+      if (searchFilters.query) {
+        const query = searchFilters.query.toLowerCase();
+        const nameMatch = preschool.namn.toLowerCase().includes(query);
+        const kommunMatch = preschool.kommun.toLowerCase().includes(query);
+        if (!nameMatch && !kommunMatch) {
+          return false;
+        }
+      }
+
+      // Max children filter
+      if (searchFilters.maxChildren && preschool.antal_barn && preschool.antal_barn > searchFilters.maxChildren) {
+        return false;
+      }
+
       // Kommun filter
       if (searchFilters.kommun && preschool.kommun !== searchFilters.kommun) {
         return false;
