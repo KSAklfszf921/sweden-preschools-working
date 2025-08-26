@@ -4,7 +4,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronUp, MapPin, Star, Users, GraduationCap } from 'lucide-react';
+import { ChevronUp, MapPin, Star, Users, GraduationCap, Building2, Home } from 'lucide-react';
 interface PreschoolListPanelProps {
   className?: string;
 }
@@ -132,6 +132,38 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({
   isSelected,
   onClick
 }) => {
+  const getHuvudmanInfo = (huvudman: string) => {
+    switch (huvudman) {
+      case 'Kommunal':
+        return {
+          icon: Building2,
+          label: 'Kommunal',
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+          borderColor: 'border-blue-200'
+        };
+      case 'Enskild':
+        return {
+          icon: Home,
+          label: 'Fristående',
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200'
+        };
+      default:
+        return {
+          icon: Building2,
+          label: 'Okänd',
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-50',
+          borderColor: 'border-gray-200'
+        };
+    }
+  };
+
+  const huvudmanInfo = getHuvudmanInfo(preschool.huvudman);
+  const HuvudmanIcon = huvudmanInfo.icon;
+
   return <motion.div 
     whileHover={{ scale: 1.01 }} 
     whileTap={{ scale: 0.99 }} 
@@ -144,9 +176,11 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({
   >
     <div className="space-y-1">
       <div className="flex items-start justify-between gap-1">
-        <h4 className="font-medium text-foreground text-xs leading-tight line-clamp-1 flex-1">
-          {preschool.namn}
-        </h4>
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <h4 className="font-medium text-foreground text-xs leading-tight line-clamp-1">
+            {preschool.namn}
+          </h4>
+        </div>
         {preschool.google_rating && (
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <Star className="h-2.5 w-2.5 fill-current text-yellow-500" />
@@ -157,9 +191,21 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({
         )}
       </div>
       
-      <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
-        <MapPin className="h-2.5 w-2.5 flex-shrink-0" />
-        <span className="truncate text-xs">{preschool.kommun}</span>
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center gap-0.5 text-xs text-muted-foreground min-w-0">
+          <MapPin className="h-2.5 w-2.5 flex-shrink-0" />
+          <span className="truncate text-xs">{preschool.kommun}</span>
+        </div>
+        
+        {preschool.huvudman && (
+          <Badge 
+            variant="outline" 
+            className={`text-xs px-1 py-0 h-4 flex items-center gap-0.5 ${huvudmanInfo.color} ${huvudmanInfo.bgColor} ${huvudmanInfo.borderColor} flex-shrink-0`}
+          >
+            <HuvudmanIcon className="h-2.5 w-2.5" />
+            <span className="font-medium">{huvudmanInfo.label}</span>
+          </Badge>
+        )}
       </div>
       
       <div className="flex flex-wrap gap-0.5">
