@@ -78,12 +78,12 @@ serve(async (req) => {
           console.log(`Found coordinates: ${lat}, ${lng}`)
           
           if (!dryRun) {
-            // Update the preschool with coordinates
+            // Update the preschool with coordinates (correct column names)
             const { error: updateError } = await supabase
               .from('Förskolor')
               .update({
-                'Latitud': lat,
-                'Longitud': lng
+                Latitud: lat,
+                Longitud: lng
               })
               .eq('id', preschool.id)
             

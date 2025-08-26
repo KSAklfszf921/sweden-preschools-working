@@ -88,7 +88,7 @@ serve(async (req) => {
 
             // Validate coordinates are within Sweden bounds
             if (lat >= 55.0 && lat <= 69.1 && lng >= 10.9 && lng <= 24.2) {
-              // Update database with correct column names
+              // Update database with correct column names (capital L)
               const { error: updateError } = await supabase
                 .from('Förskolor')
                 .update({
