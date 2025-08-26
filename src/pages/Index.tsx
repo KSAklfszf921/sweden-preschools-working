@@ -21,10 +21,13 @@ const Index = () => {
     isLoading,
     error
   } = usePreschools();
-  const { searchBoxCollapsed, setSearchBoxCollapsed } = useMapStore();
+  const {
+    searchBoxCollapsed,
+    setSearchBoxCollapsed
+  } = useMapStore();
   const [showLanding, setShowLanding] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
-  
+
   // Add toggle button for collapsed search box
   const showSearchToggle = searchBoxCollapsed;
   if (error) {
@@ -39,7 +42,7 @@ const Index = () => {
       {/* Landing Animation */}
       {showLanding && <LandingAnimation onComplete={() => setShowLanding(false)} />}
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 bg-slate-50">
         {/* Header */}
         <motion.header initial={{
         opacity: 0,
@@ -49,11 +52,11 @@ const Index = () => {
         y: 0
       }} transition={{
         delay: showLanding ? 0 : 0.5
-      }} className="relative z-40 bg-card/90 backdrop-blur-xl border-b border-border/30">
-          <div className="container mx-auto px-0 py-[10px] my-0 bg-[#000a0e]/[0.16]">
+      }} className="relative z-40 backdrop-blur-xl border-b border-border/30 bg-neutral-50">
+          <div className="container mx-auto px-0 py-[10px] my-0 bg-slate-100">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-foreground px-[20px] my-0 text-3xl font-medium text-left">Sveriges förskolor</h1>
+                <h1 className="px-[20px] my-0 text-left text-[#000a0e] font-bold text-2xl">Sveriges förskolor</h1>
                 
               </div>
               <div className="flex items-center gap-3">
@@ -122,14 +125,9 @@ const Index = () => {
           </motion.div>
           
           {/* Toggle button for collapsed search box */}
-          {showSearchToggle && (
-            <button
-              onClick={() => setSearchBoxCollapsed(false)}
-              className="absolute top-4 left-4 z-50 bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors"
-            >
+          {showSearchToggle && <button onClick={() => setSearchBoxCollapsed(false)} className="absolute top-4 left-4 z-50 bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
               🔍 Sök förskolor
-            </button>
-          )}
+            </button>}
 
           {/* Admin Panel Toggle - Bottom Right */}
           <motion.div initial={{
