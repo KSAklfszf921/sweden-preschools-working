@@ -127,34 +127,52 @@ export type Database = {
       }
       preschool_google_data: {
         Row: {
+          contact_phone: string | null
           created_at: string | null
+          formatted_address: string | null
           google_photos: string[] | null
           google_place_id: string | null
           google_rating: number | null
           google_reviews_count: number | null
           id: string
           last_updated: string | null
+          opening_hours: Json | null
           preschool_id: string
+          price_level: number | null
+          types: string[] | null
+          website_url: string | null
         }
         Insert: {
+          contact_phone?: string | null
           created_at?: string | null
+          formatted_address?: string | null
           google_photos?: string[] | null
           google_place_id?: string | null
           google_rating?: number | null
           google_reviews_count?: number | null
           id?: string
           last_updated?: string | null
+          opening_hours?: Json | null
           preschool_id: string
+          price_level?: number | null
+          types?: string[] | null
+          website_url?: string | null
         }
         Update: {
+          contact_phone?: string | null
           created_at?: string | null
+          formatted_address?: string | null
           google_photos?: string[] | null
           google_place_id?: string | null
           google_rating?: number | null
           google_reviews_count?: number | null
           id?: string
           last_updated?: string | null
+          opening_hours?: Json | null
           preschool_id?: string
+          price_level?: number | null
+          types?: string[] | null
+          website_url?: string | null
         }
         Relationships: [
           {
