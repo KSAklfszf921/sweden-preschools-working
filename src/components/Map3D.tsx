@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -6,6 +6,12 @@ import { useMapStore, Preschool } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
 import { mapboxConfig } from '@/utils/mapboxConfig';
+import { 
+  calculateOptimalView, 
+  determineViewScenario, 
+  createSmoothEasing, 
+  debounce 
+} from '@/utils/mapViewHelpers';
 
 // Mapbox token
 mapboxgl.accessToken = 'pk.eyJ1Ijoic2tvZ3N0YWRpc2FrIiwiYSI6ImNtY3BhaXRpMjA0ZGcycHBqNHM4dmlwOW0ifQ.KKHGGPnrZVjNjDdITF-_bw';
@@ -20,6 +26,8 @@ export const Map3D: React.FC<Map3DProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [popupPreschool, setPopupPreschool] = useState<Preschool | null>(null);
+  const [isMapAnimating, setIsMapAnimating] = useState(false);
+  const previousFilters = useRef<any>(null);
   const {
     filteredPreschools,
     selectedPreschool,
@@ -33,7 +41,8 @@ export const Map3D: React.FC<Map3DProps> = ({
     heatmapIntensity,
     layerVisibility,
     preschools,
-    updateVisiblePreschoolsFromViewport
+    updateVisiblePreschoolsFromViewport,
+    searchFilters
   } = useMapStore();
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -364,16 +373,75 @@ export const Map3D: React.FC<Map3DProps> = ({
     });
   }, [filteredPreschools, layerVisibility, mapZoom, setSelectedPreschool]);
 
-  // Center map when a preschool is selected
+  // Smart map view adaptation based on filtered preschools
+  const adaptMapView = useCallback(
+    debounce((preschools: Preschool[], filters: any) => {
+      if (!map.current || !map.current.isStyleLoaded() || preschools.length === 0) return;
+
+      const municipalityCount = filters.kommuner ? filters.kommuner.length : 
+        new Set(preschools.map(p => p.kommun)).size;
+      
+      const scenario = determineViewScenario(preschools.length, municipalityCount);
+      const viewOptions = calculateOptimalView(preschools, scenario);
+
+      setIsMapAnimating(true);
+
+      if (viewOptions.bounds) {
+        map.current.fitBounds(viewOptions.bounds, {
+          padding: viewOptions.padding,
+          duration: viewOptions.duration,
+          essential: viewOptions.essential,
+          pitch: viewOptions.pitch
+        });
+      } else if (viewOptions.center) {
+        map.current.flyTo({
+          center: viewOptions.center,
+          zoom: viewOptions.zoom,
+          pitch: viewOptions.pitch,
+          duration: viewOptions.duration,
+          essential: viewOptions.essential,
+          easing: createSmoothEasing(scenario)
+        });
+      }
+
+      // Reset animation state after animation completes
+      setTimeout(() => setIsMapAnimating(false), viewOptions.duration! + 100);
+    }, 300),
+    []
+  );
+
+  // React to filtered preschools changes
+  useEffect(() => {
+    const currentFilters = JSON.stringify(searchFilters);
+    
+    // Only adapt view if filters have actually changed and we have results
+    if (
+      filteredPreschools.length > 0 && 
+      currentFilters !== previousFilters.current &&
+      (searchFilters.kommuner?.length || searchFilters.query || searchFilters.nearbyMode || 
+       Object.keys(searchFilters).length > 0)
+    ) {
+      adaptMapView(filteredPreschools, searchFilters);
+      previousFilters.current = currentFilters;
+    }
+  }, [filteredPreschools, searchFilters, adaptMapView]);
+
+  // Center map when a preschool is selected (enhanced with smooth animation)
   useEffect(() => {
     if (selectedPreschool && map.current && selectedPreschool.latitud && selectedPreschool.longitud) {
+      setIsMapAnimating(true);
+      
       map.current.flyTo({
         center: [selectedPreschool.longitud, selectedPreschool.latitud],
-        zoom: 15,
+        zoom: 16,
         pitch: 45,
+        bearing: 0,
         duration: 1500,
-        essential: true
+        essential: true,
+        easing: createSmoothEasing('single')
       });
+
+      setTimeout(() => setIsMapAnimating(false), 1600);
     }
   }, [selectedPreschool]);
 
@@ -416,6 +484,21 @@ export const Map3D: React.FC<Map3DProps> = ({
             <p className="text-foreground font-medium">Laddar 3D-karta över Sverige...</p>
           </div>
         </motion.div>}
+
+      {/* Map animation indicator */}
+      {isMapAnimating && !isLoading && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-background/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border z-50"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm text-foreground font-medium">Anpassar kartvy...</span>
+          </div>
+        </motion.div>
+      )}
 
 
       {/* Enhanced preschool count with context */}
