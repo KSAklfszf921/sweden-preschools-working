@@ -148,20 +148,12 @@ export const Map3D: React.FC<Map3DProps> = ({
         map.current.removeLayer(layerId);
       }
     });
-    
     if (map.current?.getSource('preschools')) {
       map.current.removeSource('preschools');
     }
 
     // Filter out preschools without valid coordinates (handle null values properly)
-    const validPreschools = filteredPreschools.filter(p => 
-      p.latitud !== null && p.longitud !== null && 
-      p.latitud !== 0 && p.longitud !== 0 && 
-      typeof p.latitud === 'number' && typeof p.longitud === 'number' &&
-      p.latitud >= 55.0 && p.latitud <= 69.1 && 
-      p.longitud >= 10.9 && p.longitud <= 24.2
-    );
-    
+    const validPreschools = filteredPreschools.filter(p => p.latitud !== null && p.longitud !== null && p.latitud !== 0 && p.longitud !== 0 && typeof p.latitud === 'number' && typeof p.longitud === 'number' && p.latitud >= 55.0 && p.latitud <= 69.1 && p.longitud >= 10.9 && p.longitud <= 24.2);
     console.log(`Rendering ${validPreschools.length}/${filteredPreschools.length} preschools on map`);
     if (validPreschools.length === 0) return;
 
@@ -191,7 +183,7 @@ export const Map3D: React.FC<Map3DProps> = ({
 
     // Determine cluster settings based on zoom level
     const shouldCluster = currentZoom < 10;
-    
+
     // Check if source exists, if so update it, otherwise add new source
     if (map.current.getSource('preschools')) {
       const source = map.current.getSource('preschools') as mapboxgl.GeoJSONSource;
@@ -202,11 +194,11 @@ export const Map3D: React.FC<Map3DProps> = ({
         type: 'geojson',
         data: geojsonData,
         cluster: shouldCluster,
-        clusterMaxZoom: 10, // Max zoom to cluster points on
+        clusterMaxZoom: 10,
+        // Max zoom to cluster points on
         clusterRadius: 50 // Radius of each cluster when clustering points
       });
     }
-
     if (shouldCluster) {
       // Add cluster circles
       map.current.addLayer({
@@ -215,23 +207,17 @@ export const Map3D: React.FC<Map3DProps> = ({
         source: 'preschools',
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            'hsl(210, 60%, 55%)', // Small clusters - blue
-            10,
-            'hsl(140, 40%, 45%)', // Medium clusters - green
-            30,
-            'hsl(25, 70%, 55%)'   // Large clusters - orange
+          'circle-color': ['step', ['get', 'point_count'], 'hsl(210, 60%, 55%)',
+          // Small clusters - blue
+          10, 'hsl(140, 40%, 45%)',
+          // Medium clusters - green
+          30, 'hsl(25, 70%, 55%)' // Large clusters - orange
           ],
-          'circle-radius': [
-            'step',
-            ['get', 'point_count'],
-            25, // Small clusters
-            10,
-            35, // Medium clusters
-            30,
-            50  // Large clusters
+          'circle-radius': ['step', ['get', 'point_count'], 25,
+          // Small clusters
+          10, 35,
+          // Medium clusters
+          30, 50 // Large clusters
           ],
           'circle-stroke-width': 3,
           'circle-stroke-color': '#ffffff',
@@ -256,28 +242,23 @@ export const Map3D: React.FC<Map3DProps> = ({
       });
 
       // Add click handler for clusters to zoom in
-      map.current.on('click', 'preschools-clusters', (e) => {
+      map.current.on('click', 'preschools-clusters', e => {
         const features = map.current!.queryRenderedFeatures(e.point, {
           layers: ['preschools-clusters']
         });
-        
         const clusterId = features[0].properties!.cluster_id;
         const source = map.current!.getSource('preschools') as mapboxgl.GeoJSONSource;
-        
         source.getClusterExpansionZoom(clusterId, (err, zoom) => {
           if (err) return;
-          
           map.current!.easeTo({
             center: (features[0].geometry as any).coordinates,
             zoom: zoom
           });
         });
       });
-
       map.current.on('mouseenter', 'preschools-clusters', () => {
         if (map.current) map.current.getCanvas().style.cursor = 'pointer';
       });
-
       map.current.on('mouseleave', 'preschools-clusters', () => {
         if (map.current) map.current.getCanvas().style.cursor = '';
       });
@@ -290,50 +271,46 @@ export const Map3D: React.FC<Map3DProps> = ({
       source: 'preschools',
       filter: shouldCluster ? ['!', ['has', 'point_count']] : ['all'],
       paint: {
-        'circle-color': [
-          'case',
-          // Color by Google rating if available
-          ['>', ['get', 'google_rating'], 4.5],
-          'hsl(120, 70%, 45%)', // Green for excellent rating
-          ['>', ['get', 'google_rating'], 4.0],
-          'hsl(60, 70%, 50%)',  // Yellow for good rating
-          ['>', ['get', 'google_rating'], 0],
-          'hsl(25, 70%, 55%)',  // Orange for lower rating
-          // Fallback to ownership type if no rating
-          ['==', ['get', 'huvudman'], 'Kommunal'],
-          'hsl(210, 70%, 50%)', // Blue for municipal
-          ['==', ['get', 'huvudman'], 'Privat'],
-          'hsl(140, 60%, 45%)', // Green for private
-          ['==', ['get', 'huvudman'], 'Fristående'],
-          'hsl(140, 60%, 45%)', // Green for independent (same as private)
-          'hsl(25, 70%, 55%)'   // Orange for others/unknown
+        'circle-color': ['case',
+        // Color by Google rating if available
+        ['>', ['get', 'google_rating'], 4.5], 'hsl(120, 70%, 45%)',
+        // Green for excellent rating
+        ['>', ['get', 'google_rating'], 4.0], 'hsl(60, 70%, 50%)',
+        // Yellow for good rating
+        ['>', ['get', 'google_rating'], 0], 'hsl(25, 70%, 55%)',
+        // Orange for lower rating
+        // Fallback to ownership type if no rating
+        ['==', ['get', 'huvudman'], 'Kommunal'], 'hsl(210, 70%, 50%)',
+        // Blue for municipal
+        ['==', ['get', 'huvudman'], 'Privat'], 'hsl(140, 60%, 45%)',
+        // Green for private
+        ['==', ['get', 'huvudman'], 'Fristående'], 'hsl(140, 60%, 45%)',
+        // Green for independent (same as private)
+        'hsl(25, 70%, 55%)' // Orange for others/unknown
         ],
-        'circle-radius': [
-          'case',
-          // Larger radius for highly rated preschools
-          ['>', ['get', 'google_rating'], 4.5],
-          [
-            'interpolate',
-            ['linear'],
-            ['get', 'antal_barn'],
-            0, 22,    // Minimum size for highly rated
-            20, 26,   // Small highly rated preschools
-            50, 32,   // Medium highly rated preschools  
-            100, 38,  // Large highly rated preschools
-            200, 44   // Very large highly rated preschools
-          ],
-          // Standard radius for others
-          [
-            'interpolate',
-            ['linear'],
-            ['get', 'antal_barn'],
-            0, 18,    // Minimum size
-            20, 20,   // Small preschools
-            50, 25,   // Medium preschools  
-            100, 30,  // Large preschools
-            200, 35   // Very large preschools
-          ]
+        'circle-radius': ['case',
+        // Larger radius for highly rated preschools
+        ['>', ['get', 'google_rating'], 4.5], ['interpolate', ['linear'], ['get', 'antal_barn'], 0, 22,
+        // Minimum size for highly rated
+        20, 26,
+        // Small highly rated preschools
+        50, 32,
+        // Medium highly rated preschools  
+        100, 38,
+        // Large highly rated preschools
+        200, 44 // Very large highly rated preschools
         ],
+        // Standard radius for others
+        ['interpolate', ['linear'], ['get', 'antal_barn'], 0, 18,
+        // Minimum size
+        20, 20,
+        // Small preschools
+        50, 25,
+        // Medium preschools  
+        100, 30,
+        // Large preschools
+        200, 35 // Very large preschools
+        ]],
         'circle-stroke-width': 3,
         'circle-stroke-color': '#ffffff',
         'circle-opacity': 0.85
@@ -363,7 +340,7 @@ export const Map3D: React.FC<Map3DProps> = ({
     });
 
     // Add click handlers for individual markers
-    map.current.on('click', 'preschools-unclustered', (e) => {
+    map.current.on('click', 'preschools-unclustered', e => {
       if (e.features && e.features[0]) {
         const feature = e.features[0];
         const preschoolId = feature.properties?.id;
@@ -374,15 +351,12 @@ export const Map3D: React.FC<Map3DProps> = ({
         }
       }
     });
-
     map.current.on('mouseenter', 'preschools-unclustered', () => {
       if (map.current) map.current.getCanvas().style.cursor = 'pointer';
     });
-
     map.current.on('mouseleave', 'preschools-unclustered', () => {
       if (map.current) map.current.getCanvas().style.cursor = '';
     });
-
   }, [filteredPreschools, layerVisibility, mapZoom, setSelectedPreschool]);
 
   // Center map when a preschool is selected
@@ -440,13 +414,6 @@ export const Map3D: React.FC<Map3DProps> = ({
 
 
       {/* Enhanced preschool count with context */}
-      <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg px-4 py-2">
-        <p className="text-sm font-medium text-foreground">
-          {filteredPreschools.filter(p => p.latitud !== null && p.longitud !== null && p.latitud !== 0 && p.longitud !== 0 && typeof p.latitud === 'number' && typeof p.longitud === 'number' && p.latitud >= 55.0 && p.latitud <= 69.1 && p.longitud >= 10.9 && p.longitud <= 24.2).length} av {filteredPreschools.length} förskolor på kartan
-        </p>
-        {filteredPreschools.length > filteredPreschools.filter(p => p.latitud !== null && p.longitud !== null && p.latitud !== 0 && p.longitud !== 0 && typeof p.latitud === 'number' && typeof p.longitud === 'number').length && <p className="text-xs text-muted-foreground">
-            {filteredPreschools.length - filteredPreschools.filter(p => p.latitud !== null && p.longitud !== null && p.latitud !== 0 && p.longitud !== 0 && typeof p.latitud === 'number' && typeof p.longitud === 'number').length} saknar koordinater
-          </p>}
-      </div>
+      
     </div>;
 };
