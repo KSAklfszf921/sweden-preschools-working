@@ -19,9 +19,11 @@ const MAPBOX_TOKEN = 'pk.eyJ1Ijoic2tvZ3N0YWRpc2FrIiwiYSI6ImNtY3BhaXRpMjA0ZGcycHB
 mapboxgl.accessToken = MAPBOX_TOKEN;
 interface Map3DProps {
   className?: string;
+  onMapReady?: (map: mapboxgl.Map) => void;
 }
 export const Map3D: React.FC<Map3DProps> = ({
-  className
+  className,
+  onMapReady
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -99,6 +101,11 @@ export const Map3D: React.FC<Map3DProps> = ({
       // Use standard map colors - removed custom color overrides
 
       setIsLoading(false);
+      
+      // Notify parent that map is ready
+      if (onMapReady) {
+        onMapReady(map.current);
+      }
     });
 
     // Add Swedish language support with fallback to English

@@ -6,10 +6,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useMapStore } from '@/stores/mapStore';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { PreschoolDetailsModal } from './PreschoolDetailsModal';
+
 
 interface EnhancedPreschoolListProps {
   className?: string;
+  onShowDetails?: (preschool: any) => void;
 }
 
 export const EnhancedPreschoolList: React.FC<EnhancedPreschoolListProps> = ({ className }) => {
@@ -178,15 +179,11 @@ export const EnhancedPreschoolList: React.FC<EnhancedPreschoolListProps> = ({ cl
                                       <Eye className="h-3 w-3" />
                                     </Button>
                                   </DialogTrigger>
-                                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                                    {selectedPreschoolForModal && (
-                                      <PreschoolDetailsModal 
-                                        preschool={selectedPreschoolForModal}
-                                        onClose={() => setSelectedPreschoolForModal(null)}
-                                        isOpen={true}
-                                      />
-                                    )}
-                                  </DialogContent>
+                                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                     <div className="p-4">
+                                       <p>Detaljerad information kommer snart...</p>
+                                     </div>
+                                   </DialogContent>
                                 </Dialog>
                               </div>
                             </div>

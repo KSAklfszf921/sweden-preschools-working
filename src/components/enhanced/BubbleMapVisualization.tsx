@@ -208,22 +208,22 @@ export const BubbleMapVisualization: React.FC<BubbleMapVisualizationProps> = ({ 
       }
     };
 
-    map.on('click', 'preschool-bubbles', handleBubbleClick);
-    map.on('mouseenter', 'preschool-bubbles', () => {
+    const handleMouseEnter = () => {
       map.getCanvas().style.cursor = 'pointer';
-    });
-    map.on('mouseleave', 'preschool-bubbles', () => {
+    };
+
+    const handleMouseLeave = () => {
       map.getCanvas().style.cursor = '';
-    });
+    };
+
+    map.on('click', 'preschool-bubbles', handleBubbleClick);
+    map.on('mouseenter', 'preschool-bubbles', handleMouseEnter);
+    map.on('mouseleave', 'preschool-bubbles', handleMouseLeave);
 
     return () => {
       map.off('click', 'preschool-bubbles', handleBubbleClick);
-      try {
-        map.off('mouseenter', 'preschool-bubbles');
-        map.off('mouseleave', 'preschool-bubbles');
-      } catch (error) {
-        console.warn('Error removing mouse listeners:', error);
-      }
+      map.off('mouseenter', 'preschool-bubbles', handleMouseEnter);
+      map.off('mouseleave', 'preschool-bubbles', handleMouseLeave);
     };
   }, [map, filteredPreschools, mapZoom]);
 
