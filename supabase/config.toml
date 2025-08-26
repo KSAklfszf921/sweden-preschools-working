@@ -1,1 +1,9 @@
 project_id = "zfeqsdtddvelapbrwlol"
+
+[auth]
+enabled = true
+[auth.email]
+enabled = true
+
+[functions.google-places]
+verify_jwt = false
