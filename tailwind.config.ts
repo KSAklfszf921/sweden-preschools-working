@@ -59,6 +59,12 @@ export default {
 				swedish: {
 					flag: 'hsl(var(--swedish-flag))'
 				},
+				heatmap: {
+					low: 'hsl(var(--heatmap-low))',
+					medium: 'hsl(var(--heatmap-medium))',
+					high: 'hsl(var(--heatmap-high))',
+					intense: 'hsl(var(--heatmap-intense))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

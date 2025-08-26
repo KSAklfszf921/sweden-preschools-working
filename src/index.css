@@ -51,6 +51,12 @@ All colors MUST be HSL.
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
+    /* Heatmap colors */
+    --heatmap-low: 207 89% 85%;
+    --heatmap-medium: 207 89% 60%;
+    --heatmap-high: 207 89% 35%;
+    --heatmap-intense: 0 84% 60%;
+
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;

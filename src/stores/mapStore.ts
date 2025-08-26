@@ -30,6 +30,29 @@ export interface SearchFilters {
   center?: LngLatLike;
 }
 
+export type HeatmapType = 'density' | 'staff' | 'quality' | 'rating';
+
+export interface LayerVisibility {
+  heatmap: boolean;
+  clusters: boolean;
+  markers: boolean;
+  communeBorders: boolean;
+}
+
+export interface CommuneStats {
+  kommun: string;
+  count: number;
+  avg_staff_density: number;
+  avg_teacher_exam: number;
+  avg_google_rating: number;
+}
+
+export interface StatisticsData {
+  totalPreschools: number;
+  communeStats: CommuneStats[];
+  selectedCommuneData?: CommuneStats;
+}
+
 interface MapState {
   preschools: Preschool[];
   filteredPreschools: Preschool[];
@@ -40,6 +63,22 @@ interface MapState {
   mapZoom: number;
   showClusters: boolean;
   
+  // Heatmap states
+  heatmapType: HeatmapType;
+  heatmapIntensity: number;
+  showHeatmap: boolean;
+  
+  // Layer visibility
+  layerVisibility: LayerVisibility;
+  
+  // Statistics and insights
+  selectedCommune: string | null;
+  statisticsData: StatisticsData | null;
+  showStatistics: boolean;
+  
+  // Performance
+  performanceMode: 'high' | 'medium' | 'low';
+  
   // Actions
   setPreschools: (preschools: Preschool[]) => void;
   setFilteredPreschools: (preschools: Preschool[]) => void;
@@ -49,6 +88,23 @@ interface MapState {
   setMapCenter: (center: LngLatLike) => void;
   setMapZoom: (zoom: number) => void;
   setShowClusters: (show: boolean) => void;
+  
+  // Heatmap actions
+  setHeatmapType: (type: HeatmapType) => void;
+  setHeatmapIntensity: (intensity: number) => void;
+  setShowHeatmap: (show: boolean) => void;
+  
+  // Layer actions
+  setLayerVisibility: (layer: keyof LayerVisibility, visible: boolean) => void;
+  
+  // Statistics actions
+  setSelectedCommune: (commune: string | null) => void;
+  setStatisticsData: (data: StatisticsData) => void;
+  setShowStatistics: (show: boolean) => void;
+  
+  // Performance actions
+  setPerformanceMode: (mode: 'high' | 'medium' | 'low') => void;
+  
   applyFilters: () => void;
 }
 
@@ -61,6 +117,27 @@ export const useMapStore = create<MapState>((set, get) => ({
   mapCenter: [15.0, 62.0], // Center of Sweden
   mapZoom: 5,
   showClusters: true,
+  
+  // Heatmap defaults
+  heatmapType: 'density',
+  heatmapIntensity: 1,
+  showHeatmap: false,
+  
+  // Layer visibility defaults
+  layerVisibility: {
+    heatmap: false,
+    clusters: true,
+    markers: true,
+    communeBorders: false,
+  },
+  
+  // Statistics defaults
+  selectedCommune: null,
+  statisticsData: null,
+  showStatistics: false,
+  
+  // Performance defaults
+  performanceMode: 'high',
 
   setPreschools: (preschools) => {
     set({ preschools });
@@ -83,6 +160,33 @@ export const useMapStore = create<MapState>((set, get) => ({
   setMapZoom: (mapZoom) => set({ mapZoom }),
 
   setShowClusters: (showClusters) => set({ showClusters }),
+  
+  // Heatmap actions
+  setHeatmapType: (heatmapType) => set({ heatmapType }),
+  
+  setHeatmapIntensity: (heatmapIntensity) => set({ heatmapIntensity }),
+  
+  setShowHeatmap: (showHeatmap) => set({ showHeatmap }),
+  
+  // Layer actions
+  setLayerVisibility: (layer, visible) => {
+    set((state) => ({
+      layerVisibility: {
+        ...state.layerVisibility,
+        [layer]: visible,
+      },
+    }));
+  },
+  
+  // Statistics actions
+  setSelectedCommune: (selectedCommune) => set({ selectedCommune }),
+  
+  setStatisticsData: (statisticsData) => set({ statisticsData }),
+  
+  setShowStatistics: (showStatistics) => set({ showStatistics }),
+  
+  // Performance actions
+  setPerformanceMode: (performanceMode) => set({ performanceMode }),
 
   applyFilters: () => {
     const { preschools, searchFilters } = get();
