@@ -76,7 +76,7 @@ const Index = () => {
       {showLanding && <LandingAnimation onComplete={handleLandingComplete} />}
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" id="main-content">
-        {/* Header */}
+        {/* Header - Mobile optimized */}
         <motion.header initial={{
           opacity: 0,
           y: -20
@@ -86,21 +86,21 @@ const Index = () => {
         }} transition={{
           delay: showLanding ? 0 : 0.5
         }} className="relative z-40 bg-gradient-to-r from-primary/5 via-background to-secondary/5 border-b border-border/20 backdrop-blur-sm">
-          <div className="container mx-auto px-6 py-4">
+          <div className="container mx-auto px-4 md:px-6 py-2 md:py-4">
             <div className="flex items-center justify-between">
               {/* Logo and Title Section */}
-              <div className="flex items-center space-x-4">
-                <img src={preschoolIcon} alt="Sveriges Förskolor" className="w-12 h-12 rounded-xl shadow-lg" />
+              <div className="flex items-center space-x-2 md:space-x-4">
+                <img src={preschoolIcon} alt="Sveriges Förskolor" className="w-8 h-8 md:w-12 md:h-12 rounded-xl shadow-lg" />
                 <div>
-                  <h1 className="text-3xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-[#000a0e]/[0.71] font-semibold text-justify mx-0 py-[5px] my-[5px]">Förskolor i Sverige</h1>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">Hitta och jämför förskolor – i hela landet</p>
+                  <h1 className="text-lg md:text-3xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-[#000a0e]/[0.71] font-semibold text-justify mx-0 py-[2px] md:py-[5px] my-[2px] md:my-[5px]">Förskolor i Sverige</h1>
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium mt-0.5 md:mt-1 hidden sm:block">Hitta och jämför förskolor – i hela landet</p>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3">
+              {/* Action Buttons - Desktop only */}
+              <div className="hidden md:flex items-center gap-3">
                 <StatisticsButton />
-                <Button variant="outline" size="sm" className="hidden sm:flex items-center gap-2 bg-background/50 hover:bg-accent/50 relative" onClick={() => setIsOpen(true)}>
+                <Button variant="outline" size="sm" className="items-center gap-2 bg-background/50 hover:bg-accent/50 relative" onClick={() => setIsOpen(true)}>
                   <GitCompare className="w-4 h-4" />
                   Jämför
                   {selectedPreschools.length > 0 && <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center">
@@ -109,28 +109,35 @@ const Index = () => {
                 </Button>
                 <ThemeToggle />
               </div>
+
+              {/* Mobile only theme toggle */}
+              <div className="md:hidden">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </motion.header>
 
       {/* Main content */}
-      <div className="relative">
-          {/* Smart Search Bar */}
-          <motion.div initial={{
-            opacity: 0,
-            x: -20
-          }} animate={{
-            opacity: showLanding ? 0 : 1,
-            x: 0
-          }} transition={{
-            delay: showLanding ? 0 : 1.0
-          }} className="absolute left-4 top-4 z-30">
-        <ErrorBoundary>
-          <LoadingBoundary>
-            <OptimizedSearchBar />
-          </LoadingBoundary>
-        </ErrorBoundary>
-          </motion.div>
+      <div className={`relative ${isMobile ? 'pb-16' : ''}`}>
+          {/* Smart Search Bar - Desktop only */}
+          {!isMobile && (
+            <motion.div initial={{
+              opacity: 0,
+              x: -20
+            }} animate={{
+              opacity: showLanding ? 0 : 1,
+              x: 0
+            }} transition={{
+              delay: showLanding ? 0 : 1.0
+            }} className="absolute left-4 top-4 z-30">
+              <ErrorBoundary>
+                <LoadingBoundary>
+                  <OptimizedSearchBar />
+                </LoadingBoundary>
+              </ErrorBoundary>
+            </motion.div>
+          )}
 
 
           {/* Preschool List Panel - right side */}
@@ -147,7 +154,7 @@ const Index = () => {
           </motion.div>
 
           {/* 3D Map with enhanced transitions */}
-          <div className="h-screen">
+          <div className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'}`}>
             <MapTransitions isMapVisible={isMapVisible}>
               <Map3D className="w-full h-full" />
               <StatisticsPopup />
