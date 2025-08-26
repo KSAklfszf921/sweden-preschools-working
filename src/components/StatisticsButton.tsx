@@ -15,9 +15,16 @@ export const StatisticsButton: React.FC = () => {
   const getButtonText = () => {
     if (showStatistics) return 'Dölj statistik';
     if (hasActiveFilters) {
-      if (searchFilters.kommuner && searchFilters.kommuner.length > 0) return `Statistik för ${searchFilters.kommuner[0]}`;
+      if (searchFilters.kommuner && searchFilters.kommuner.length > 0) {
+        if (searchFilters.kommuner.length === 1) {
+          return `Statistik för ${searchFilters.kommuner[0]}`;
+        } else {
+          return `Statistik för ${searchFilters.kommuner.length} kommuner`;
+        }
+      }
       if (searchFilters.radius) return 'Statistik för närområdet';
       if (searchFilters.huvudman) return `Statistik för ${searchFilters.huvudman.toLowerCase()}a`;
+      if (searchFilters.query) return 'Statistik för sökningen';
       return 'Statistik för filter';
     }
     return 'Visa statistik';

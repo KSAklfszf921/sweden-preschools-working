@@ -226,7 +226,7 @@ export const useMapStore = create<MapState>((set, get) => ({
           const kommun = filters.kommuner[0];
           const kommunCenter = getKommunCenter(kommun);
           if (kommunCenter) {
-            set({ mapCenter: kommunCenter, mapZoom: 9 });
+            set({ mapCenter: kommunCenter, mapZoom: 11 });
           } else {
             // Fallback: calculate center from preschools in this municipality
             const kommunPreschools = updatedState.filteredPreschools.filter(p => p.kommun === kommun);
@@ -236,7 +236,20 @@ export const useMapStore = create<MapState>((set, get) => ({
               if (lats.length > 0) {
                 const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
                 const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
-                set({ mapCenter: [centerLng, centerLat], mapZoom: 10 });
+                
+                // Calculate appropriate zoom based on spread within municipality
+                const latSpread = Math.max(...lats) - Math.min(...lats);
+                const lngSpread = Math.max(...lngs) - Math.min(...lngs);
+                const maxSpread = Math.max(latSpread, lngSpread);
+                
+                let zoom = 12;
+                if (maxSpread < 0.005) zoom = 15;
+                else if (maxSpread < 0.01) zoom = 14;
+                else if (maxSpread < 0.02) zoom = 13;
+                else if (maxSpread < 0.05) zoom = 12;
+                else zoom = 11;
+                
+                set({ mapCenter: [centerLng, centerLat], mapZoom: zoom });
               }
             }
           }
@@ -250,13 +263,15 @@ export const useMapStore = create<MapState>((set, get) => ({
             const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
             const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
             
-            // Calculate zoom based on spread
+            // Calculate zoom based on spread for multiple municipalities
             const latSpread = Math.max(...lats) - Math.min(...lats);
             const lngSpread = Math.max(...lngs) - Math.min(...lngs);
             const maxSpread = Math.max(latSpread, lngSpread);
             
             let zoom = 8;
-            if (maxSpread < 0.1) zoom = 10;
+            if (maxSpread < 0.05) zoom = 11;
+            else if (maxSpread < 0.1) zoom = 10;
+            else if (maxSpread < 0.3) zoom = 9;
             else if (maxSpread < 0.5) zoom = 8;
             else if (maxSpread < 1.0) zoom = 7;
             else zoom = 6;
@@ -265,15 +280,41 @@ export const useMapStore = create<MapState>((set, get) => ({
           }
         }
       } else if (filters.center && filters.nearbyMode) {
-        // Center on user location with appropriate zoom
-        set({ mapCenter: filters.center, mapZoom: 12 });
+        // Center on user location with appropriate zoom for nearby search
+        set({ mapCenter: filters.center, mapZoom: 13 });
       } else if (filters.query && !filters.kommuner) {
         // If searching by text, try to find a preschool to center on
         const filteredPreschools = updatedState.filteredPreschools;
         if (filteredPreschools.length > 0) {
-          const preschool = filteredPreschools[0];
-          if (preschool.longitud && preschool.latitud) {
-            set({ mapCenter: [preschool.longitud, preschool.latitud], mapZoom: 14 });
+          if (filteredPreschools.length === 1) {
+            // Single result - zoom in close
+            const preschool = filteredPreschools[0];
+            if (preschool.longitud && preschool.latitud) {
+              set({ mapCenter: [preschool.longitud, preschool.latitud], mapZoom: 15 });
+            }
+          } else {
+            // Multiple results - calculate best fit
+            const lats = filteredPreschools.map(p => p.latitud).filter(Boolean);
+            const lngs = filteredPreschools.map(p => p.longitud).filter(Boolean);
+            
+            if (lats.length > 0) {
+              const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+              const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+              
+              const latSpread = Math.max(...lats) - Math.min(...lats);
+              const lngSpread = Math.max(...lngs) - Math.min(...lngs);
+              const maxSpread = Math.max(latSpread, lngSpread);
+              
+              let zoom = 12;
+              if (maxSpread < 0.005) zoom = 15;
+              else if (maxSpread < 0.01) zoom = 14;
+              else if (maxSpread < 0.02) zoom = 13;
+              else if (maxSpread < 0.05) zoom = 12;
+              else if (maxSpread < 0.1) zoom = 11;
+              else zoom = 10;
+              
+              set({ mapCenter: [centerLng, centerLat], mapZoom: zoom });
+            }
           }
         }
       } else if (updatedState.filteredPreschools.length > 0 && Object.keys(newFilters).length > 0) {

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useMapStore } from '@/stores/mapStore';
 import { motion } from 'framer-motion';
 import { useDebounce } from '@/hooks/useDebounce';
+import { ActiveFiltersDisplay } from './ActiveFiltersDisplay';
 interface OptimizedSearchBarProps {
   className?: string;
 }
@@ -180,6 +181,8 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
   }, [setMapCenter, setMapZoom, setSearchFilters]);
   const clearSearch = useCallback(() => {
     setSearchQuery('');
+    setShowSuggestions(false);
+    setSuggestions([]);
     clearFilters();
     setUserLocation(null);
   }, [clearFilters]);
@@ -217,18 +220,37 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
               <Button onClick={() => setIsExpanded(true)} variant="ghost" size="sm" className="h-8 px-2 hover-scale transition-all duration-200 font-heading">
                 <Search className="h-4 w-4 mr-1 text-primary" />
                 <span className="font-medium text-base">Sök förskolor</span>
-                {hasActiveFilters && <Badge variant="secondary" className="ml-2 h-4 px-1 text-xs">
+                {hasActiveFilters && <Badge variant="secondary" className="h-4 px-1 text-xs">
                     {filterCount}
                   </Badge>}
                 <ChevronDown className="h-4 w-4 ml-1" />
               </Button>
+              
+              {/* Quick clear button when filters are active */}
+              {hasActiveFilters && (
+                <Button
+                  onClick={clearSearch}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 hover:bg-destructive/10"
+                  title="Rensa alla filter"
+                >
+                  <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                </Button>
+              )}
             </div>
             
             
+            {/* Active filters display */}
+            {hasActiveFilters && (
+              <div className="pt-2 border-t border-border/50">
+                <ActiveFiltersDisplay />
+              </div>
+            )}
           </div>
         </Card>
       </motion.div>;
-  }
+}
   return <motion.div initial={{
     opacity: 0,
     x: -20
@@ -416,8 +438,23 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
               {isLocating ? "Hämtar position..." : userLocation ? "Position aktiv" : "Hitta närliggande"}
             </Button>
 
-            {/* Results count */}
-            
+            {/* Results count and clear all */}
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                {filteredPreschools.length.toLocaleString()} förskolor hittades
+              </div>
+              {hasActiveFilters && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearSearch}
+                  className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Rensa allt
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </Card>
