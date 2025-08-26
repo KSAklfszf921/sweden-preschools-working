@@ -26,10 +26,10 @@ const LayerControl: React.FC<LayerControlProps> = ({ className }) => {
   } = useMapStore();
 
   const heatmapTypes = [
-    { value: 'density', label: 'Förskoltäthet', icon: MapPin },
-    { value: 'staff', label: 'Personaltäthet', icon: Map },
-    { value: 'quality', label: 'Lärarexamen %', icon: Square },
-    { value: 'rating', label: 'Google Betyg', icon: Square },
+    { value: 'density', label: '🔥 Förskoltäthet', icon: MapPin, description: 'Antal förskolor per område' },
+    { value: 'staff', label: '👥 Personaltäthet', icon: Map, description: 'Vuxen-barn ratio (grön = bättre)' },
+    { value: 'quality', label: '🎓 Lärarexamen %', icon: Square, description: 'Andel med förskollärarexamen' },
+    { value: 'rating', label: '⭐ Google Betyg', icon: Square, description: 'Genomsnittligt betyg' },
   ] as const;
 
   return (
@@ -78,7 +78,10 @@ const LayerControl: React.FC<LayerControlProps> = ({ className }) => {
                     <SelectContent>
                       {heatmapTypes.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
-                          {type.label}
+                          <div className="flex flex-col">
+                            <span className="font-medium">{type.label}</span>
+                            <span className="text-xs text-muted-foreground">{type.description}</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

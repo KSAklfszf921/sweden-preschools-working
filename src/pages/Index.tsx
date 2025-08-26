@@ -4,6 +4,8 @@ import { SearchFilters } from '@/components/SearchFilters';
 import { PreschoolDetails } from '@/components/PreschoolDetails';
 import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { AdminPanel } from '@/components/AdminPanel';
+import { StatisticsOverlay } from '@/components/StatisticsOverlay';
+import LayerControl from '@/components/LayerControl';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LandingAnimation } from '@/components/LandingAnimation';
 import { usePreschools } from '@/hooks/usePreschools';
@@ -97,6 +99,8 @@ const Index = () => {
             className="h-screen"
           >
             <Map3D className="w-full h-full" />
+            <StatisticsOverlay />
+            <LayerControl />
           </motion.div>
 
           {/* Admin Panel Toggle - Bottom Right */}
