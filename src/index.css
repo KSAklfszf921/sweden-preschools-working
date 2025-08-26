@@ -8,75 +8,73 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 220 20% 20%;
-
+    /* Core Colors - Refined Swedish nature palette */
+    --background: 216 20% 99%;
+    --foreground: 224 71% 4%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 20%;
-
+    --card-foreground: 224 71% 4%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 20%;
-
-    --primary: 210 85% 55%;
+    --popover-foreground: 224 71% 4%;
+    
+    --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 210 85% 70%;
-
-    --secondary: 210 15% 92%;
-    --secondary-foreground: 220 20% 20%;
-
-    --muted: 220 8% 96%;
-    --muted-foreground: 220 10% 40%;
-
-    --accent: 210 15% 92%;
-    --accent-foreground: 220 20% 20%;
-
-    /* Swedish Nature-Inspired Colors */
-    --forest: 130 35% 25%;
-    --lake: 210 85% 35%;
-    --sky: 200 75% 60%;
-    --mountain: 220 15% 45%;
-    --meadow: 85 40% 50%;
+    --primary-glow: 142 76% 50%;
     
-    --nordic-blue: 207 89% 42%;
-    --nordic-light: 207 50% 95%;
-    --swedish-flag: 47 100% 50%;
-
-    --destructive: 0 70% 55%;
+    --secondary: 210 30% 96%;
+    --secondary-foreground: 224 71% 4%;
+    
+    --muted: 210 30% 94%;
+    --muted-foreground: 215 20% 45%;
+    
+    --accent: 210 30% 94%;
+    --accent-foreground: 224 71% 4%;
+    
+    /* Swedish Nature Colors - refined */
+    --forest: 142 76% 36%;
+    --lake: 200 85% 45%;
+    --sky: 210 100% 90%;
+    --mountain: 220 15% 65%;
+    --meadow: 84 65% 55%;
+    --nordic-blue: 214 100% 50%;
+    --nordic-light: 210 30% 96%;
+    --swedish-flag: 214 100% 50%;
+    
+    --destructive: 0 85% 60%;
     --destructive-foreground: 0 0% 100%;
-
-    --border: 220 8% 90%;
-    --input: 220 8% 98%;
-    --ring: 210 85% 55%;
-
-    /* Modern gradients with glassmorphism */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-nordic: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--secondary)));
-    --gradient-hero: linear-gradient(135deg, hsl(220 15% 85%), hsl(200 25% 88%), hsl(45 20% 90%));
-    --gradient-glass: linear-gradient(135deg, hsl(var(--background) / 0.8), hsl(var(--muted) / 0.6));
     
-    /* Modern glassmorphism shadows */
-    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
-    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.4);
-    --shadow-card: 0 4px 15px -3px hsl(var(--foreground) / 0.1);
-    --shadow-popup: 0 8px 25px -5px hsl(var(--foreground) / 0.2);
-    --shadow-glass: 0 8px 32px 0 hsl(var(--foreground) / 0.1);
-    --shadow-soft: 0 2px 8px 0 hsl(var(--foreground) / 0.08);
+    --border: 214 25% 88%;
+    --input: 214 25% 90%;
+    --ring: 142 76% 36%;
     
-    /* Glassmorphism variables */
-    --glass-bg: hsl(var(--background) / 0.85);
-    --glass-border: hsl(var(--border) / 0.2);
-    --glass-blur: blur(12px);
+    /* Design tokens */
+    --radius: 16px;
+    --radius-sm: 8px;
+    --radius-lg: 24px;
     
+    /* Refined gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--forest)) 0%, hsl(var(--lake)) 100%);
+    --gradient-nordic: linear-gradient(180deg, hsl(var(--sky)) 0%, hsl(var(--nordic-light)) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(var(--forest)) 0%, hsl(var(--lake)) 50%, hsl(var(--sky)) 100%);
+    --gradient-subtle: linear-gradient(145deg, hsl(var(--background)) 0%, hsl(var(--accent)) 100%);
+    
+    /* Enhanced shadows with better depth */
+    --shadow-nordic: 0 10px 40px -12px hsla(var(--forest), 0.25);
+    --shadow-glow: 0 0 32px hsla(var(--primary), 0.35);
+    --shadow-soft: 0 2px 12px -4px hsla(var(--foreground), 0.12);
+    --shadow-elegant: 0 8px 32px -8px hsla(var(--primary), 0.15);
+    
+    /* Smooth transitions with better easing */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-
+    --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-spring: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
     /* Heatmap colors */
-    --heatmap-low: 207 89% 85%;
-    --heatmap-medium: 207 89% 60%;
-    --heatmap-high: 207 89% 35%;
-    --heatmap-intense: 0 84% 60%;
-
-    --radius: 0.5rem;
+    --heatmap-low: 195 100% 85%;
+    --heatmap-medium: 142 76% 50%;
+    --heatmap-high: 35 100% 55%;
+    --heatmap-intense: 0 85% 60%;
 
     --sidebar-background: 0 0% 98%;
 
@@ -96,58 +94,56 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 220 39% 6%;
-    --foreground: 207 27% 96%;
-
-    --card: 220 39% 8%;
-    --card-foreground: 207 27% 96%;
-
-    --popover: 220 39% 8%;
-    --popover-foreground: 207 27% 96%;
-
-    --primary: 207 89% 55%;
-    --primary-foreground: 220 39% 11%;
-    --primary-glow: 207 89% 70%;
-
-    --secondary: 220 39% 12%;
-    --secondary-foreground: 207 27% 96%;
-
-    --muted: 220 39% 12%;
-    --muted-foreground: 207 10% 60%;
-
-    --accent: 220 39% 12%;
-    --accent-foreground: 207 27% 96%;
-
-    /* Swedish Nature-Inspired Colors - Dark Mode */
-    --forest: 130 35% 35%;
-    --lake: 210 85% 55%;
-    --sky: 200 75% 70%;
-    --mountain: 220 15% 65%;
-    --meadow: 85 40% 60%;
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
     
-    --nordic-blue: 207 89% 55%;
-    --nordic-light: 220 39% 15%;
-    --swedish-flag: 47 100% 60%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 220 39% 15%;
-    --input: 220 39% 15%;
-    --ring: 207 89% 55%;
-
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-nordic: linear-gradient(135deg, hsl(var(--nordic-blue)), hsl(var(--nordic-light)));
-    --gradient-hero: linear-gradient(135deg, hsl(207 89% 45%), hsl(207 89% 55%), hsl(220 39% 15%));
-    --gradient-glass: linear-gradient(135deg, hsl(var(--background) / 0.75), hsl(var(--muted) / 0.5));
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
     
-    --shadow-nordic: 0 10px 40px -15px hsl(var(--primary) / 0.5);
-    --shadow-glow: 0 0 30px hsl(var(--primary-glow) / 0.3);
-    --shadow-glass: 0 8px 32px 0 hsl(0 0% 0% / 0.3);
+    --popover: 224 71% 4%;
+    --popover-foreground: 213 31% 91%;
     
-    /* Dark mode glassmorphism */
-    --glass-bg: hsl(var(--background) / 0.75);
-    --glass-border: hsl(var(--border) / 0.15);
+    --primary: 142 76% 40%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 142 76% 50%;
+    
+    --secondary: 223 47% 11%;
+    --secondary-foreground: 213 31% 91%;
+    
+    --muted: 223 47% 11%;
+    --muted-foreground: 215 16% 57%;
+    
+    --accent: 216 34% 17%;
+    --accent-foreground: 213 31% 91%;
+    
+    /* Dark theme nature colors */
+    --forest: 142 76% 42%;
+    --lake: 200 85% 55%;
+    --sky: 210 100% 95%;
+    --mountain: 220 15% 75%;
+    --meadow: 84 65% 65%;
+    --nordic-blue: 214 100% 60%;
+    --nordic-light: 216 34% 17%;
+    --swedish-flag: 214 100% 60%;
+    
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --ring: 142 76% 40%;
+    
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--forest)) 0%, hsl(var(--lake)) 100%);
+    --gradient-nordic: linear-gradient(180deg, hsl(216 34% 17%) 0%, hsl(223 47% 11%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(var(--forest)) 0%, hsl(var(--lake)) 50%, hsl(216 34% 17%) 100%);
+    --gradient-subtle: linear-gradient(145deg, hsl(var(--background)) 0%, hsl(var(--accent)) 100%);
+    
+    /* Dark mode shadows */
+    --shadow-nordic: 0 10px 40px -12px hsla(0, 0%, 0%, 0.5);
+    --shadow-glow: 0 0 32px hsla(var(--primary), 0.4);
+    --shadow-soft: 0 2px 12px -4px hsla(0, 0%, 0%, 0.4);
+    --shadow-elegant: 0 8px 32px -8px hsla(0, 0%, 0%, 0.3);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -169,58 +165,67 @@ All colors MUST be HSL.
   }
 }
 
-/* Enhanced Glassmorphism utility classes */
+/* Enhanced glassmorphism effects with semantic colors */
 .glass-effect {
-  background: var(--glass-bg);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-glass);
+  background: hsla(var(--background), 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid hsla(var(--border), 0.3);
+  box-shadow: var(--shadow-elegant);
 }
 
 .glass-popup {
-  background: hsl(var(--background) / 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-popup);
-  border-radius: 16px;
-  padding: 1.5rem;
+  background: hsla(var(--popover), 0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsla(var(--border), 0.4);
+  box-shadow: var(--shadow-nordic);
+  border-radius: var(--radius);
+  padding: 2rem;
 }
 
 .glass-card {
-  background: hsl(var(--background) / 0.7);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-card);
-  border-radius: 12px;
+  background: hsla(var(--card), 0.9);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid hsla(var(--border), 0.3);
+  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius);
 }
 
 .glass-nav {
-  background: hsl(var(--background) / 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--glass-border);
+  background: hsla(var(--background), 0.95);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-bottom: 1px solid hsla(var(--border), 0.4);
   box-shadow: var(--shadow-soft);
 }
 
 .glass-search {
-  background: hsl(var(--background) / 0.85);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-card);
-  border-radius: 16px;
+  background: hsla(var(--background), 0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsla(var(--border), 0.3);
+  box-shadow: var(--shadow-nordic);
+  border-radius: var(--radius);
 }
 
-/* Enhanced Hover animations and effects */
+/* Enhanced hover effects with semantic colors */
 .hover-lift {
   transition: var(--transition-smooth);
 }
 
 .hover-lift:hover {
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-nordic);
+}
+
+.hover-lift-subtle {
+  transition: var(--transition-smooth);
+}
+
+.hover-lift-subtle:hover {
+  transform: translateY(-2px);
   box-shadow: var(--shadow-elegant);
 }
 
@@ -230,11 +235,20 @@ All colors MUST be HSL.
 
 .hover-glow:hover {
   box-shadow: var(--shadow-glow);
-  transform: scale(1.05);
+  transform: scale(1.02);
+}
+
+.hover-glow-subtle {
+  transition: var(--transition-smooth);
+}
+
+.hover-glow-subtle:hover {
+  box-shadow: 0 0 20px hsla(var(--primary), 0.2);
+  transform: scale(1.01);
 }
 
 .hover-scale {
-  transition: transform 0.2s ease;
+  transition: var(--transition-spring);
 }
 
 .hover-scale:hover {
@@ -246,9 +260,8 @@ All colors MUST be HSL.
 }
 
 .card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-elegant);
-  border-color: hsl(var(--primary) / 0.3);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: var(--shadow-nordic);
 }
 
 /* Staggered animations */
@@ -288,14 +301,29 @@ All colors MUST be HSL.
   @apply w-full max-w-full px-3;
 }
 
-/* Enhanced hover effects */
-.hover-lift-subtle {
-  @apply transition-transform duration-200 hover:translate-y-[-2px];
+/* Typography and spacing refinements */
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.hover-glow-subtle {
-  @apply transition-shadow duration-300 hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)];
+/* Focus states with better accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2;
 }
+
+/* Consistent spacing utilities */
+.spacing-xs { @apply p-2; }
+.spacing-sm { @apply p-4; }
+.spacing-md { @apply p-6; }
+.spacing-lg { @apply p-8; }
+
+/* Animation consistency */
+.transition-smooth { transition: var(--transition-smooth); }
+.transition-spring { transition: var(--transition-spring); }
+.transition-bounce { transition: var(--transition-bounce); }
 
 /* Mobile optimizations */
 @media (max-width: 768px) {

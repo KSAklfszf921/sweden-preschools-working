@@ -88,9 +88,17 @@ export default {
 				}
 			},
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				lg: 'var(--radius-lg)',
+				DEFAULT: 'var(--radius)',
+				md: 'var(--radius)',
+				sm: 'var(--radius-sm)'
+			},
+			spacing: {
+				'4.5': '1.125rem',
+				'18': '4.5rem',
+				'72': '18rem',
+				'84': '21rem',
+				'96': '24rem'
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
@@ -99,7 +107,9 @@ export default {
 			},
 			boxShadow: {
 				'nordic': 'var(--shadow-nordic)',
-				'glow': 'var(--shadow-glow)'
+				'glow': 'var(--shadow-glow)',
+				'soft': 'var(--shadow-soft)',
+				'elegant': 'var(--shadow-elegant)'
 			},
 			transitionTimingFunction: {
 				'smooth': 'var(--transition-smooth)',
