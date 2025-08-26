@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Map3D } from '@/components/Map3D';
-import { SmartSearchBar } from '@/components/SmartSearchBar';
+import { OptimizedSearchBar } from '@/components/enhanced/OptimizedSearchBar';
+import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
+import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
+import { OfflineHandler } from '@/components/enhanced/OfflineHandler';
+import PerformanceOptimizer from '@/components/enhanced/PerformanceOptimizer';
 import { PreschoolDetails } from '@/components/PreschoolDetails';
 import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { AdminPanel } from '@/components/AdminPanel';
@@ -52,9 +56,11 @@ const Index = () => {
         </div>
       </div>;
   }
-  return <>
-      <AccessibilityEnhancements />
-      <MobileOptimizations />
+  return (
+    <OfflineHandler>
+      <PerformanceOptimizer>
+        <AccessibilityEnhancements />
+        <MobileOptimizations />
       {/* Landing Animation */}
       {showLanding && <LandingAnimation onComplete={() => setShowLanding(false)} />}
 
@@ -110,7 +116,11 @@ const Index = () => {
         }} transition={{
           delay: showLanding ? 0 : 1.0
         }} className="absolute left-4 top-4 z-30">
-            <SmartSearchBar />
+        <ErrorBoundary>
+          <LoadingBoundary>
+            <OptimizedSearchBar />
+          </LoadingBoundary>
+        </ErrorBoundary>
           </motion.div>
 
 
@@ -204,6 +214,8 @@ const Index = () => {
             </motion.div>}
         </div>
       </div>
-    </>;
+      </PerformanceOptimizer>
+    </OfflineHandler>
+  );
 };
 export default Index;

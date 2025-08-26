@@ -54,7 +54,9 @@ export const MobileNavigation: React.FC = () => {
       icon: Heart,
       label: 'Jämför',
       action: () => {
-        setIsOpen(true);
+        if (selectedPreschools.length > 0) {
+          setIsOpen(true);
+        }
       },
       badge: selectedPreschools.length
     }

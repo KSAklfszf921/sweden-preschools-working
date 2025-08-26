@@ -17,13 +17,13 @@ export const usePreschools = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch ALL preschools including those without coordinates
+      // Fetch ALL preschools with correct column casing
       const { data: preschoolsData, error: preschoolsError } = await supabase
         .from('Förskolor')
         .select(`
           id,
           "Namn",
-          "Kommun",
+          "Kommun", 
           "Adress",
           "Latitud",
           "Longitud",
