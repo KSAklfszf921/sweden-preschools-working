@@ -49,26 +49,9 @@ interface AdminStats {
     missingCoordinates: number;
     withGoogleData: number;
     withImages: number;
-    googleDataEntries: number;
-    imagesCount: number;
-    userFavorites: number;
-    searchHistory: number;
     coordinatesCoverage: number;
     googleDataCoverage: number;
     imagesCoverage: number;
-  };
-  storage: {
-    totalSize: number;
-    totalSizeFormatted: string;
-    buckets: Array<{
-      name: string;
-      fileCount: number;
-      size: number;
-      sizeFormatted: string;
-    }>;
-  };
-  activity: {
-    recentLogs: Array<any>;
   };
   systemHealth: {
     databaseOnline: boolean;
@@ -76,17 +59,25 @@ interface AdminStats {
   };
 }
 
+interface GeoCodingResult {
+  id: string;
+  name: string;
+  address?: string;
+  coordinates?: { lat: number; lng: number };
+  status: 'success' | 'failed' | 'error';
+  error?: string;
+  updated: boolean;
+}
+
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodingProgress, setGeocodingProgress] = useState(0);
-  const [geocodingBatchSize, setGeocodingBatchSize] = useState(5);
+  const [geocodingBatchSize, setGeocodingBatchSize] = useState(10);
   const [geocodingDryRun, setGeocodingDryRun] = useState(true);
-  const [geocodingResults, setGeocodingResults] = useState<any[]>([]);
-  const [geocodingInProgress, setGeocodingInProgress] = useState(false);
+  const [geocodingResults, setGeocodingResults] = useState<GeoCodingResult[]>([]);
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [dryRun, setDryRun] = useState(true);
   const { preschools } = useMapStore();
   const { toast } = useToast();
 
@@ -101,24 +92,66 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       if (error) throw error;
       setApiStatus('online');
     } catch (error) {
+      console.error('API Status check failed:', error);
       setApiStatus('offline');
-      console.error('API status check failed:', error);
     }
   };
 
   const loadAdminStats = async () => {
     setStatsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-stats');
-      
-      if (error) throw error;
-      
-      setAdminStats(data);
+      // Get database stats
+      const { data: totalData, error: totalError } = await supabase
+        .from('Förskolor')
+        .select('id', { count: 'exact' });
+
+      if (totalError) throw totalError;
+
+      const { data: missingCoordsData, error: missingError } = await supabase
+        .from('Förskolor')
+        .select('id', { count: 'exact' })
+        .or('Latitud.is.null,Longitud.is.null,Latitud.eq.0,Longitud.eq.0');
+
+      if (missingError) throw missingError;
+
+      const { data: googleData, error: googleError } = await supabase
+        .from('preschool_google_data')
+        .select('id', { count: 'exact' });
+
+      if (googleError) throw googleError;
+
+      const { data: imagesData, error: imagesError } = await supabase
+        .from('preschool_images')
+        .select('id', { count: 'exact' });
+
+      if (imagesError) throw imagesError;
+
+      const total = totalData?.length || 0;
+      const missing = missingCoordsData?.length || 0;
+      const withGoogle = googleData?.length || 0;
+      const withImages = imagesData?.length || 0;
+
+      setAdminStats({
+        database: {
+          totalPreschools: total,
+          missingCoordinates: missing,
+          withGoogleData: withGoogle,
+          withImages: withImages,
+          coordinatesCoverage: total > 0 ? ((total - missing) / total) * 100 : 0,
+          googleDataCoverage: total > 0 ? (withGoogle / total) * 100 : 0,
+          imagesCoverage: total > 0 ? (withImages / total) * 100 : 0,
+        },
+        systemHealth: {
+          databaseOnline: true,
+          lastUpdated: new Date().toISOString(),
+        }
+      });
+
     } catch (error) {
-      console.error('Error loading admin stats:', error);
+      console.error('Failed to load admin stats:', error);
       toast({
-        title: "Kunde inte ladda statistik",
-        description: "Kontrollera att admin-stats funktionen är aktiv.",
+        title: "Fel",
+        description: "Kunde inte ladda administrativa statistik",
         variant: "destructive"
       });
     } finally {
@@ -126,48 +159,113 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleGeocoding = async (batchSize = geocodingBatchSize) => {
-    if (geocodingInProgress) return;
+  const startGeocodingProcess = async () => {
+    if (isGeocoding) return;
 
-    setGeocodingInProgress(true);
     setIsGeocoding(true);
     setGeocodingProgress(0);
     setGeocodingResults([]);
-    
+
     try {
-      const { data, error } = await supabase.functions.invoke('fix-missing-geocoding', {
-        body: { 
-          batchSize,
+      const response = await supabase.functions.invoke('fix-missing-geocoding', {
+        body: {
+          batchSize: geocodingBatchSize,
           dryRun: geocodingDryRun
         }
       });
 
-      if (error) throw error;
+      if (response.error) {
+        throw response.error;
+      }
 
-      setGeocodingResults(data.results || []);
+      const result = response.data;
+      setGeocodingResults(result.results || []);
       setGeocodingProgress(100);
 
       toast({
-        title: geocodingDryRun ? "Geocoding simulering klar" : "Geocoding klar",
-        description: `${data.success} lyckades, ${data.errors} misslyckades av ${data.processed} behandlade.`,
-        variant: data.errors > 0 ? "destructive" : "default"
+        title: geocodingDryRun ? "Test slutförd" : "Geocoding slutförd",
+        description: `Bearbetade ${result.processed} förskolor. ${result.success} lyckades, ${result.errors} misslyckades.`,
+        variant: result.success > 0 ? "default" : "destructive"
       });
 
       // Reload stats after successful geocoding
-      if (!geocodingDryRun && data.success > 0) {
-        setTimeout(loadAdminStats, 1000);
+      if (!geocodingDryRun && result.success > 0) {
+        await loadAdminStats();
       }
 
-    } catch (error: any) {
-      console.error('Geocoding error:', error);
+    } catch (error) {
+      console.error('Geocoding failed:', error);
       toast({
         title: "Geocoding misslyckades",
-        description: error.message || "Kontrollera att Google Maps API-nyckeln är konfigurerad.",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
       setIsGeocoding(false);
-      setGeocodingInProgress(false);
+    }
+  };
+
+  const stopGeocodingProcess = () => {
+    setIsGeocoding(false);
+    setGeocodingProgress(0);
+  };
+
+  const clearResults = () => {
+    setGeocodingResults([]);
+    setGeocodingProgress(0);
+  };
+
+  const runAdvancedGeocoding = async () => {
+    if (!missingCoords.length) {
+      toast({
+        title: "Inga förskolor att bearbeta",
+        description: "Alla förskolor har redan koordinater",
+      });
+      return;
+    }
+
+    setIsGeocoding(true);
+    setGeocodingResults([]);
+
+    try {
+      const response = await supabase.functions.invoke('geocoding-service', {
+        body: {
+          preschools: missingCoords.slice(0, geocodingBatchSize).map(p => ({
+            id: p.id,
+            Namn: p.namn,
+            Adress: p.adress,
+            Kommun: p.kommun,
+            Latitud: p.latitud,
+            Longitud: p.longitud
+          }))
+        }
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      const result = response.data;
+      setGeocodingResults(result.results || []);
+      
+      toast({
+        title: "Avancerad geocoding slutförd",
+        description: `${result.successful}/${result.processed} förskolor geocodade framgångsrikt`,
+        variant: result.successful > 0 ? "default" : "destructive"
+      });
+
+      // Reload stats
+      await loadAdminStats();
+
+    } catch (error) {
+      console.error('Advanced geocoding failed:', error);
+      toast({
+        title: "Avancerad geocoding misslyckades",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeocoding(false);
     }
   };
 
@@ -178,578 +276,350 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
+  if (!isOpen) return null;
+
   return (
     <AnimatePresence>
-      {isOpen && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 glass-nav"
+      >
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
+        
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="absolute top-4 left-4 right-4 bottom-4 max-w-6xl mx-auto"
         >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="w-full max-w-6xl max-h-[90vh] overflow-hidden"
-          >
-            <Card className="bg-card/95 backdrop-blur-lg border-border/50 shadow-nordic">
-              <div className="flex items-center justify-between p-6 border-b border-border/50">
-                <div className="flex items-center gap-3">
-                  <Settings className="w-6 h-6 text-primary" />
-                  <h2 className="text-xl font-semibold text-foreground">Administratörspanel</h2>
-                  <Badge variant="secondary">Admin Mode</Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={loadAdminStats}
-                    disabled={statsLoading}
-                  >
-                    {statsLoading ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onClose}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-5 h-5" />
-                  </Button>
-                </div>
+          <Card className="h-full glass-card border-0 shadow-lg">
+            <div className="flex items-center justify-between p-6 border-b border-border/20">
+              <div className="flex items-center gap-3">
+                <Settings className="h-6 w-6 text-primary" />
+                <h2 className="text-2xl font-heading font-bold">Admin Panel</h2>
+                <Badge variant={apiStatus === 'online' ? 'default' : 'destructive'}>
+                  {apiStatus === 'online' ? 'Online' : apiStatus === 'offline' ? 'Offline' : 'Kontrollerar...'}
+                </Badge>
               </div>
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover-scale"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
 
-              <div className="p-6">
-                <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="grid w-full grid-cols-6">
-                    <TabsTrigger value="overview">Översikt</TabsTrigger>
-                    <TabsTrigger value="database">Databas</TabsTrigger>
-                    <TabsTrigger value="storage">Lagring</TabsTrigger>
-                    <TabsTrigger value="geocoding">Geo-Data</TabsTrigger>
-                    <TabsTrigger value="activity">Aktivitet</TabsTrigger>
-                    <TabsTrigger value="tools">Verktyg</TabsTrigger>
-                  </TabsList>
+            <div className="flex-1 p-6">
+              <Tabs defaultValue="overview" className="h-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="overview">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Översikt
+                  </TabsTrigger>
+                  <TabsTrigger value="geocoding">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Koordinater
+                  </TabsTrigger>
+                  <TabsTrigger value="system">
+                    <Server className="w-4 h-4 mr-2" />
+                    System
+                  </TabsTrigger>
+                </TabsList>
 
-                  <TabsContent value="overview" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <Card className="p-4 bg-muted/30">
-                        <div className="flex items-center gap-3">
-                          <Database className="w-5 h-5 text-primary" />
-                          <div>
-                            <p className="font-medium">Supabase Status</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              {apiStatus === 'online' && (
-                                <>
-                                  <CheckCircle className="w-4 h-4 text-green-500" />
-                                  <span className="text-sm text-green-600">Online</span>
-                                </>
-                              )}
-                              {apiStatus === 'offline' && (
-                                <>
-                                  <XCircle className="w-4 h-4 text-red-500" />
-                                  <span className="text-sm text-red-600">Offline</span>
-                                </>
-                              )}
-                              {apiStatus === 'checking' && (
-                                <>
-                                  <RefreshCw className="w-4 h-4 text-yellow-500 animate-spin" />
-                                  <span className="text-sm text-yellow-600">Kontrollerar...</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-
-                      <Card className="p-4 bg-muted/30">
-                        <div className="flex items-center gap-3">
-                          <Users className="w-5 h-5 text-primary" />
-                          <div>
-                            <p className="font-medium">Förskolor</p>
-                            <p className="text-2xl font-bold text-primary">
-                              {adminStats?.database.totalPreschools?.toLocaleString() || preschools.length.toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-
-                      <Card className="p-4 bg-muted/30">
-                        <div className="flex items-center gap-3">
-                          <MapPin className="w-5 h-5 text-orange-500" />
-                          <div>
-                            <p className="font-medium">Saknar koordinater</p>
-                            <p className="text-2xl font-bold text-orange-500">
-                              {adminStats?.database.missingCoordinates || missingCoords.length}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-
-                      <Card className="p-4 bg-muted/30">
-                        <div className="flex items-center gap-3">
-                          <HardDrive className="w-5 h-5 text-blue-500" />
-                          <div>
-                            <p className="font-medium">Lagringsstorlek</p>
-                            <p className="text-lg font-bold text-blue-500">
-                              {adminStats?.storage.totalSizeFormatted || 'Laddar...'}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    </div>
-
-                    {/* Coverage Statistics */}
-                    {adminStats && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card className="p-4 bg-muted/30">
-                          <h3 className="font-medium mb-3 flex items-center gap-2">
-                            <Map className="w-4 h-4" />
-                            Koordinattäckning
-                          </h3>
-                          <Progress value={adminStats.database.coordinatesCoverage} className="mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            {adminStats.database.coordinatesCoverage}% har koordinater
-                          </p>
-                        </Card>
-
-                        <Card className="p-4 bg-muted/30">
-                          <h3 className="font-medium mb-3 flex items-center gap-2">
-                            <Globe className="w-4 h-4" />
-                            Google Data
-                          </h3>
-                          <Progress value={adminStats.database.googleDataCoverage} className="mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            {adminStats.database.googleDataCoverage}% har Google-data
-                          </p>
-                        </Card>
-
-                        <Card className="p-4 bg-muted/30">
-                          <h3 className="font-medium mb-3 flex items-center gap-2">
-                            <Images className="w-4 h-4" />
-                            Bildtäckning
-                          </h3>
-                          <Progress value={adminStats.database.imagesCoverage} className="mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            {adminStats.database.imagesCoverage}% har bilder
-                          </p>
-                        </Card>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="database" className="space-y-4">
+                <TabsContent value="overview" className="mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {statsLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                        <span>Laddar databasstatistik...</span>
+                      <div className="col-span-full flex items-center justify-center py-12">
+                        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                        <span className="ml-2 font-heading">Laddar statistik...</span>
                       </div>
                     ) : adminStats ? (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card className="p-4 bg-muted/30">
-                          <h3 className="font-medium mb-3 flex items-center gap-2">
-                            <Database className="w-4 h-4" />
-                            Huvudtabeller
-                          </h3>
-                          <div className="space-y-2 text-sm">
+                      <>
+                        <Card className="p-6 card-hover">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Database className="h-8 w-8 text-primary" />
+                            <h3 className="font-heading font-semibold text-lg">Databas</h3>
+                          </div>
+                          <div className="space-y-3">
                             <div className="flex justify-between">
-                              <span>Förskolor:</span>
-                              <span className="font-medium">{adminStats.database.totalPreschools.toLocaleString()}</span>
+                              <span className="text-muted-foreground">Totalt förskolor:</span>
+                              <Badge variant="secondary">{adminStats.database.totalPreschools.toLocaleString()}</Badge>
                             </div>
                             <div className="flex justify-between">
-                              <span>Google Data:</span>
-                              <span className="font-medium">{adminStats.database.googleDataEntries.toLocaleString()}</span>
+                              <span className="text-muted-foreground">Saknar koordinater:</span>
+                              <Badge variant={adminStats.database.missingCoordinates > 0 ? "destructive" : "default"}>
+                                {adminStats.database.missingCoordinates.toLocaleString()}
+                              </Badge>
                             </div>
                             <div className="flex justify-between">
-                              <span>Bilder:</span>
-                              <span className="font-medium">{adminStats.database.imagesCount.toLocaleString()}</span>
+                              <span className="text-muted-foreground">Koordinattäckning:</span>
+                              <Badge variant="default">{adminStats.database.coordinatesCoverage.toFixed(1)}%</Badge>
                             </div>
                           </div>
                         </Card>
 
-                        <Card className="p-4 bg-muted/30">
-                          <h3 className="font-medium mb-3 flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            Användardata
-                          </h3>
-                          <div className="space-y-2 text-sm">
+                        <Card className="p-6 card-hover">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Star className="h-8 w-8 text-yellow-500" />
+                            <h3 className="font-heading font-semibold text-lg">Google Data</h3>
+                          </div>
+                          <div className="space-y-3">
                             <div className="flex justify-between">
-                              <span>Favoriter:</span>
-                              <span className="font-medium">{adminStats.database.userFavorites.toLocaleString()}</span>
+                              <span className="text-muted-foreground">Med Google data:</span>
+                              <Badge variant="secondary">{adminStats.database.withGoogleData.toLocaleString()}</Badge>
                             </div>
                             <div className="flex justify-between">
-                              <span>Sökhistorik:</span>
-                              <span className="font-medium">{adminStats.database.searchHistory.toLocaleString()}</span>
+                              <span className="text-muted-foreground">Datatäckning:</span>
+                              <Badge variant="default">{adminStats.database.googleDataCoverage.toFixed(1)}%</Badge>
                             </div>
                           </div>
                         </Card>
 
-                        <Card className="p-4 bg-muted/30">
-                          <h3 className="font-medium mb-3 flex items-center gap-2">
-                            <BarChart3 className="w-4 h-4" />
-                            Datakvalitet
-                          </h3>
-                          <div className="space-y-2 text-sm">
+                        <Card className="p-6 card-hover">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Images className="h-8 w-8 text-green-500" />
+                            <h3 className="font-heading font-semibold text-lg">Bilder</h3>
+                          </div>
+                          <div className="space-y-3">
                             <div className="flex justify-between">
-                              <span>Utan koordinater:</span>
-                              <span className="font-medium text-orange-600">{adminStats.database.missingCoordinates}</span>
+                              <span className="text-muted-foreground">Med bilder:</span>
+                              <Badge variant="secondary">{adminStats.database.withImages.toLocaleString()}</Badge>
                             </div>
                             <div className="flex justify-between">
-                              <span>Med Google-data:</span>
-                              <span className="font-medium text-green-600">{adminStats.database.withGoogleData}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Med bilder:</span>
-                              <span className="font-medium text-blue-600">{adminStats.database.withImages}</span>
+                              <span className="text-muted-foreground">Bildtäckning:</span>
+                              <Badge variant="default">{adminStats.database.imagesCoverage.toFixed(1)}%</Badge>
                             </div>
                           </div>
                         </Card>
-                      </div>
+                      </>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>Kunde inte ladda databasstatistik</p>
+                      <div className="col-span-full text-center py-12 text-muted-foreground">
+                        Kunde inte ladda statistik
                       </div>
                     )}
-                  </TabsContent>
+                  </div>
+                </TabsContent>
 
-                  <TabsContent value="storage" className="space-y-4">
-                    {adminStats?.storage ? (
-                      <div className="space-y-4">
-                        <Card className="p-4 bg-muted/30">
-                          <h3 className="font-medium mb-3 flex items-center gap-2">
-                            <HardDrive className="w-4 h-4" />
-                            Total lagringsstorlek: {adminStats.storage.totalSizeFormatted}
-                          </h3>
-                        </Card>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {adminStats.storage.buckets.map((bucket) => (
-                            <Card key={bucket.name} className="p-4 bg-muted/30">
-                              <h4 className="font-medium mb-2">{bucket.name}</h4>
-                              <div className="space-y-1 text-sm">
-                                <div className="flex justify-between">
-                                  <span>Filer:</span>
-                                  <span className="font-medium">{bucket.fileCount.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Storlek:</span>
-                                  <span className="font-medium">{bucket.sizeFormatted}</span>
-                                </div>
-                              </div>
-                            </Card>
-                          ))}
+                <TabsContent value="geocoding" className="mt-6">
+                  <Card className="glass-popup">
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <h3 className="text-xl font-heading font-semibold mb-2">Koordinat-hantering</h3>
+                          <p className="text-muted-foreground">
+                            Hämta GPS-koordinater för förskolor som saknar dem
+                          </p>
                         </div>
+                        <Badge variant={missingCoords.length > 0 ? "destructive" : "default"}>
+                          {missingCoords.length} saknar koordinater
+                        </Badge>
                       </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <HardDrive className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>Lagringsstatistik ej tillgänglig</p>
-                      </div>
-                    )}
-                  </TabsContent>
 
-                  <TabsContent value="geocoding" className="space-y-4">
-                    {adminStats?.database ? (
-                      <div className="space-y-6">
-                        {/* Geocoding Status */}
-                        <div className="bg-muted/30 rounded-lg p-4">
-                          <h3 className="font-medium mb-3 flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            Geocoding Status
-                          </h3>
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-green-600">
-                                {adminStats.database.totalPreschools - adminStats.database.missingCoordinates}
-                              </div>
-                              <div className="text-sm text-muted-foreground">Med koordinater</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-red-600">
-                                {adminStats.database.missingCoordinates}
-                              </div>
-                              <div className="text-sm text-muted-foreground">Saknar koordinater</div>
-                            </div>
-                          </div>
-                          <Progress value={adminStats.database.coordinatesCoverage} className="mb-2" />
-                          <div className="text-sm text-muted-foreground text-center">
-                            {adminStats.database.coordinatesCoverage.toFixed(1)}% har koordinater
-                          </div>
-                        </div>
-
-                        {/* Geocoding Controls */}
-                        <div className="bg-muted/30 rounded-lg p-4">
-                          <h4 className="font-medium mb-3 flex items-center gap-2">
-                            <Settings className="w-4 h-4" />
-                            Geocoding Kontroller
-                          </h4>
-                          
-                          {/* Batch Size and Mode Controls */}
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="batchSize">Batch-storlek</Label>
-                              <Select value={geocodingBatchSize.toString()} onValueChange={(value) => setGeocodingBatchSize(parseInt(value))}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1">1 (Långsam, säker)</SelectItem>
-                                  <SelectItem value="5">5 (Rekommenderad)</SelectItem>
-                                  <SelectItem value="10">10 (Snabb)</SelectItem>
-                                  <SelectItem value="20">20 (Mycket snabb)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Testkörning</Label>
-                              <div className="flex items-center space-x-2">
-                                <Switch 
-                                  checked={geocodingDryRun} 
-                                  onCheckedChange={setGeocodingDryRun}
-                                />
-                                <span className="text-sm">{geocodingDryRun ? 'Test' : 'Verklig körning'}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className="grid grid-cols-2 gap-2 mb-4">
-                            <Button
-                              onClick={() => handleGeocoding()}
-                              disabled={geocodingInProgress || adminStats.database.missingCoordinates === 0}
-                              variant="default"
-                              className="w-full"
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="batch-size" className="font-heading font-medium">Antal per omgång</Label>
+                            <Select 
+                              value={geocodingBatchSize.toString()} 
+                              onValueChange={(value) => setGeocodingBatchSize(Number(value))}
                             >
-                              {geocodingInProgress ? (
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="5">5 förskolor</SelectItem>
+                                <SelectItem value="10">10 förskolor</SelectItem>
+                                <SelectItem value="20">20 förskolor</SelectItem>
+                                <SelectItem value="50">50 förskolor</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="dry-run"
+                              checked={geocodingDryRun}
+                              onCheckedChange={setGeocodingDryRun}
+                            />
+                            <Label htmlFor="dry-run" className="font-heading font-medium">
+                              Test-läge (sparar inte)
+                            </Label>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={startGeocodingProcess}
+                              disabled={isGeocoding || missingCoords.length === 0}
+                              className="flex-1 hover-scale"
+                              variant={geocodingDryRun ? "outline" : "default"}
+                            >
+                              {isGeocoding ? (
                                 <>
                                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                  Kör geocoding...
+                                  Kör...
                                 </>
                               ) : (
                                 <>
                                   <Play className="w-4 h-4 mr-2" />
-                                  Starta Geocoding
+                                  {geocodingDryRun ? "Testa" : "Kör"} Geocoding
                                 </>
                               )}
                             </Button>
-                            <Button
-                              onClick={() => {
-                                setGeocodingInProgress(false);
-                                setIsGeocoding(false);
-                              }}
-                              disabled={!geocodingInProgress}
-                              variant="destructive"
-                              className="w-full"
-                            >
-                              <Square className="w-4 h-4 mr-2" />
-                              Stoppa
-                            </Button>
+
+                            {isGeocoding && (
+                              <Button
+                                onClick={stopGeocodingProcess}
+                                variant="destructive"
+                                size="sm"
+                                className="hover-scale"
+                              >
+                                <Square className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
 
-                          {/* Progress Display */}
-                          {geocodingInProgress && (
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span>Progress</span>
-                                <span>{geocodingProgress.toFixed(1)}%</span>
-                              </div>
-                              <Progress value={geocodingProgress} className="mb-2" />
-                              <div className="text-xs text-muted-foreground">
-                                {geocodingResults.filter((r: any) => r.status === 'success').length} lyckade, {' '}
-                                {geocodingResults.filter((r: any) => r.status === 'error').length} misslyckade
-                              </div>
-                            </div>
-                          )}
-
-                          {geocodingDryRun && (
-                            <Badge variant="outline" className="mb-3">Testkörning - Inga ändringar sparades</Badge>
-                          )}
+                          <Button
+                            onClick={runAdvancedGeocoding}
+                            disabled={isGeocoding || missingCoords.length === 0}
+                            variant="secondary"
+                            className="w-full hover-scale"
+                          >
+                            <Globe className="w-4 h-4 mr-2" />
+                            Avancerad Geocoding
+                          </Button>
                         </div>
+                      </div>
 
-                        {/* Recent Results */}
-                        {geocodingResults.length > 0 && (
-                          <div className="bg-muted/30 rounded-lg p-4">
-                            <h4 className="font-medium mb-3 flex items-center gap-2">
-                              <BarChart3 className="w-4 h-4" />
-                              Senaste Resultat ({geocodingResults.length})
-                            </h4>
-                            <div className="max-h-40 overflow-y-auto space-y-1">
-                              {geocodingResults.slice(-10).map((result: any, index: number) => (
-                                <div 
+                      {geocodingProgress > 0 && (
+                        <div className="mb-6">
+                          <div className="flex justify-between text-sm mb-2">
+                            <span className="font-heading font-medium">Framsteg</span>
+                            <span>{geocodingProgress.toFixed(0)}%</span>
+                          </div>
+                          <Progress value={geocodingProgress} className="h-2" />
+                        </div>
+                      )}
+
+                      {geocodingResults.length > 0 && (
+                        <div>
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-heading font-medium">Resultat ({geocodingResults.length})</h4>
+                            <Button
+                              onClick={clearResults}
+                              variant="ghost"
+                              size="sm"
+                              className="hover-scale"
+                            >
+                              <X className="w-4 h-4 mr-1" />
+                              Rensa
+                            </Button>
+                          </div>
+                          
+                          <ScrollArea className="h-64 rounded-lg border">
+                            <div className="p-4 space-y-2">
+                              {geocodingResults.map((result, index) => (
+                                <div
                                   key={index}
-                                  className={`text-xs p-2 rounded border-l-2 ${
-                                    result.status === 'success' 
-                                      ? 'border-green-500 bg-green-50 dark:bg-green-950' 
-                                      : 'border-red-500 bg-red-50 dark:bg-red-950'
-                                  }`}
+                                  className="flex items-center justify-between p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
                                 >
-                                  <div className="font-medium">{result.name}</div>
-                                  {result.status === 'success' ? (
-                                    <div className="text-muted-foreground">
-                                      ✓ {result.coordinates?.lat.toFixed(6)}, {result.coordinates?.lng.toFixed(6)}
+                                  <div className="flex items-center gap-3">
+                                    {result.status === 'success' ? (
+                                      <CheckCircle className="w-4 h-4 text-green-500" />
+                                    ) : (
+                                      <XCircle className="w-4 h-4 text-red-500" />
+                                    )}
+                                    <div>
+                                      <div className="font-heading font-medium text-sm">{result.name}</div>
+                                      {result.coordinates && (
+                                        <div className="text-xs text-muted-foreground">
+                                          {result.coordinates.lat.toFixed(4)}, {result.coordinates.lng.toFixed(4)}
+                                        </div>
+                                      )}
+                                      {result.error && (
+                                        <div className="text-xs text-red-500">{result.error}</div>
+                                      )}
                                     </div>
-                                  ) : (
-                                    <div className="text-red-600">✗ {result.error}</div>
-                                  )}
+                                  </div>
+                                  <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
+                                    {result.updated ? 'Sparad' : result.status === 'success' ? 'Test' : 'Fel'}
+                                  </Badge>
                                 </div>
                               ))}
                             </div>
-                            <div className="mt-3 pt-3 border-t">
-                              <Button
-                                onClick={() => setGeocodingResults([])}
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                              >
-                                Rensa Resultat
-                              </Button>
-                            </div>
+                          </ScrollArea>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="system" className="mt-6">
+                  <div className="grid gap-6">
+                    <Card className="p-6 card-hover">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Activity className="h-6 w-6 text-primary" />
+                        <h3 className="font-heading font-semibold text-lg">Systemhälsa</h3>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Databas:</span>
+                          <Badge variant={apiStatus === 'online' ? 'default' : 'destructive'}>
+                            {apiStatus === 'online' ? 'Online' : 'Offline'}
+                          </Badge>
+                        </div>
+                        {adminStats && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Senast uppdaterad:</span>
+                            <span className="text-sm">
+                              {new Date(adminStats.systemHealth.lastUpdated).toLocaleString('sv-SE')}
+                            </span>
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p className="text-muted-foreground">Laddar geocoding-information...</p>
+                    </Card>
+
+                    <Card className="p-6 card-hover">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Wrench className="h-6 w-6 text-primary" />
+                        <h3 className="font-heading font-semibold text-lg">Verktyg</h3>
                       </div>
-                    )}
-                  </TabsContent>
-
-
-                  <TabsContent value="activity" className="space-y-4">
-                    <Card className="p-4 bg-muted/30">
-                      <h3 className="font-medium mb-3 flex items-center gap-2">
-                        <Activity className="w-4 h-4" />
-                        Senaste systemhändelser
-                      </h3>
-                      <ScrollArea className="h-64">
-                        <div className="space-y-2 text-sm">
-                          {adminStats?.activity.recentLogs.length > 0 ? (
-                            adminStats.activity.recentLogs.map((log, index) => (
-                              <div key={index} className="flex items-center gap-2 p-2 rounded bg-background/30">
-                                <Clock className="w-3 h-3 text-muted-foreground" />
-                                <span className="text-muted-foreground">
-                                  {new Date(log.created_at).toLocaleString()}
-                                </span>
-                                <span className="font-medium">{log.category}</span>
-                                <span className="text-muted-foreground">{log.message}</span>
-                              </div>
-                            ))
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={loadAdminStats}
+                          disabled={statsLoading}
+                          variant="outline"
+                          className="hover-scale"
+                        >
+                          {statsLoading ? (
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                           ) : (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="w-3 h-3 text-green-500" />
-                                <span className="text-muted-foreground">{new Date().toLocaleTimeString()}</span>
-                                <span>Admin-panel öppnad</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="w-3 h-3 text-green-500" />
-                                <span className="text-muted-foreground">{new Date(Date.now() - 30000).toLocaleTimeString()}</span>
-                                <span>Förskolor laddade från databas</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Activity className="w-3 h-3 text-blue-500" />
-                                <span className="text-muted-foreground">{new Date(Date.now() - 60000).toLocaleTimeString()}</span>
-                                <span>Användare navigerade till {window.location.pathname}</span>
-                              </div>
-                            </>
+                            <RefreshCw className="w-4 h-4 mr-2" />
                           )}
-                        </div>
-                      </ScrollArea>
-                    </Card>
-
-                    <Card className="p-4 bg-muted/30">
-                      <h3 className="font-medium mb-3 flex items-center gap-2">
-                        <Server className="w-4 h-4" />
-                        API Funktioner Status
-                      </h3>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Admin Stats</span>
-                          <Badge variant="secondary">Aktiv</Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Fix Missing Geocoding</span>
-                          <Badge variant="secondary">Aktiv</Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Google Places API</span>
-                          <Badge variant="secondary">Aktiv</Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Street View Generator</span>
-                          <Badge variant="secondary">Aktiv</Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Mapbox Proxy</span>
-                          <Badge variant="secondary">Aktiv</Badge>
-                        </div>
+                          Uppdatera statistik
+                        </Button>
+                        <Button
+                          onClick={checkApiStatus}
+                          variant="outline"
+                          className="hover-scale"
+                        >
+                          <Server className="w-4 h-4 mr-2" />
+                          Kontrollera API
+                        </Button>
                       </div>
                     </Card>
-                  </TabsContent>
-
-                  <TabsContent value="tools" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card className="p-4 bg-muted/30">
-                        <h3 className="font-medium mb-3 flex items-center gap-2">
-                          <Wrench className="w-4 h-4" />
-                          Systemverktyg
-                        </h3>
-                        <div className="space-y-3">
-                          <Button variant="outline" size="sm" onClick={checkApiStatus} className="w-full justify-start">
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Kontrollera API-status
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={loadAdminStats} className="w-full justify-start">
-                            <BarChart3 className="w-4 h-4 mr-2" />
-                            Uppdatera statistik
-                          </Button>
-                          <Button variant="outline" size="sm" className="w-full justify-start">
-                            <FileText className="w-4 h-4 mr-2" />
-                            Exportera data
-                          </Button>
-                        </div>
-                      </Card>
-
-                      <Card className="p-4 bg-muted/30">
-                        <h3 className="font-medium mb-3 flex items-center gap-2">
-                          <Database className="w-4 h-4" />
-                          Dataunderhåll
-                        </h3>
-                        <div className="space-y-3">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleGeocoding(50)}
-                            disabled={isGeocoding}
-                            className="w-full justify-start"
-                          >
-                            <MapPin className="w-4 h-4 mr-2" />
-                            Batch geocoding (50st)
-                          </Button>
-                          <Button variant="outline" size="sm" className="w-full justify-start">
-                            <Images className="w-4 h-4 mr-2" />
-                            Uppdatera Google-bilder
-                          </Button>
-                          <Button variant="outline" size="sm" className="w-full justify-start">
-                            <Star className="w-4 h-4 mr-2" />
-                            Hämta recensioner
-                          </Button>
-                        </div>
-                      </Card>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </Card>
-          </motion.div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </Card>
         </motion.div>
-      )}
+      </motion.div>
     </AnimatePresence>
   );
 };

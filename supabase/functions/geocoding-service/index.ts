@@ -8,11 +8,11 @@ const corsHeaders = {
 
 interface Preschool {
   id: string;
-  namn: string;
-  adress: string;
-  kommun: string;
-  latitud?: number;
-  longitud?: number;
+  Namn: string;
+  Adress: string;
+  Kommun: string;
+  Latitud?: number;
+  Longitud?: number;
 }
 
 serve(async (req) => {
@@ -54,12 +54,12 @@ serve(async (req) => {
       for (const preschool of batch) {
         try {
           // Skip if already has coordinates
-          if (preschool.latitud && preschool.longitud) {
+          if (preschool.Latitud && preschool.Longitud) {
             continue;
           }
 
           // Construct address for geocoding
-          const address = `${preschool.adress}, ${preschool.kommun}, Sweden`;
+          const address = `${preschool.Adress}, ${preschool.Kommun}, Sweden`;
           const encodedAddress = encodeURIComponent(address);
           
           // Call Google Geocoding API
@@ -87,34 +87,34 @@ serve(async (req) => {
               if (!updateError) {
                 results.push({
                   id: preschool.id,
-                  namn: preschool.namn,
+                  namn: preschool.Namn,
                   success: true,
                   coordinates: { lat, lng }
                 });
-                console.log(`✅ Geocoded: ${preschool.namn} -> ${lat}, ${lng}`);
+                console.log(`✅ Geocoded: ${preschool.Namn} -> ${lat}, ${lng}`);
               } else {
-                console.error(`❌ DB Update failed for ${preschool.namn}:`, updateError);
+                console.error(`❌ DB Update failed for ${preschool.Namn}:`, updateError);
                 results.push({
                   id: preschool.id,
-                  namn: preschool.namn,
+                  namn: preschool.Namn,
                   success: false,
                   error: 'Database update failed'
                 });
               }
             } else {
-              console.warn(`⚠️ Invalid coordinates for ${preschool.namn}: ${lat}, ${lng}`);
+              console.warn(`⚠️ Invalid coordinates for ${preschool.Namn}: ${lat}, ${lng}`);
               results.push({
                 id: preschool.id,
-                namn: preschool.namn,
+                namn: preschool.Namn,
                 success: false,
                 error: 'Coordinates outside Sweden'
               });
             }
           } else {
-            console.warn(`⚠️ Geocoding failed for ${preschool.namn}: ${data.status}`);
+            console.warn(`⚠️ Geocoding failed for ${preschool.Namn}: ${data.status}`);
             results.push({
               id: preschool.id,
-              namn: preschool.namn,
+              namn: preschool.Namn,
               success: false,
               error: `Geocoding failed: ${data.status}`
             });
@@ -124,10 +124,10 @@ serve(async (req) => {
           await new Promise(resolve => setTimeout(resolve, 100));
 
         } catch (error) {
-          console.error(`❌ Error processing ${preschool.namn}:`, error);
+          console.error(`❌ Error processing ${preschool.Namn}:`, error);
           results.push({
             id: preschool.id,
-            namn: preschool.namn,
+            namn: preschool.Namn,
             success: false,
             error: error.message
           });
