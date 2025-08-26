@@ -1,28 +1,61 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, X, Filter, RotateCcw, Navigation, Settings, Clock, ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react';
+import { Search, MapPin, X, Filter, RotateCcw, Navigation, Settings, Clock, ChevronDown, ChevronUp, Minus, Plus, Star, Users, Award, SlidersHorizontal, BookOpen, Home, Route, Target } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMapStore } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SearchFilters } from '@/components/SearchFilters';
 import { DistanceFilter } from '@/components/filters/DistanceFilter';
+import { AdvancedSearch } from '@/components/enhanced/AdvancedSearch';
+import { TravelTimeCalculator } from '@/components/enhanced/TravelTimeCalculator';
 
 const SmartSearchBar: React.FC = () => {
-  const { preschools, searchFilters, setSearchFilters, clearFilters, setMapCenter, setMapZoom, filteredPreschools } = useMapStore();
+  const { 
+    preschools, 
+    searchFilters, 
+    setSearchFilters, 
+    clearFilters, 
+    setMapCenter, 
+    setMapZoom, 
+    filteredPreschools,
+    setSelectedPreschool 
+  } = useMapStore();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showLocationOptions, setShowLocationOptions] = useState(false);
+  const [activeTab, setActiveTab] = useState('search');
   const [radius, setRadius] = useState([2]);
   const [isLocating, setIsLocating] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showTravelTimes, setShowTravelTimes] = useState(false);
+  
+  // Advanced filters state
+  const [advancedFilters, setAdvancedFilters] = useState({
+    minChildren: [0],
+    maxChildren: [200],
+    minStaff: [0],
+    maxStaff: [10],
+    minExam: [0],
+    maxExam: [100],
+    minRating: [0],
+    maxRating: [5],
+    hasGoogleRating: false,
+    hasContact: false,
+    sortBy: 'namn' as 'namn' | 'antal_barn' | 'google_rating' | 'andel_med_förskollärarexamen',
+    sortOrder: 'asc' as 'asc' | 'desc'
+  });
+
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +112,20 @@ const SmartSearchBar: React.FC = () => {
     setShowSuggestions(false);
     clearFilters();
     setUserLocation(null);
-    setShowLocationOptions(false);
+    setAdvancedFilters({
+      minChildren: [0],
+      maxChildren: [200],
+      minStaff: [0],
+      maxStaff: [10],
+      minExam: [0],
+      maxExam: [100],
+      minRating: [0],
+      maxRating: [5],
+      hasGoogleRating: false,
+      hasContact: false,
+      sortBy: 'namn',
+      sortOrder: 'asc'
+    });
   };
 
   const hasActiveFilters = () => {
@@ -119,12 +165,12 @@ const SmartSearchBar: React.FC = () => {
         setMapCenter(center);
         setMapZoom(12);
         setSearchFilters({ 
-          radius: radius[0] * 1000, // Convert to meters
+          radius: radius[0] * 1000,
           center: center,
           nearbyMode: true
         });
         setIsLocating(false);
-        setShowLocationOptions(true);
+        setActiveTab('location');
       },
       (error) => {
         console.error('Error getting location:', error);
@@ -144,6 +190,24 @@ const SmartSearchBar: React.FC = () => {
         nearbyMode: true
       });
     }
+  };
+
+  const applyAdvancedFilters = () => {
+    setSearchFilters({
+      ...searchFilters,
+      minChildren: advancedFilters.minChildren[0] > 0 ? advancedFilters.minChildren[0] : undefined,
+      maxChildren: advancedFilters.maxChildren[0] < 200 ? advancedFilters.maxChildren[0] : undefined,
+      minStaff: advancedFilters.minStaff[0] > 0 ? advancedFilters.minStaff[0] : undefined,
+      maxStaff: advancedFilters.maxStaff[0] < 10 ? advancedFilters.maxStaff[0] : undefined,
+      minExam: advancedFilters.minExam[0] > 0 ? advancedFilters.minExam[0] : undefined,
+      maxExam: advancedFilters.maxExam[0] < 100 ? advancedFilters.maxExam[0] : undefined,
+      minRating: advancedFilters.minRating[0] > 0 ? advancedFilters.minRating[0] : undefined,
+      maxRating: advancedFilters.maxRating[0] < 5 ? advancedFilters.maxRating[0] : undefined,
+      hasGoogleRating: advancedFilters.hasGoogleRating || undefined,
+      hasContact: advancedFilters.hasContact || undefined,
+      sortBy: advancedFilters.sortBy,
+      sortOrder: advancedFilters.sortOrder
+    });
   };
 
   const filterCount = Object.keys(searchFilters).filter(key => 
@@ -189,7 +253,6 @@ const SmartSearchBar: React.FC = () => {
               )}
             </div>
             
-            {/* Quick stats */}
             <div className="mt-2 text-xs text-muted-foreground">
               {filteredPreschools.length.toLocaleString()} förskolor
             </div>
@@ -204,7 +267,7 @@ const SmartSearchBar: React.FC = () => {
     <motion.div 
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="absolute left-4 top-4 z-30 w-80"
+      className="absolute left-4 top-4 z-30 w-96"
     >
       <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-lg">
         <div className="p-4">
@@ -243,7 +306,7 @@ const SmartSearchBar: React.FC = () => {
           </div>
 
           {/* Main Search */}
-          <div className="space-y-3">
+          <div className="space-y-3 mb-4">
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -286,7 +349,7 @@ const SmartSearchBar: React.FC = () => {
               </Button>
             </div>
 
-            {/* Location & Radius Controls */}
+            {/* Quick Action Buttons */}
             <div className="flex gap-2">
               <Button
                 onClick={handleGetCurrentLocation}
@@ -300,197 +363,334 @@ const SmartSearchBar: React.FC = () => {
                 ) : (
                   <Navigation className="w-3 h-3 mr-1" />
                 )}
-                {isLocating ? "Hämtar position..." : userLocation ? "Position hämtad" : "Min position"}
+                {isLocating ? "Hämtar..." : userLocation ? "Position OK" : "Min position"}
               </Button>
               <Button
-                onClick={() => setShowFilters(!showFilters)}
-                variant={showFilters ? "default" : "outline"}
+                onClick={() => setShowAdvancedSearch(true)}
+                variant="outline"
                 size="sm"
                 className="text-xs"
               >
-                <Filter className="h-3 w-3 mr-1" />
-                Filter
+                <SlidersHorizontal className="h-3 w-3 mr-1" />
+                Avancerat
               </Button>
             </div>
+          </div>
 
-            {/* Radius Control for nearby search */}
-            {userLocation && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2 p-3 bg-muted/30 rounded-lg"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    Sökradie: {radius[0]} km
-                  </span>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 w-5 p-0"
-                      onClick={() => updateRadius([Math.max(0.5, radius[0] - 0.5)])}
-                    >
-                      <Minus className="w-2.5 h-2.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 w-5 p-0"
-                      onClick={() => updateRadius([Math.min(10, radius[0] + 0.5)])}
-                    >
-                      <Plus className="w-2.5 h-2.5" />
-                    </Button>
+          {/* Tabbed Interface */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 h-8">
+              <TabsTrigger value="search" className="text-xs">
+                <Search className="w-3 h-3 mr-1" />
+                Sök
+              </TabsTrigger>
+              <TabsTrigger value="location" className="text-xs">
+                <MapPin className="w-3 h-3 mr-1" />
+                Plats
+              </TabsTrigger>
+              <TabsTrigger value="filters" className="text-xs">
+                <Filter className="w-3 h-3 mr-1" />
+                Filter
+              </TabsTrigger>
+              <TabsTrigger value="tools" className="text-xs">
+                <Settings className="w-3 h-3 mr-1" />
+                Verktyg
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="search" className="space-y-3 mt-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Kommun</label>
+                  <Select
+                    value={searchFilters.kommuner?.[0] || ''}
+                    onValueChange={(value) => {
+                      setSearchFilters({ ...searchFilters, kommuner: value ? [value] : undefined });
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Välj kommun" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-border shadow-lg max-h-60 overflow-y-auto z-50">
+                      <SelectItem value="">Alla kommuner</SelectItem>
+                      {uniqueKommuner.slice(0, 50).map(kommun => (
+                        <SelectItem key={kommun} value={kommun} className="text-xs">
+                          {kommun}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Huvudman</label>
+                  <Select
+                    value={searchFilters.huvudman || ''}
+                    onValueChange={(value) => {
+                      setSearchFilters({ ...searchFilters, huvudman: value || undefined });
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Välj typ" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-border shadow-lg z-50">
+                      <SelectItem value="">Alla typer</SelectItem>
+                      <SelectItem value="Kommunal">Kommunal</SelectItem>
+                      <SelectItem value="Enskild">Fristående</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="location" className="space-y-3 mt-3">
+              {userLocation ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <Target className="w-4 h-4" />
+                    Position hämtad
+                  </div>
+                  
+                  <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        Sökradie: {radius[0]} km
+                      </span>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0"
+                          onClick={() => updateRadius([Math.max(0.5, radius[0] - 0.5)])}
+                        >
+                          <Minus className="w-2.5 h-2.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0"
+                          onClick={() => updateRadius([Math.min(10, radius[0] + 0.5)])}
+                        >
+                          <Plus className="w-2.5 h-2.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Slider
+                      value={radius}
+                      onValueChange={updateRadius}
+                      max={10}
+                      min={0.5}
+                      step={0.5}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={() => setShowTravelTimes(!showTravelTimes)}
+                    variant={showTravelTimes ? "default" : "outline"}
+                    size="sm"
+                    className="w-full text-xs"
+                  >
+                    <Route className="w-3 h-3 mr-1" />
+                    {showTravelTimes ? "Dölj restider" : "Visa restider"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <MapPin className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Aktivera platsåtkomst för närliggande förskolor
+                  </p>
+                  <Button onClick={handleGetCurrentLocation} size="sm" className="w-full">
+                    <Navigation className="w-3 h-3 mr-1" />
+                    Hämta min position
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="filters" className="space-y-3 mt-3">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-xs font-medium flex items-center gap-1 mb-2">
+                    <Users className="w-3 h-3" />
+                    Barn: {advancedFilters.minChildren[0]} - {advancedFilters.maxChildren[0]}
+                  </Label>
+                  <Slider
+                    value={[advancedFilters.minChildren[0], advancedFilters.maxChildren[0]]}
+                    onValueChange={([min, max]) => {
+                      setAdvancedFilters(prev => ({ 
+                        ...prev, 
+                        minChildren: [min], 
+                        maxChildren: [max] 
+                      }));
+                      applyAdvancedFilters();
+                    }}
+                    max={200}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs font-medium flex items-center gap-1 mb-2">
+                    <Star className="w-3 h-3" />
+                    Betyg: {advancedFilters.minRating[0]} - {advancedFilters.maxRating[0]}
+                  </Label>
+                  <Slider
+                    value={[advancedFilters.minRating[0], advancedFilters.maxRating[0]]}
+                    onValueChange={([min, max]) => {
+                      setAdvancedFilters(prev => ({ 
+                        ...prev, 
+                        minRating: [min], 
+                        maxRating: [max] 
+                      }));
+                      applyAdvancedFilters();
+                    }}
+                    max={5}
+                    step={0.1}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Google-betyg</Label>
+                    <Switch
+                      checked={advancedFilters.hasGoogleRating}
+                      onCheckedChange={(checked) => {
+                        setAdvancedFilters(prev => ({ ...prev, hasGoogleRating: checked }));
+                        applyAdvancedFilters();
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Kontakt</Label>
+                    <Switch
+                      checked={advancedFilters.hasContact}
+                      onCheckedChange={(checked) => {
+                        setAdvancedFilters(prev => ({ ...prev, hasContact: checked }));
+                        applyAdvancedFilters();
+                      }}
+                    />
                   </div>
                 </div>
-                <Slider
-                  value={radius}
-                  onValueChange={updateRadius}
-                  max={10}
-                  min={0.5}
-                  step={0.5}
-                  className="w-full"
+              </div>
+            </TabsContent>
+
+            <TabsContent value="tools" className="space-y-3 mt-3">
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => setShowAdvancedSearch(true)}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  <SlidersHorizontal className="w-3 h-3 mr-1" />
+                  Avancerat
+                </Button>
+                <Button
+                  onClick={clearSearch}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  Återställ
+                </Button>
+              </div>
+              
+              {userLocation && (
+                <DistanceFilter 
+                  userLocation={userLocation}
+                  onLocationRequest={handleGetCurrentLocation}
                 />
-              </motion.div>
-            )}
+              )}
+            </TabsContent>
+          </Tabs>
 
-            {/* Quick Filters */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Kommun</label>
-                <Select
-                  value={searchFilters.kommuner?.[0] || ''}
-                  onValueChange={(value) => {
-                    setSearchFilters({ ...searchFilters, kommuner: value ? [value] : undefined });
-                  }}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Välj kommun" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-border shadow-lg max-h-60 overflow-y-auto z-50">
-                    <SelectItem value="">Alla kommuner</SelectItem>
-                    {uniqueKommuner.slice(0, 50).map(kommun => (
-                      <SelectItem key={kommun} value={kommun} className="text-xs">
-                        {kommun}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Huvudman</label>
-                <Select
-                  value={searchFilters.huvudman || ''}
-                  onValueChange={(value) => {
-                    setSearchFilters({ ...searchFilters, huvudman: value || undefined });
-                  }}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Välj typ" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-border shadow-lg z-50">
-                    <SelectItem value="">Alla typer</SelectItem>
-                    <SelectItem value="Kommunal">Kommunal</SelectItem>
-                    <SelectItem value="Enskild">Fristående</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Results summary */}
+          <div className="pt-3 mt-3 border-t border-border">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Resultat:</span>
+              <span className="font-medium text-foreground">
+                {filteredPreschools.length.toLocaleString()} förskolor
+              </span>
             </div>
-
-            {/* Results summary */}
-            <div className="pt-2 border-t border-border">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Resultat:</span>
-                <span className="font-medium text-foreground">
-                  {filteredPreschools.length.toLocaleString()} förskolor
-                </span>
-              </div>
-            </div>
-
-            {/* Active filters display */}
-            {hasActiveFilters() && (
-              <div className="space-y-2">
-                <div className="flex flex-wrap gap-1">
-                  {searchFilters.query && (
-                    <Badge variant="secondary" className="text-xs">
-                      Sök: {searchFilters.query}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setSearchFilters({ ...searchFilters, query: undefined })}
-                        className="ml-1 h-3 w-3 p-0"
-                      >
-                        <X className="h-2 w-2" />
-                      </Button>
-                    </Badge>
-                  )}
-                  {searchFilters.kommuner && searchFilters.kommuner.length > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      Kommuner: {searchFilters.kommuner.length}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setSearchFilters({ ...searchFilters, kommuner: undefined })}
-                        className="ml-1 h-3 w-3 p-0"
-                      >
-                        <X className="h-2 w-2" />
-                      </Button>
-                    </Badge>
-                  )}
-                  {searchFilters.nearbyMode && (
-                    <Badge variant="secondary" className="text-xs">
-                      I närheten ({radius[0]} km)
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setSearchFilters({ ...searchFilters, nearbyMode: false, center: undefined, radius: undefined });
-                          setUserLocation(null);
-                        }}
-                        className="ml-1 h-3 w-3 p-0"
-                      >
-                        <X className="h-2 w-2" />
-                      </Button>
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Active filters display */}
+          {hasActiveFilters() && (
+            <div className="space-y-2 mt-3">
+              <div className="flex flex-wrap gap-1">
+                {searchFilters.query && (
+                  <Badge variant="secondary" className="text-xs">
+                    Sök: {searchFilters.query}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSearchFilters({ ...searchFilters, query: undefined })}
+                      className="ml-1 h-3 w-3 p-0"
+                    >
+                      <X className="h-2 w-2" />
+                    </Button>
+                  </Badge>
+                )}
+                {searchFilters.kommuner && searchFilters.kommuner.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    Kommuner: {searchFilters.kommuner.length}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSearchFilters({ ...searchFilters, kommuner: undefined })}
+                      className="ml-1 h-3 w-3 p-0"
+                    >
+                      <X className="h-2 w-2" />
+                    </Button>
+                  </Badge>
+                )}
+                {searchFilters.nearbyMode && (
+                  <Badge variant="secondary" className="text-xs">
+                    I närheten ({radius[0]} km)
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSearchFilters({ ...searchFilters, nearbyMode: false, center: undefined, radius: undefined });
+                        setUserLocation(null);
+                      }}
+                      className="ml-1 h-3 w-3 p-0"
+                    >
+                      <X className="h-2 w-2" />
+                    </Button>
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 
-      {/* Advanced filters panel */}
+      {/* Travel Times Panel */}
       <AnimatePresence>
-        {showFilters && (
+        {showTravelTimes && userLocation && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="mt-2"
           >
-            <SearchFilters onClose={() => setShowFilters(false)} />
+            <TravelTimeCalculator userLocation={userLocation} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Distance/Travel Time Filter */}
-      {userLocation && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="mt-2"
-        >
-          <DistanceFilter 
-            userLocation={userLocation}
-            onLocationRequest={handleGetCurrentLocation}
-          />
-        </motion.div>
-      )}
+      {/* Advanced Search Modal */}
+      <AdvancedSearch
+        isOpen={showAdvancedSearch}
+        onClose={() => setShowAdvancedSearch(false)}
+      />
 
       {/* Search suggestions */}
       <AnimatePresence>
