@@ -166,11 +166,11 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
         lat: latitude,
         lng: longitude
       });
+      // Direct map control without setTimeout
       setMapCenter(center);
       setMapZoom(12);
       setSearchFilters({
         radius: 2000,
-        // 2km default
         center: center,
         nearbyMode: true
       });

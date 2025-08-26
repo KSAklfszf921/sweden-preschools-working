@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useMapStore } from '@/stores/mapStore';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { PreschoolDetailsPanel } from './PreschoolDetailsPanel';
 
 
 interface EnhancedPreschoolListProps {
@@ -14,11 +14,11 @@ interface EnhancedPreschoolListProps {
 }
 
 export const EnhancedPreschoolList: React.FC<EnhancedPreschoolListProps> = ({ className }) => {
-  const { filteredPreschools, searchFilters, setSelectedPreschool, setMapCenter, setMapZoom } = useMapStore();
+  const { filteredPreschools, searchFilters, setSelectedPreschool, setMapCenter, setMapZoom, preschools } = useMapStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selectedPreschoolForModal, setSelectedPreschoolForModal] = useState<any>(null);
+  const [selectedPreschoolForDetails, setSelectedPreschoolForDetails] = useState<any>(null);
 
-  // Sort preschools by rating, then by name
+  // Sort preschools by rating, then by name - UNLIMITED LIST
   const sortedPreschools = useMemo(() => {
     return [...filteredPreschools]
       .filter(p => p.latitud && p.longitud) // Only show preschools with coordinates
@@ -31,8 +31,7 @@ export const EnhancedPreschoolList: React.FC<EnhancedPreschoolListProps> = ({ cl
         }
         // Then sort by name
         return a.namn.localeCompare(b.namn);
-      })
-      .slice(0, 50); // Limit to 50 for performance
+      }); // Removed limit - show all filtered preschools
   }, [filteredPreschools]);
 
   const handlePreschoolClick = (preschool: any) => {
@@ -75,6 +74,32 @@ export const EnhancedPreschoolList: React.FC<EnhancedPreschoolListProps> = ({ cl
     return huvudman === 'Kommunal' ? 'bg-bubble-kommunal/10 text-bubble-kommunal border-bubble-kommunal/20' :
            'bg-bubble-enskild/10 text-bubble-enskild border-bubble-enskild/20';
   };
+
+  // Calculate national averages for comparisons
+  const nationalAverage = useMemo(() => {
+    if (preschools.length === 0) return undefined;
+    const validChildren = preschools.filter(p => p.antal_barn).map(p => p.antal_barn!);
+    const validStaff = preschools.filter(p => p.personaltäthet).map(p => p.personaltäthet!);
+    const validExam = preschools.filter(p => p.andel_med_förskollärarexamen).map(p => p.andel_med_förskollärarexamen!);
+    const validRating = preschools.filter(p => p.google_rating).map(p => p.google_rating!);
+    return {
+      avgChildren: validChildren.length > 0 ? Math.round(validChildren.reduce((a, b) => a + b, 0) / validChildren.length) : 0,
+      avgStaff: validStaff.length > 0 ? validStaff.reduce((a, b) => a + b, 0) / validStaff.length : 0,
+      avgTeacherExam: validExam.length > 0 ? Math.round(validExam.reduce((a, b) => a + b, 0) / validExam.length) : 0,
+      avgRating: validRating.length > 0 ? validRating.reduce((a, b) => a + b, 0) / validRating.length : 0
+    };
+  }, [preschools]);
+
+  // Show details panel if a preschool is selected
+  if (selectedPreschoolForDetails) {
+    return (
+      <PreschoolDetailsPanel
+        preschool={selectedPreschoolForDetails}
+        onBack={() => setSelectedPreschoolForDetails(null)}
+        nationalAverage={nationalAverage}
+      />
+    );
+  }
 
   return (
     <motion.div
@@ -166,26 +191,17 @@ export const EnhancedPreschoolList: React.FC<EnhancedPreschoolListProps> = ({ cl
                                 )}
                               </div>
                               
-                              {/* Actions */}
-                              <div className="flex items-center gap-1">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-6 w-6 p-0 hover:bg-primary/10"
-                                      onClick={() => setSelectedPreschoolForModal(preschool)}
-                                    >
-                                      <Eye className="h-3 w-3" />
-                                    </Button>
-                                  </DialogTrigger>
-                                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                                     <div className="p-4">
-                                       <p>Detaljerad information kommer snart...</p>
-                                     </div>
-                                   </DialogContent>
-                                </Dialog>
-                              </div>
+              {/* Actions */}
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 hover:bg-primary/10"
+                  onClick={() => setSelectedPreschoolForDetails(preschool)}
+                >
+                  <Eye className="h-3 w-3" />
+                </Button>
+              </div>
                             </div>
 
                             {/* Quality indicator */}

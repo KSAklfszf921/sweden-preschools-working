@@ -15,8 +15,10 @@ export interface Preschool {
   antal_barngrupper: number;
   google_rating?: number;
   google_reviews_count?: number;
+  google_reviews?: any;
   contact_phone?: string;
   website_url?: string;
+  opening_hours?: any;
 }
 
 export interface SearchFilters {
@@ -216,9 +218,8 @@ export const useMapStore = create<MapState>((set, get) => ({
     // Apply filters first to get updated filteredPreschools
     state.applyFilters();
     
-    // Auto-center map based on filters - do this after applying filters
-    setTimeout(() => {
-      const updatedState = get();
+    // Apply filters immediately without setTimeout
+    const updatedState = get();
       
       if (filters.kommuner && filters.kommuner.length > 0) {
         // Handle multiple municipalities
@@ -342,7 +343,6 @@ export const useMapStore = create<MapState>((set, get) => ({
           set({ mapCenter: [centerLng, centerLat], mapZoom: zoom });
         }
       }
-    }, 100);
   },
 
   clearFilters: () => {
