@@ -4,7 +4,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { toast } from 'sonner';
 
 export const useRealTimeUpdates = () => {
-  const { preschools, setPreschools, updatePreschool } = useMapStore();
+  const { preschools, setPreschools, updatePreschool, setLoading } = useMapStore();
 
   const handleInsert = useCallback((payload: any) => {
     const newPreschool = {
@@ -40,8 +40,19 @@ export const useRealTimeUpdates = () => {
       antal_barngrupper: payload.new["Antal barngrupper"],
     };
 
+    // Check if coordinates were added/updated
+    const oldCoords = { lat: payload.old?.Latitud, lng: payload.old?.Longitud };
+    const newCoords = { lat: payload.new.Latitud, lng: payload.new.Longitud };
+    
+    if ((oldCoords.lat === null || oldCoords.lat === 0) && newCoords.lat !== null && newCoords.lat !== 0) {
+      toast.success(`Koordinater tillagda för ${updatedPreschool.namn}!`);
+    } else if (oldCoords.lat !== newCoords.lat || oldCoords.lng !== newCoords.lng) {
+      toast.info(`Koordinater uppdaterade för ${updatedPreschool.namn}`);
+    } else {
+      toast.info(`Förskola uppdaterad: ${updatedPreschool.namn}`);
+    }
+
     updatePreschool(updatedPreschool);
-    toast.info(`Förskola uppdaterad: ${updatedPreschool.namn}`);
   }, [updatePreschool]);
 
   const handleDelete = useCallback((payload: any) => {
@@ -75,7 +86,27 @@ export const useRealTimeUpdates = () => {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'preschool_google_data' },
         (payload) => {
-          toast.info('Google-data uppdaterad');
+          console.log('Google data update received:', payload);
+          // Force refresh of preschool data to include new Google data
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            toast.info('Google-data uppdaterad - laddar om förskoledata...');
+            // Trigger a refresh of preschool data
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to image changes
+    const imageSubscription = supabase
+      .channel('image_changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'preschool_images' },
+        (payload) => {
+          console.log('Image update received:', payload);
+          toast.info('Nya bilder tillgängliga');
         }
       )
       .subscribe();
@@ -83,6 +114,7 @@ export const useRealTimeUpdates = () => {
     return () => {
       supabase.removeChannel(preschoolSubscription);
       supabase.removeChannel(googleDataSubscription);
+      supabase.removeChannel(imageSubscription);
     };
   }, [handleInsert, handleUpdate, handleDelete]);
 
