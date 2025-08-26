@@ -6,34 +6,23 @@ import { useMapStore, Preschool } from '@/stores/mapStore';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
-import { 
-  generateHeatmapColorExpression, 
-  calculateHeatmapWeight, 
-  getAdaptiveIntensity,
-  getAdaptiveRadius 
-} from '@/utils/heatmapGradients';
-import { 
-  generateBuildingExtrusionLayer,
-  generateBuildingFootprintLayer,
-  generateTerrainContextLayers,
-  getAddressClusterConfig
-} from '@/utils/buildingExtrusions';
+import { generateHeatmapColorExpression, calculateHeatmapWeight, getAdaptiveIntensity, getAdaptiveRadius } from '@/utils/heatmapGradients';
+import { generateBuildingExtrusionLayer, generateBuildingFootprintLayer, generateTerrainContextLayers, getAddressClusterConfig } from '@/utils/buildingExtrusions';
 import { mapboxConfig } from '@/utils/mapboxConfig';
 
 // Mapbox token
 mapboxgl.accessToken = 'pk.eyJ1Ijoic2tvZ3N0YWRpc2FrIiwiYSI6ImNtY3BhaXRpMjA0ZGcycHBqNHM4dmlwOW0ifQ.KKHGGPnrZVjNjDdITF-_bw';
-
 interface Map3DProps {
   className?: string;
 }
-
-export const Map3D: React.FC<Map3DProps> = ({ className }) => {
+export const Map3D: React.FC<Map3DProps> = ({
+  className
+}) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [popupPreschool, setPopupPreschool] = useState<Preschool | null>(null);
-  
   const {
     filteredPreschools,
     selectedPreschool,
@@ -49,7 +38,6 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     preschools,
     updateVisiblePreschoolsFromViewport
   } = useMapStore();
-
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -78,7 +66,10 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       });
 
       // Add terrain layer
-      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+      map.current.setTerrain({
+        'source': 'mapbox-dem',
+        'exaggeration': 1.5
+      });
 
       // Add Nordic-inspired sky and atmosphere
       map.current.addLayer({
@@ -88,7 +79,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
           'sky-type': 'atmosphere',
           'sky-atmosphere-sun': [0.0, 0.0],
           'sky-atmosphere-sun-intensity': 12,
-          'sky-atmosphere-color': 'hsl(210, 85%, 85%)', // Nordic blue atmosphere
+          'sky-atmosphere-color': 'hsl(210, 85%, 85%)',
+          // Nordic blue atmosphere
           'sky-atmosphere-halo-color': 'hsl(207, 89%, 90%)' // Light Nordic halo
         }
       });
@@ -109,16 +101,13 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     }), 'top-right');
 
     // Add geolocate control
-    map.current.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true
-        },
-        trackUserLocation: true,
-        showUserHeading: true
-      }),
-      'top-right'
-    );
+    map.current.addControl(new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true
+      },
+      trackUserLocation: true,
+      showUserHeading: true
+    }), 'top-right');
 
     // Handle map movement
     map.current.on('moveend', () => {
@@ -127,7 +116,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       const zoom = map.current.getZoom();
       setMapCenter([center.lng, center.lat]);
       setMapZoom(zoom);
-      
+
       // Update visible preschools for list module
       const bounds = map.current.getBounds();
       updateVisiblePreschoolsFromViewport({
@@ -137,7 +126,6 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         west: bounds.getWest()
       });
     });
-
     return () => {
       map.current?.remove();
     };
@@ -154,19 +142,12 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
     // Remove existing preschool layers and sources
-    const layersToRemove = [
-      'preschools-heatmap', 'preschools-heatmap-pulse', 
-      'preschools-clusters', 'preschools-cluster-count', 
-      'preschools-unclustered', 'preschool-buildings-3d',
-      'preschool-buildings-footprint', 'parks-context', 'schools-context', 'preschool-labels'
-    ];
-    
+    const layersToRemove = ['preschools-heatmap', 'preschools-heatmap-pulse', 'preschools-clusters', 'preschools-cluster-count', 'preschools-unclustered', 'preschool-buildings-3d', 'preschool-buildings-footprint', 'parks-context', 'schools-context', 'preschool-labels'];
     layersToRemove.forEach(layerId => {
       if (map.current?.getLayer(layerId)) {
         map.current.removeLayer(layerId);
       }
     });
-    
     ['preschools', 'preschools-heatmap'].forEach(sourceId => {
       if (map.current?.getSource(sourceId)) {
         map.current.removeSource(sourceId);
@@ -174,15 +155,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     });
 
     // Filter out preschools without valid coordinates
-    const validPreschools = filteredPreschools.filter(p => 
-      p.latitud && p.longitud && 
-      p.latitud !== 0 && p.longitud !== 0 &&
-      p.latitud >= 55.0 && p.latitud <= 69.1 && 
-      p.longitud >= 10.9 && p.longitud <= 24.2
-    );
-
+    const validPreschools = filteredPreschools.filter(p => p.latitud && p.longitud && p.latitud !== 0 && p.longitud !== 0 && p.latitud >= 55.0 && p.latitud <= 69.1 && p.longitud >= 10.9 && p.longitud <= 24.2);
     console.log(`Rendering ${validPreschools.length}/${filteredPreschools.length} preschools on map`);
-
     if (validPreschools.length === 0) return;
 
     // Create GeoJSON data from valid preschools
@@ -221,7 +195,6 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       // Enhanced adaptive intensity calculation
       const dataCount = validPreschools.length;
       const adaptiveIntensity = getAdaptiveIntensity(dataCount, currentZoom, heatmapIntensity);
-
       map.current.addLayer({
         id: 'preschools-heatmap',
         type: 'heatmap',
@@ -229,42 +202,15 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         maxzoom: 7,
         paint: {
           // Enhanced weight calculation with data-driven expressions
-          'heatmap-weight': [
-            'interpolate',
-            ['exponential', 1.2],
-            ['get', 'weight'],
-            0, 0.1,
-            0.5, 0.8,
-            1, 1.5,
-            2, 2.5,
-            5, 4
-          ],
+          'heatmap-weight': ['interpolate', ['exponential', 1.2], ['get', 'weight'], 0, 0.1, 0.5, 0.8, 1, 1.5, 2, 2.5, 5, 4],
           // Adaptive intensity based on zoom and data density
-          'heatmap-intensity': [
-            'interpolate',
-            ['exponential', 1.5],
-            ['zoom'],
-            1, adaptiveIntensity * 0.3,
-            3, adaptiveIntensity * 0.6,
-            5, adaptiveIntensity * 1.0,
-            6, adaptiveIntensity * 1.2
-          ],
+          'heatmap-intensity': ['interpolate', ['exponential', 1.5], ['zoom'], 1, adaptiveIntensity * 0.3, 3, adaptiveIntensity * 0.6, 5, adaptiveIntensity * 1.0, 6, adaptiveIntensity * 1.2],
           // Dynamic gradient based on heatmap type
           'heatmap-color': generateHeatmapColorExpression(heatmapType) as any,
           // Smart adaptive radius
           'heatmap-radius': getAdaptiveRadius(currentZoom, dataCount),
           // Dynamic opacity that increases with zoom for better visibility
-          'heatmap-opacity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            1, 0.4,
-            2, 0.5,
-            3, 0.65,
-            4, 0.75,
-            5, 0.85,
-            6, 0.9
-          ]
+          'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 1, 0.4, 2, 0.5, 3, 0.65, 4, 0.75, 5, 0.85, 6, 0.9]
         }
       });
 
@@ -276,34 +222,10 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
           source: 'preschools-heatmap',
           maxzoom: 7,
           paint: {
-            'heatmap-weight': [
-              'case',
-              ['>', ['get', 'weight'], 2],
-              ['*', ['get', 'weight'], 1.5],
-              0
-            ],
-            'heatmap-intensity': [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              4, 0.3,
-              6, 0.6
-            ],
-            'heatmap-color': [
-              'interpolate',
-              ['linear'],
-              ['heatmap-density'],
-              0, 'rgba(255, 255, 255, 0)',
-              0.5, 'rgba(255, 255, 255, 0.1)',
-              1, 'rgba(255, 255, 255, 0.3)'
-            ],
-            'heatmap-radius': [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              4, 15,
-              6, 25
-            ],
+            'heatmap-weight': ['case', ['>', ['get', 'weight'], 2], ['*', ['get', 'weight'], 1.5], 0],
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.3, 6, 0.6],
+            'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(255, 255, 255, 0)', 0.5, 'rgba(255, 255, 255, 0.1)', 1, 'rgba(255, 255, 255, 0.3)'],
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 4, 15, 6, 25],
             'heatmap-opacity': 0.6
           }
         });
@@ -312,8 +234,9 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
 
     // Add smart clustering with enhanced configuration
     if (shouldShowClusters || shouldShowMarkers) {
-      const clusterConfig = shouldShowClusters ? getAddressClusterConfig() : { cluster: false };
-      
+      const clusterConfig = shouldShowClusters ? getAddressClusterConfig() : {
+        cluster: false
+      };
       map.current.addSource('preschools', {
         type: 'geojson',
         data: geojsonData,
@@ -329,26 +252,15 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         source: 'preschools',
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': [
-            'interpolate',
-            ['linear'],
-            ['get', 'avg_rating'],
-            0, '#ef4444', // Red for low/no rating
-            2.5, '#f59e0b', // Orange for medium
-            4, '#22c55e', // Green for high quality
-            5, '#059669' // Dark green for excellent
+          'circle-color': ['interpolate', ['linear'], ['get', 'avg_rating'], 0, '#ef4444',
+          // Red for low/no rating
+          2.5, '#f59e0b',
+          // Orange for medium
+          4, '#22c55e',
+          // Green for high quality
+          5, '#059669' // Dark green for excellent
           ],
-          'circle-radius': [
-            'interpolate',
-            ['linear'],
-            ['get', 'point_count'],
-            1, 15,
-            10, 25,
-            50, 35,
-            100, 45,
-            500, 55,
-            1000, 65
-          ],
+          'circle-radius': ['interpolate', ['linear'], ['get', 'point_count'], 1, 15, 10, 25, 50, 35, 100, 45, 500, 55, 1000, 65],
           'circle-stroke-width': 2,
           'circle-stroke-color': '#ffffff',
           'circle-opacity': 0.8
@@ -379,27 +291,11 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         type: 'circle',
         source: 'preschools',
         filter: shouldShowClusters ? ['!', ['has', 'point_count']] : ['all'],
-        minzoom: 10, // Show markers from zoom 10+
+        minzoom: 10,
+        // Show markers from zoom 10+
         paint: {
-          'circle-color': [
-            'case',
-            ['==', ['get', 'huvudman'], 'Kommunal'],
-            mapboxConfig.swedenStyle.preschoolColors.municipal,
-            ['==', ['get', 'huvudman'], 'Privat'],
-            mapboxConfig.swedenStyle.preschoolColors.private,
-            ['==', ['get', 'huvudman'], 'Kooperativ'],
-            mapboxConfig.swedenStyle.preschoolColors.cooperative,
-            mapboxConfig.swedenStyle.preschoolColors.unknown
-          ],
-          'circle-radius': [
-            'interpolate',
-            ['linear'],
-            ['get', 'antal_barn'],
-            0, mapboxConfig.settings.markerSizes.small,
-            20, mapboxConfig.settings.markerSizes.small,
-            50, mapboxConfig.settings.markerSizes.medium,
-            100, mapboxConfig.settings.markerSizes.large
-          ],
+          'circle-color': ['case', ['==', ['get', 'huvudman'], 'Kommunal'], mapboxConfig.swedenStyle.preschoolColors.municipal, ['==', ['get', 'huvudman'], 'Privat'], mapboxConfig.swedenStyle.preschoolColors.private, ['==', ['get', 'huvudman'], 'Kooperativ'], mapboxConfig.swedenStyle.preschoolColors.cooperative, mapboxConfig.swedenStyle.preschoolColors.unknown],
+          'circle-radius': ['interpolate', ['linear'], ['get', 'antal_barn'], 0, mapboxConfig.settings.markerSizes.small, 20, mapboxConfig.settings.markerSizes.small, 50, mapboxConfig.settings.markerSizes.medium, 100, mapboxConfig.settings.markerSizes.large],
           'circle-stroke-width': 2,
           'circle-stroke-color': '#ffffff',
           'circle-opacity': 0.8
@@ -431,23 +327,20 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
 
     // Add click handlers for individual markers
     if (map.current.getLayer('preschools-unclustered')) {
-      map.current.on('click', 'preschools-unclustered', (e) => {
+      map.current.on('click', 'preschools-unclustered', e => {
         if (e.features && e.features[0]) {
           const feature = e.features[0];
           const preschoolId = feature.properties?.id;
           const preschool = filteredPreschools.find(p => p.id === preschoolId);
-          
           if (preschool) {
             setPopupPreschool(preschool);
             setShowPopup(true);
           }
         }
       });
-
       map.current.on('mouseenter', 'preschools-unclustered', () => {
         if (map.current) map.current.getCanvas().style.cursor = 'pointer';
       });
-
       map.current.on('mouseleave', 'preschools-unclustered', () => {
         if (map.current) map.current.getCanvas().style.cursor = '';
       });
@@ -457,116 +350,70 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
   // Calculate national averages for popup comparisons
   const nationalAverage = React.useMemo(() => {
     if (preschools.length === 0) return undefined;
-    
     const validChildren = preschools.filter(p => p.antal_barn).map(p => p.antal_barn!);
     const validStaff = preschools.filter(p => p.personaltäthet).map(p => p.personaltäthet!);
     const validExam = preschools.filter(p => p.andel_med_förskollärarexamen).map(p => p.andel_med_förskollärarexamen!);
     const validRating = preschools.filter(p => p.google_rating).map(p => p.google_rating!);
-
     return {
       avgChildren: validChildren.length > 0 ? Math.round(validChildren.reduce((a, b) => a + b, 0) / validChildren.length) : 0,
-      avgStaff: validStaff.length > 0 ? (validStaff.reduce((a, b) => a + b, 0) / validStaff.length) : 0,
+      avgStaff: validStaff.length > 0 ? validStaff.reduce((a, b) => a + b, 0) / validStaff.length : 0,
       avgTeacherExam: validExam.length > 0 ? Math.round(validExam.reduce((a, b) => a + b, 0) / validExam.length) : 0,
-      avgRating: validRating.length > 0 ? (validRating.reduce((a, b) => a + b, 0) / validRating.length) : 0,
+      avgRating: validRating.length > 0 ? validRating.reduce((a, b) => a + b, 0) / validRating.length : 0
     };
   }, [preschools]);
-
-  return (
-    <div className={`relative ${className}`}>
+  return <div className={`relative ${className}`}>
       <AnimatePresence>
-        {showPopup && popupPreschool && (
-          <EnhancedPopup
-            preschool={popupPreschool}
-            onClose={() => {
-              setShowPopup(false);
-              setPopupPreschool(null);
-            }}
-            onViewDetails={() => {
-              setSelectedPreschool(popupPreschool);
-              setShowPopup(false);
-              setPopupPreschool(null);
-            }}
-            nationalAverage={nationalAverage}
-          />
-        )}
+        {showPopup && popupPreschool && <EnhancedPopup preschool={popupPreschool} onClose={() => {
+        setShowPopup(false);
+        setPopupPreschool(null);
+      }} onViewDetails={() => {
+        setSelectedPreschool(popupPreschool);
+        setShowPopup(false);
+        setPopupPreschool(null);
+      }} nationalAverage={nationalAverage} />}
       </AnimatePresence>
       <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden" />
       
-      {isLoading && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 backdrop-blur-sm flex items-center justify-center rounded-lg"
-        >
+      {isLoading && <motion.div initial={{
+      opacity: 0
+    }} animate={{
+      opacity: 1
+    }} exit={{
+      opacity: 0
+    }} className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 backdrop-blur-sm flex items-center justify-center rounded-lg">
           <div className="text-center">
             <div className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-foreground font-medium">Laddar 3D-karta över Sverige...</p>
           </div>
-        </motion.div>
-      )}
+        </motion.div>}
 
       {/* Map controls */}
-      <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg p-3 space-y-2">
-        <button
-          onClick={() => {
-            if (map.current) {
-              map.current.flyTo({
-                center: [15.0, 62.0],
-                zoom: 5,
-                pitch: 45,
-                bearing: 0,
-                duration: 2000
-              });
-            }
-          }}
-          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-        >
-          🇸🇪 Hela Sverige
-        </button>
+      <div className="absolute top-4 left-4 backdrop-blur-sm p-3 space-y-2 mx-0 px-[10px] my-0 rounded-lg py-[50px] bg-[#000a0e]/[0.31]">
         
-        <button
-          onClick={() => {
-            // Get user location and fly there
-            navigator.geolocation.getCurrentPosition((position) => {
-              if (map.current) {
-                map.current.flyTo({
-                  center: [position.coords.longitude, position.coords.latitude],
-                  zoom: 12,
-                  pitch: 60,
-                  duration: 2000
-                });
-              }
+        
+        <button onClick={() => {
+        // Get user location and fly there
+        navigator.geolocation.getCurrentPosition(position => {
+          if (map.current) {
+            map.current.flyTo({
+              center: [position.coords.longitude, position.coords.latitude],
+              zoom: 12,
+              pitch: 60,
+              duration: 2000
             });
-          }}
-          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-        >
-          📍 Min position
-        </button>
+          }
+        });
+      }} className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors mx-0 my-0 px-0 py-[5px]">Förskolor nära mig</button>
       </div>
 
       {/* Enhanced preschool count with context */}
       <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg px-4 py-2">
         <p className="text-sm font-medium text-foreground">
-          {filteredPreschools.filter(p => 
-            p.latitud && p.longitud && 
-            p.latitud !== 0 && p.longitud !== 0 &&
-            p.latitud >= 55.0 && p.latitud <= 69.1 && 
-            p.longitud >= 10.9 && p.longitud <= 24.2
-          ).length} av {filteredPreschools.length} förskolor på kartan
+          {filteredPreschools.filter(p => p.latitud && p.longitud && p.latitud !== 0 && p.longitud !== 0 && p.latitud >= 55.0 && p.latitud <= 69.1 && p.longitud >= 10.9 && p.longitud <= 24.2).length} av {filteredPreschools.length} förskolor på kartan
         </p>
-        {filteredPreschools.length > filteredPreschools.filter(p => 
-          p.latitud && p.longitud && 
-          p.latitud !== 0 && p.longitud !== 0
-        ).length && (
-          <p className="text-xs text-muted-foreground">
-            {filteredPreschools.length - filteredPreschools.filter(p => 
-              p.latitud && p.longitud && 
-              p.latitud !== 0 && p.longitud !== 0
-            ).length} saknar koordinater
-          </p>
-        )}
+        {filteredPreschools.length > filteredPreschools.filter(p => p.latitud && p.longitud && p.latitud !== 0 && p.longitud !== 0).length && <p className="text-xs text-muted-foreground">
+            {filteredPreschools.length - filteredPreschools.filter(p => p.latitud && p.longitud && p.latitud !== 0 && p.longitud !== 0).length} saknar koordinater
+          </p>}
       </div>
-    </div>
-  );
+    </div>;
 };
