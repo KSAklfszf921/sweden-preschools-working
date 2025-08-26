@@ -26,19 +26,112 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<Array<{
+    type: 'kommun' | 'preschool';
+    value: string;
+    label: string;
+    count?: number;
+  }>>([]);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const debouncedSearchQuery = useDebounce(searchQuery, 200);
 
   // Memoized unique values for performance
   const uniqueKommuner = useMemo(() => [...new Set(preschools.map(p => p.kommun))].filter(Boolean).sort(), [preschools]);
 
-  // Debounced search effect
+  // Generate suggestions based on search query
+  const generateSuggestions = useCallback((query: string) => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const suggestions: Array<{
+      type: 'kommun' | 'preschool';
+      value: string;
+      label: string;
+      count?: number;
+    }> = [];
+
+    // Add kommun suggestions
+    const matchingKommuner = uniqueKommuner.filter(k => 
+      k.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 5);
+
+    matchingKommuner.forEach(kommun => {
+      const count = preschools.filter(p => p.kommun === kommun).length;
+      suggestions.push({
+        type: 'kommun',
+        value: kommun,
+        label: kommun,
+        count
+      });
+    });
+
+    // Add preschool suggestions
+    const matchingPreschools = preschools.filter(p => 
+      p.namn.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 8);
+
+    matchingPreschools.forEach(preschool => {
+      suggestions.push({
+        type: 'preschool',
+        value: preschool.namn,
+        label: `${preschool.namn}, ${preschool.kommun}`
+      });
+    });
+
+    setSuggestions(suggestions.slice(0, 10));
+    setShowSuggestions(suggestions.length > 0);
+  }, [uniqueKommuner, preschools]);
+
+  // Handle search query changes
   useEffect(() => {
-    if (debouncedSearchQuery.length > 0) {
+    generateSuggestions(searchQuery);
+  }, [searchQuery, generateSuggestions]);
+
+  // Handle suggestion selection
+  const handleSuggestionClick = useCallback((suggestion: typeof suggestions[0]) => {
+    if (suggestion.type === 'kommun') {
+      setSearchQuery(suggestion.value);
+      setSearchFilters({
+        kommuner: [suggestion.value]
+      });
+    } else {
+      setSearchQuery(suggestion.value);
+      setSearchFilters({
+        query: suggestion.value
+      });
+    }
+    setShowSuggestions(false);
+  }, [setSearchFilters]);
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current && 
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current && 
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced search effect - simplified since suggestions handle the display
+  useEffect(() => {
+    if (debouncedSearchQuery.length > 0 && !showSuggestions) {
       const kommun = uniqueKommuner.find(k => k.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
       if (kommun) {
         setSearchFilters({
@@ -50,10 +143,9 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
         });
       }
     } else if (debouncedSearchQuery.length === 0 && searchQuery.length === 0) {
-      // Only clear when both debounced and actual query are empty
       clearFilters();
     }
-  }, [debouncedSearchQuery, uniqueKommuner, setSearchFilters, clearFilters, searchQuery]);
+  }, [debouncedSearchQuery, uniqueKommuner, setSearchFilters, clearFilters, searchQuery, showSuggestions]);
   const handleGetCurrentLocation = useCallback(() => {
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(position => {
@@ -148,10 +240,60 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
           <div className="space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input ref={inputRef} type="text" placeholder="Sök kommun eller förskola..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 pr-10 border-0 focus:ring-2 focus:ring-primary/20" />
-              {searchQuery && <Button size="sm" variant="ghost" onClick={clearSearch} className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted/50">
+              <Input 
+                ref={inputRef} 
+                type="text" 
+                placeholder="Sök kommun eller förskola..." 
+                value={searchQuery} 
+                onChange={e => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
+                className="pl-10 pr-10 border-0 focus:ring-2 focus:ring-primary/20" 
+              />
+              {searchQuery && (
+                <Button size="sm" variant="ghost" onClick={clearSearch} className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted/50">
                   <X className="h-3 w-3" />
-                </Button>}
+                </Button>
+              )}
+              
+              {/* Suggestions dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <motion.div
+                  ref={suggestionsRef}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 mt-1 bg-background/95 backdrop-blur-sm border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={`${suggestion.type}-${suggestion.value}-${index}`}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-3 py-2 hover:bg-muted/50 cursor-pointer transition-colors text-sm border-b border-border/50 last:border-b-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {suggestion.type === 'kommun' ? (
+                            <MapPin className="h-3 w-3 text-primary" />
+                          ) : (
+                            <Search className="h-3 w-3 text-muted-foreground" />
+                          )}
+                          <span className="text-foreground">{suggestion.label}</span>
+                        </div>
+                        {suggestion.count && (
+                          <Badge variant="secondary" className="text-xs h-4 px-1">
+                            {suggestion.count}
+                          </Badge>
+                        )}
+                      </div>
+                      {suggestion.type === 'kommun' && (
+                        <div className="text-xs text-muted-foreground ml-5">
+                          {suggestion.count} förskolor
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </motion.div>
+              )}
             </div>
 
             {/* Quick filters */}
