@@ -473,6 +473,75 @@ export type Database = {
           },
         ]
       }
+      skolverket_forskoledata: {
+        Row: {
+          child_groups_total: string | null
+          children_1_5_years_count: string | null
+          children_1_5_years_percentage: string | null
+          children_other_mother_tongue_percentage: string | null
+          children_per_group: string | null
+          children_per_teacher: string | null
+          county: string | null
+          id: string | null
+          municipality_code: number | null
+          municipality_name: string | null
+          municipality_size: string | null
+          preschool_units_private: string | null
+          preschool_units_total: string | null
+          private_provision_percentage: string | null
+          public_provision_percentage: string | null
+          quality_category: string | null
+          staff_density_children_per_position: number | null
+          teacher_license_percentage: number | null
+          teacher_qualification_percentage: number | null
+          total_enrolled_children: string | null
+        }
+        Insert: {
+          child_groups_total?: string | null
+          children_1_5_years_count?: string | null
+          children_1_5_years_percentage?: string | null
+          children_other_mother_tongue_percentage?: string | null
+          children_per_group?: string | null
+          children_per_teacher?: string | null
+          county?: string | null
+          id?: string | null
+          municipality_code?: number | null
+          municipality_name?: string | null
+          municipality_size?: string | null
+          preschool_units_private?: string | null
+          preschool_units_total?: string | null
+          private_provision_percentage?: string | null
+          public_provision_percentage?: string | null
+          quality_category?: string | null
+          staff_density_children_per_position?: number | null
+          teacher_license_percentage?: number | null
+          teacher_qualification_percentage?: number | null
+          total_enrolled_children?: string | null
+        }
+        Update: {
+          child_groups_total?: string | null
+          children_1_5_years_count?: string | null
+          children_1_5_years_percentage?: string | null
+          children_other_mother_tongue_percentage?: string | null
+          children_per_group?: string | null
+          children_per_teacher?: string | null
+          county?: string | null
+          id?: string | null
+          municipality_code?: number | null
+          municipality_name?: string | null
+          municipality_size?: string | null
+          preschool_units_private?: string | null
+          preschool_units_total?: string | null
+          private_provision_percentage?: string | null
+          public_provision_percentage?: string | null
+          quality_category?: string | null
+          staff_density_children_per_position?: number | null
+          teacher_license_percentage?: number | null
+          teacher_qualification_percentage?: number | null
+          total_enrolled_children?: string | null
+        }
+        Relationships: []
+      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -646,6 +715,123 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      swedish_preschools: {
+        Row: {
+          child_groups_total: number | null
+          children_1_5_years_count: number | null
+          children_1_5_years_percentage: number | null
+          children_other_mother_tongue_percentage: number | null
+          children_per_group: number | null
+          children_per_teacher: number | null
+          county: string
+          county_code: string | null
+          created_at: string | null
+          data_source: string | null
+          data_year: number | null
+          id: string
+          inconvenient_hours_places: number | null
+          municipality_code: number
+          municipality_name: string
+          municipality_size: string | null
+          open_preschool_education_percentage: number | null
+          open_preschool_positions: number | null
+          open_preschool_units: number | null
+          population_density_category: string | null
+          preschool_units_private: number | null
+          preschool_units_public: number | null
+          preschool_units_total: number | null
+          private_provision_percentage: number | null
+          public_provision_percentage: number | null
+          quality_category: string | null
+          quality_score: number | null
+          staff_density_children_per_position: number | null
+          staff_density_private: number | null
+          staff_density_public: number | null
+          teacher_license_percentage: number | null
+          teacher_qualification_percentage: number | null
+          teacher_qualification_private_percentage: number | null
+          teacher_qualification_public_percentage: number | null
+          total_enrolled_children: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          child_groups_total?: number | null
+          children_1_5_years_count?: number | null
+          children_1_5_years_percentage?: number | null
+          children_other_mother_tongue_percentage?: number | null
+          children_per_group?: number | null
+          children_per_teacher?: number | null
+          county: string
+          county_code?: string | null
+          created_at?: string | null
+          data_source?: string | null
+          data_year?: number | null
+          id?: string
+          inconvenient_hours_places?: number | null
+          municipality_code: number
+          municipality_name: string
+          municipality_size?: string | null
+          open_preschool_education_percentage?: number | null
+          open_preschool_positions?: number | null
+          open_preschool_units?: number | null
+          population_density_category?: string | null
+          preschool_units_private?: number | null
+          preschool_units_public?: number | null
+          preschool_units_total?: number | null
+          private_provision_percentage?: number | null
+          public_provision_percentage?: number | null
+          quality_category?: string | null
+          quality_score?: number | null
+          staff_density_children_per_position?: number | null
+          staff_density_private?: number | null
+          staff_density_public?: number | null
+          teacher_license_percentage?: number | null
+          teacher_qualification_percentage?: number | null
+          teacher_qualification_private_percentage?: number | null
+          teacher_qualification_public_percentage?: number | null
+          total_enrolled_children?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          child_groups_total?: number | null
+          children_1_5_years_count?: number | null
+          children_1_5_years_percentage?: number | null
+          children_other_mother_tongue_percentage?: number | null
+          children_per_group?: number | null
+          children_per_teacher?: number | null
+          county?: string
+          county_code?: string | null
+          created_at?: string | null
+          data_source?: string | null
+          data_year?: number | null
+          id?: string
+          inconvenient_hours_places?: number | null
+          municipality_code?: number
+          municipality_name?: string
+          municipality_size?: string | null
+          open_preschool_education_percentage?: number | null
+          open_preschool_positions?: number | null
+          open_preschool_units?: number | null
+          population_density_category?: string | null
+          preschool_units_private?: number | null
+          preschool_units_public?: number | null
+          preschool_units_total?: number | null
+          private_provision_percentage?: number | null
+          public_provision_percentage?: number | null
+          quality_category?: string | null
+          quality_score?: number | null
+          staff_density_children_per_position?: number | null
+          staff_density_private?: number | null
+          staff_density_public?: number | null
+          teacher_license_percentage?: number | null
+          teacher_qualification_percentage?: number | null
+          teacher_qualification_private_percentage?: number | null
+          teacher_qualification_public_percentage?: number | null
+          total_enrolled_children?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       user_favorites: {
         Row: {

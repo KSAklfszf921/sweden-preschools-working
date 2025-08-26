@@ -19,4 +19,25 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Optimize build for production deployment
+    target: 'es2015',
+    minify: 'terser',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          mapbox: ['mapbox-gl'],
+          supabase: ['@supabase/supabase-js'],
+        },
+      },
+    },
+    // Increase chunk size warning limit for map components
+    chunkSizeWarningLimit: 1000,
+  },
+  // Optimize dependencies for faster loading
+  optimizeDeps: {
+    include: ['mapbox-gl', '@supabase/supabase-js', 'react', 'react-dom'],
+  },
 }));

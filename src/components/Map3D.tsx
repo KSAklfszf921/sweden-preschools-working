@@ -47,10 +47,10 @@ export const Map3D: React.FC<Map3DProps> = ({
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map with Sweden focus - allow full world view
+    // Initialize map with compatible style for deployment
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/skogstadisak/cmes217k800am01qtckhcd0pi',
+      style: 'mapbox://styles/mapbox/streets-v12', // Compatible public style for deployment
       center: [15.5, 62.0],
       zoom: 5.5,
       pitch: 30,
