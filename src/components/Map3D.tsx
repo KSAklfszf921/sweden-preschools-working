@@ -411,7 +411,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
           'text-halo-color': '#ffffff',
           'text-halo-width': 1
         }
-        });
+      });
     }
 
     // Add click handlers for individual markers
@@ -437,91 +437,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         if (map.current) map.current.getCanvas().style.cursor = '';
       });
     }
-  }, [filteredPreschools, layerVisibility, shouldShowClusters, shouldShowMarkers]);
-
-    // Add 3D buildings for very high zoom (14+)
-    if (currentZoom >= 14 && layerVisibility.markers) {
-      const buildingLayer = generateBuildingExtrusionLayer(currentZoom);
-      map.current.addLayer(buildingLayer);
-    }
-
-    // Add building footprints for medium-high zoom (12-14)
-    if (currentZoom >= 12 && currentZoom < 14 && layerVisibility.markers) {
-      const footprintLayer = generateBuildingFootprintLayer();
-      map.current.addLayer(footprintLayer);
-    }
-
-    // Add terrain context layers for environmental context
-    if (currentZoom >= 12 && layerVisibility.communeBorders) {
-      const contextLayers = generateTerrainContextLayers();
-      contextLayers.forEach(layer => {
-        map.current?.addLayer(layer);
-      });
-    }
-
-    // Add click handlers
-    map.current.on('click', 'preschools-clusters', (e) => {
-      if (!map.current) return;
-      const features = map.current.queryRenderedFeatures(e.point, {
-        layers: ['preschools-clusters']
-      });
-      const clusterId = features[0].properties?.cluster_id;
-      
-      if (clusterId !== undefined) {
-        (map.current.getSource('preschools') as mapboxgl.GeoJSONSource).getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err || !map.current) return;
-          map.current.easeTo({
-            center: (features[0].geometry as any).coordinates,
-            zoom: zoom
-          });
-        });
-      }
-    });
-
-    // Enhanced click handlers with popup system
-    map.current.on('click', 'preschools-unclustered', (e) => {
-      const feature = e.features?.[0];
-      if (feature?.properties) {
-        const preschool = filteredPreschools.find(p => p.id === feature.properties?.id);
-        if (preschool) {
-          setPopupPreschool(preschool);
-          setShowPopup(true);
-          
-          // Gentle zoom to the selected preschool
-          map.current?.easeTo({
-            center: [preschool.longitud, preschool.latitud],
-            zoom: Math.max(currentZoom, 13),
-            pitch: 45,
-            duration: 1500
-          });
-        }
-      }
-    });
-
-    // Click handler for 3D buildings
-    map.current.on('click', 'preschool-buildings-3d', (e) => {
-      const feature = e.features?.[0];
-      if (feature?.properties) {
-        const preschool = filteredPreschools.find(p => p.id === feature.properties?.id);
-        if (preschool) {
-          setPopupPreschool(preschool);
-          setShowPopup(true);
-        }
-      }
-    });
-
-    // Enhanced hover effects with multi-state interactions
-    const cursorLayers = ['preschools-clusters', 'preschools-unclustered', 'preschool-buildings-3d'];
-    cursorLayers.forEach(layerId => {
-      map.current.on('mouseenter', layerId, () => {
-        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
-      });
-      map.current.on('mouseleave', layerId, () => {
-        if (map.current) map.current.getCanvas().style.cursor = '';
-      });
-    });
-
-  }, [filteredPreschools, showClusters, setSelectedPreschool, mapZoom, heatmapType, heatmapIntensity, layerVisibility]);
+  }, [filteredPreschools, layerVisibility, mapZoom, heatmapType, heatmapIntensity, setSelectedPreschool]);
 
   // Calculate national averages for popup comparisons
   const nationalAverage = React.useMemo(() => {
