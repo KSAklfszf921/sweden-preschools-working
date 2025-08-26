@@ -68,12 +68,13 @@ export const CoordinateBatchProcessor: React.FC<BatchProcessorProps> = ({
 
         console.log(`Processing batch ${i + 1}/${batches}: ${batch.length} preschools`);
 
-        // Prepare data for geocoding service
+        // Prepare data for geocoding service with proper format including Postnummer
         const preschoolsForGeocoding = batch.map(p => ({
           id: p.id,
           Namn: p.namn,
           Adress: p.adress,
           Kommun: p.kommun,
+          Postnummer: null, // Will be filled if available in database
           Latitud: p.latitud,
           Longitud: p.longitud
         }));

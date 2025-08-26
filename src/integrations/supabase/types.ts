@@ -629,6 +629,10 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      bulk_update_coordinates: {
+        Args: { updates: Json[] }
+        Returns: undefined
+      }
       bytea: {
         Args: { "": unknown } | { "": unknown }
         Returns: string
