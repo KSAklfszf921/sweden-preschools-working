@@ -446,7 +446,7 @@ export const useMapStore = create<MapState>((set, get) => ({
     const { filteredPreschools, listSortOrder } = get();
     
     // Filter preschools within viewport bounds
-    let visibleInViewport = filteredPreschools.filter(preschool => 
+    const visibleInViewport = filteredPreschools.filter(preschool => 
       preschool.latitud && preschool.longitud &&
       preschool.latitud >= bounds.south && preschool.latitud <= bounds.north &&
       preschool.longitud >= bounds.west && preschool.longitud <= bounds.east
@@ -482,7 +482,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   applyFilters: () => {
     const { preschools, searchFilters } = get();
     
-    let filtered = preschools.filter(preschool => {
+    const filtered = preschools.filter(preschool => {
       // Query filter (search in name and kommun)
       if (searchFilters.query) {
         const query = searchFilters.query.toLowerCase();

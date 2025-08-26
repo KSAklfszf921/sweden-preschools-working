@@ -218,7 +218,7 @@ async function updateCoordinatesInDatabase(results: GeocodeResult[], supabase: a
 
   try {
     // Use direct table updates instead of RPC function that may not exist
-    let errors = [];
+    const errors = [];
     for (const result of successfulResults) {
       const { error } = await supabase
         .from('Förskolor')

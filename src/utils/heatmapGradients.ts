@@ -57,7 +57,7 @@ export const calculateHeatmapWeight = (preschool: any, type: HeatmapType, zoom: 
   let baseWeight = 1;
   
   switch (type) {
-    case 'density':
+    case 'density': {
       // Base weight with child count influence
       const childCount = preschool.antal_barn || 0;
       baseWeight = 1 + Math.log10(Math.max(childCount, 1)) * 0.3;
@@ -65,8 +65,9 @@ export const calculateHeatmapWeight = (preschool: any, type: HeatmapType, zoom: 
       const groupCount = preschool.antal_barngrupper || 1;
       baseWeight += Math.log10(groupCount + 1) * 0.2;
       break;
+    }
       
-    case 'staff':
+    case 'staff': {
       // Staff density with logarithmic scaling (higher is better)
       const staffRatio = preschool.personaltäthet || 0;
       if (staffRatio > 0) {
@@ -76,14 +77,16 @@ export const calculateHeatmapWeight = (preschool: any, type: HeatmapType, zoom: 
         baseWeight = 0.1; // Low weight for unknown staff ratio
       }
       break;
+    }
       
-    case 'quality':
+    case 'quality': {
       // Teacher qualification percentage with exponential scaling
       const qualPercent = preschool.andel_med_förskollärarexamen || 0;
       baseWeight = Math.max(0.2, Math.pow(qualPercent / 100, 0.7) * 2.5);
       break;
+    }
       
-    case 'rating':
+    case 'rating': {
       // Google rating with exponential emphasis on higher ratings
       const rating = preschool.google_rating || 0;
       if (rating > 0) {
@@ -97,8 +100,9 @@ export const calculateHeatmapWeight = (preschool: any, type: HeatmapType, zoom: 
         baseWeight = 0.1; // Low weight for no rating
       }
       break;
+    }
       
-    default:
+    default: {
       // Enhanced default weight considering multiple factors
       const childrenWeight = Math.log10(Math.max(preschool.antal_barn || 1, 1)) * 0.2;
       const ratingWeight = preschool.google_rating ? (preschool.google_rating / 5) * 0.3 : 0;
@@ -106,6 +110,7 @@ export const calculateHeatmapWeight = (preschool: any, type: HeatmapType, zoom: 
       const qualityWeight = preschool.andel_med_förskollärarexamen ? (preschool.andel_med_förskollärarexamen / 100) * 0.3 : 0;
       baseWeight = 1 + childrenWeight + ratingWeight + groupWeight + qualityWeight;
       break;
+    }
   }
   
   // Apply zoom-based weight adjustment to prevent oversaturation
