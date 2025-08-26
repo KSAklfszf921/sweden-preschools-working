@@ -7,70 +7,26 @@ interface LandingAnimationProps {
 }
 
 export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }) => {
-  const [preschoolCount, setPreschoolCount] = useState(0);
-  const [animationProgress, setAnimationProgress] = useState(0);
-  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
-  const totalPreschools = 8739;
+  const [stage, setStage] = useState(0);
 
-  // Main animation effect - single source of truth
   useEffect(() => {
-    const totalDuration = 3500; // 3.5 seconds total animation
-    const countingDuration = 2000; // 2 seconds for counting
-    const finalDisplayDuration = 1000; // 1 second to show final count
-    const startTime = Date.now();
-
-    const animationTimer = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / totalDuration, 1);
-      
-      setAnimationProgress(progress);
-
-      // Counting phase starts after initial setup (at 20% progress)
-      const countingStartProgress = 0.2;
-      const countingEndProgress = 0.8;
-      
-      if (progress >= countingStartProgress && progress <= countingEndProgress) {
-        const countingProgress = (progress - countingStartProgress) / (countingEndProgress - countingStartProgress);
-        
-        // Easing function: slow start, fast end (cubic ease-in)
-        const easedProgress = countingProgress * countingProgress * countingProgress;
-        
-        const newCount = Math.floor(easedProgress * totalPreschools);
-        setPreschoolCount(newCount);
-      } else if (progress > countingEndProgress) {
-        // Ensure final count is set
-        setPreschoolCount(totalPreschools);
+    const timer = setTimeout(() => {
+      if (stage < 4) {
+        setStage(stage + 1);
+      } else {
+        setTimeout(onComplete, 500);
       }
+    }, stage === 0 ? 1000 : 800);
 
-      // Complete animation
-      if (progress >= 1) {
-        clearInterval(animationTimer);
-        setIsAnimationComplete(true);
-        setTimeout(onComplete, finalDisplayDuration);
-      }
-    }, 16); // ~60fps for smooth animation
-
-    return () => clearInterval(animationTimer);
-  }, [onComplete, totalPreschools]);
-
-  // Calculate current stage based on animation progress
-  const getCurrentStage = () => {
-    if (animationProgress < 0.2) return 0;
-    if (animationProgress < 0.4) return 1;
-    if (animationProgress < 0.6) return 2;
-    if (animationProgress < 0.8) return 3;
-    return 4;
-  };
-
-  const currentStage = getCurrentStage();
+    return () => clearTimeout(timer);
+  }, [stage, onComplete]);
 
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 1 }}
-        exit={{ opacity: 0, scale: 1.1 }}
-        transition={{ duration: 0.8, ease: "easeInOut" }}
-        className="fixed inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20 z-50 flex items-center justify-center backdrop-blur-sm"
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20 z-50 flex items-center justify-center"
       >
         {/* Welcome message */}
         <motion.div
@@ -85,33 +41,33 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
             className="mb-8"
           >
             <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
-              Sveriges Förskolor
+              Förskolor i Sverige
             </h1>
             <p className="text-lg text-muted-foreground">
-              Upptäck och jämför alla förskolor i Sverige
+              Upptäck och jämför alla förskolor – i hela Sverige
             </p>
           </motion.div>
 
           {/* Progress indicators */}
           <div className="flex items-center justify-center gap-8 mb-8">
             {[
-              { icon: MapPin, label: 'Laddar karta', delay: 0 },
-              { icon: Search, label: 'Förbereder sökfilter', delay: 0.8 },
-              { icon: List, label: 'Hämtar förskolor', delay: 1.6 },
-              { icon: BarChart3, label: 'Beräknar statistik', delay: 2.4 }
+              { icon: MapPin, label: 'Bygger karta', delay: 0 },
+              { icon: Search, label: 'Hämtar data', delay: 0.8 },
+              { icon: List, label: 'Listar förskolor', delay: 1.6 },
+              { icon: BarChart3, label: 'Samlar statistik', delay: 2.4 }
             ].map(({ icon: Icon, label, delay }, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0.3, scale: 0.9 }}
                 animate={{
-                  opacity: currentStage >= index ? 1 : 0.3,
-                  scale: currentStage >= index ? 1 : 0.9
+                  opacity: stage >= index ? 1 : 0.3,
+                  scale: stage >= index ? 1 : 0.9
                 }}
                 transition={{ delay, duration: 0.3 }}
                 className="text-center"
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto ${
-                  currentStage >= index ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  stage >= index ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                 }`}>
                   <Icon className="w-6 h-6" />
                 </div>
@@ -125,18 +81,18 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
             <motion.div
               className="h-full bg-gradient-to-r from-primary to-secondary"
               initial={{ width: 0 }}
-              animate={{ width: `${animationProgress * 100}%` }}
-              transition={{ duration: 0.1 }}
+              animate={{ width: `${(stage / 4) * 100}%` }}
+              transition={{ duration: 0.5 }}
             />
           </div>
 
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: currentStage >= 2 ? 1 : 0 }}
-            transition={{ delay: currentStage >= 2 ? 0.2 : 3 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 3 }}
             className="text-sm text-muted-foreground mt-4"
           >
-            {preschoolCount.toLocaleString('sv-SE')} förskolor laddade
+            8,739 förskolor hämtade
           </motion.p>
         </motion.div>
       </motion.div>
