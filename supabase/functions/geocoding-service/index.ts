@@ -273,22 +273,24 @@ serve(async (req) => {
     });
 
     if (!googleApiKey) {
-      console.error('❌ Missing GOOGLE_GEOCODING_API_KEY');
+      console.error('❌ Missing GOOGLE_GEOCODING_API_KEY in Edge Function secrets');
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'Missing Google API key. Please configure GOOGLE_GEOCODING_API_KEY secret.' 
+          error: 'GOOGLE_GEOCODING_API_KEY not configured in Supabase Edge Function secrets',
+          details: 'Go to Supabase Dashboard → Settings → Edge Functions → Secrets and add GOOGLE_GEOCODING_API_KEY'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('❌ Missing Supabase configuration');
+    if (!supabaseKey) {
+      console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY in Edge Function secrets');
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'Missing Supabase configuration' 
+          error: 'SUPABASE_SERVICE_ROLE_KEY not configured in Supabase Edge Function secrets',
+          details: 'Go to Supabase Dashboard → Settings → Edge Functions → Secrets and add SUPABASE_SERVICE_ROLE_KEY'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
