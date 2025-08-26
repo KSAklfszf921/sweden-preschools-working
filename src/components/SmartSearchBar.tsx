@@ -8,7 +8,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SearchFilters } from '@/components/SearchFilters';
 
-export const SmartSearchBar: React.FC = () => {
+const SmartSearchBar: React.FC = () => {
   const { preschools, searchFilters, setSearchFilters, clearFilters } = useMapStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,15 +37,23 @@ export const SmartSearchBar: React.FC = () => {
 
       setSuggestions([...filteredKommuner, ...filteredPreschools]);
       setShowSuggestions(true);
+      setIsLoading(false);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsLoading(false);
+    }
+  }, [searchQuery, preschools, uniqueKommuner]);
 
-      // Auto-apply filters for exact matches
+  // Separate effect for applying search filters to avoid infinite loops
+  useEffect(() => {
+    if (searchQuery.length > 0) {
       const kommun = uniqueKommuner.find(k => 
         k.toLowerCase().includes(searchQuery.toLowerCase())
       );
       if (kommun) {
         setSearchFilters({ kommuner: [kommun] });
       } else {
-        // Search in preschool names
         const matchingPreschools = preschools.filter(p => 
           p.namn.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -53,13 +61,8 @@ export const SmartSearchBar: React.FC = () => {
           setSearchFilters({ query: searchQuery });
         }
       }
-      setIsLoading(false);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      setIsLoading(false);
     }
-  }, [searchQuery, preschools, uniqueKommuner, setSearchFilters]);
+  }, [searchQuery, uniqueKommuner, preschools]);
 
   const clearSearch = () => {
     setSearchQuery('');
@@ -229,3 +232,5 @@ export const SmartSearchBar: React.FC = () => {
     </div>
   );
 };
+
+export { SmartSearchBar };
