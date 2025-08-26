@@ -33,9 +33,10 @@ const Index = () => {
     searchBoxCollapsed,
     setSearchBoxCollapsed
   } = useMapStore();
-  const comparisonStore = useComparisonStore();
-  const selectedPreschools = comparisonStore.selectedPreschools || [];
-  const setIsOpen = comparisonStore.setIsOpen;
+  const {
+    selectedPreschools,
+    setIsOpen
+  } = useComparisonStore();
   const isMobile = useIsMobile();
   const [showLanding, setShowLanding] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -58,50 +59,37 @@ const Index = () => {
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" id="main-content">
         {/* Header */}
-        <motion.header 
-          initial={{ opacity: 0, y: -20 }} 
-          animate={{ opacity: showLanding ? 0 : 1, y: 0 }} 
-          transition={{ delay: showLanding ? 0 : 0.5 }} 
-          className="relative z-40 bg-gradient-to-r from-primary/5 via-background to-secondary/5 border-b border-border/20 backdrop-blur-sm"
-        >
+        <motion.header initial={{
+        opacity: 0,
+        y: -20
+      }} animate={{
+        opacity: showLanding ? 0 : 1,
+        y: 0
+      }} transition={{
+        delay: showLanding ? 0 : 0.5
+      }} className="relative z-40 bg-gradient-to-r from-primary/5 via-background to-secondary/5 border-b border-border/20 backdrop-blur-sm">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Logo and Title Section */}
               <div className="flex items-center space-x-4">
-                <img 
-                  src={preschoolIcon} 
-                  alt="Sveriges Förskolor"
-                  className="w-12 h-12 rounded-xl shadow-lg"
-                />
+                <img src={preschoolIcon} alt="Sveriges Förskolor" className="w-12 h-12 rounded-xl shadow-lg" />
                 <div>
                   <h1 className="text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
                     Sveriges Förskolor
                   </h1>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">
-                    Hitta och jämför förskolor i hela Sverige med avancerad kartfunktionalitet
-                  </p>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Hitta och jämför förskolor i hela Sverige</p>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3">
                 <StatisticsButton />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hidden sm:flex items-center gap-2 bg-background/50 hover:bg-accent/50 relative"
-                  onClick={() => setIsOpen(true)}
-                >
+                <Button variant="outline" size="sm" className="hidden sm:flex items-center gap-2 bg-background/50 hover:bg-accent/50 relative" onClick={() => setIsOpen(true)}>
                   <GitCompare className="w-4 h-4" />
                   Jämför
-                  {selectedPreschools.length > 0 && (
-                    <Badge 
-                      variant="secondary" 
-                      className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center"
-                    >
+                  {selectedPreschools.length > 0 && <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center">
                       {selectedPreschools.length}
-                    </Badge>
-                  )}
+                    </Badge>}
                 </Button>
                 <ThemeToggle />
               </div>
@@ -178,19 +166,16 @@ const Index = () => {
           {isMobile && <MobileNavigation />}
           
           {/* Admin Button */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: showLanding ? 0 : 1, y: 0 }}
-            transition={{ delay: showLanding ? 0 : 1.4 }}
-            className="fixed bottom-4 right-4 z-40"
-          >
-            <Button
-              onClick={() => setShowAdmin(true)}
-              variant="outline"
-              size="sm"
-              className="bg-card/95 backdrop-blur-sm hover:bg-accent/50"
-              title="Öppna adminpanel"
-            >
+          <motion.div initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: showLanding ? 0 : 1,
+          y: 0
+        }} transition={{
+          delay: showLanding ? 0 : 1.4
+        }} className="fixed bottom-4 right-4 z-40">
+            <Button onClick={() => setShowAdmin(true)} variant="outline" size="sm" className="bg-card/95 backdrop-blur-sm hover:bg-accent/50" title="Öppna adminpanel">
               <Settings className="w-4 h-4" />
             </Button>
           </motion.div>
