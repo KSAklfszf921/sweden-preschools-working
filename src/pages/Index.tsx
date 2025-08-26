@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Map3D } from '@/components/Map3D';
 import { SmartSearchBar } from '@/components/SmartSearchBar';
-
 import { PreschoolDetails } from '@/components/PreschoolDetails';
 import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { AdminPanel } from '@/components/AdminPanel';
@@ -14,13 +13,13 @@ import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
 import { SmartNotificationSystem } from '@/components/enhanced/SmartNotificationSystem';
-
 import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
 import { motion } from 'framer-motion';
-import { Settings } from 'lucide-react';
+import { Settings, BarChart3, GitCompare, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import preschoolIcon from '@/assets/preschool-icon.jpg';
 const Index = () => {
   const {
     isLoading,
@@ -49,24 +48,45 @@ const Index = () => {
       {/* Landing Animation */}
       {showLanding && <LandingAnimation onComplete={() => setShowLanding(false)} />}
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 bg-slate-50" id="main-content">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" id="main-content">
         {/* Header */}
-        <motion.header initial={{
-        opacity: 0,
-        y: -20
-      }} animate={{
-        opacity: showLanding ? 0 : 1,
-        y: 0
-      }} transition={{
-        delay: showLanding ? 0 : 0.5
-      }} className="relative z-40 backdrop-blur-xl border-b border-border/30 bg-neutral-50">
-          <div className="container mx-auto px-0 py-[10px] my-0 bg-slate-100">
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: showLanding ? 0 : 1, y: 0 }} 
+          transition={{ delay: showLanding ? 0 : 0.5 }} 
+          className="relative z-40 bg-gradient-to-r from-primary/5 via-background to-secondary/5 border-b border-border/20 backdrop-blur-sm"
+        >
+          <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="px-[20px] my-0 text-left text-[#000a0e] font-bold text-2xl">Sveriges förskolor</h1>
-                
+              {/* Logo and Title Section */}
+              <div className="flex items-center space-x-4">
+                <img 
+                  src={preschoolIcon} 
+                  alt="Sveriges Förskolor"
+                  className="w-12 h-12 rounded-xl shadow-lg"
+                />
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                    Sveriges Förskolor
+                  </h1>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">
+                    Hitta och jämför förskolor i hela Sverige med avancerad kartfunktionalitet
+                  </p>
+                </div>
               </div>
+
+              {/* Action Buttons */}
               <div className="flex items-center gap-3">
+                <StatisticsButton />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:flex items-center gap-2 bg-background/50 hover:bg-accent/50"
+                  onClick={() => {/* TODO: Open comparison panel */}}
+                >
+                  <GitCompare className="w-4 h-4" />
+                  Jämför
+                </Button>
                 <ThemeToggle />
               </div>
             </div>
@@ -88,18 +108,6 @@ const Index = () => {
             <SmartSearchBar />
           </motion.div>
 
-          {/* Statistics Button */}
-          <motion.div initial={{
-          opacity: 0,
-          y: -20
-        }} animate={{
-          opacity: showLanding ? 0 : 1,
-          y: 0
-        }} transition={{
-          delay: showLanding ? 0 : 1.2
-        }} className="absolute left-4 top-20 z-30">
-            <StatisticsButton />
-          </motion.div>
 
           {/* Preschool List Panel - right side */}
           <motion.div initial={{
