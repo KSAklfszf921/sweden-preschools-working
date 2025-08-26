@@ -270,6 +270,7 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({
     return stars;
   };
 
+  // Get huvudman information for display
   const huvudmanInfo = getHuvudmanInfo(preschool.huvudman);
   const HuvudmanIcon = huvudmanInfo.icon;
   const groupSize = calculateGroupSize();
