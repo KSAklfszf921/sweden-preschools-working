@@ -153,10 +153,11 @@ export const Map3D: React.FC<Map3DProps> = ({
       map.current.removeSource('preschools');
     }
 
-    // Filter out preschools without valid coordinates
+    // Filter out preschools without valid coordinates (handle null values properly)
     const validPreschools = filteredPreschools.filter(p => 
-      p.latitud && p.longitud && 
+      p.latitud !== null && p.longitud !== null && 
       p.latitud !== 0 && p.longitud !== 0 && 
+      typeof p.latitud === 'number' && typeof p.longitud === 'number' &&
       p.latitud >= 55.0 && p.latitud <= 69.1 && 
       p.longitud >= 10.9 && p.longitud <= 24.2
     );
@@ -441,10 +442,10 @@ export const Map3D: React.FC<Map3DProps> = ({
       {/* Enhanced preschool count with context */}
       <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg px-4 py-2">
         <p className="text-sm font-medium text-foreground">
-          {filteredPreschools.filter(p => p.latitud && p.longitud && p.latitud !== 0 && p.longitud !== 0 && p.latitud >= 55.0 && p.latitud <= 69.1 && p.longitud >= 10.9 && p.longitud <= 24.2).length} av {filteredPreschools.length} förskolor på kartan
+          {filteredPreschools.filter(p => p.latitud !== null && p.longitud !== null && p.latitud !== 0 && p.longitud !== 0 && typeof p.latitud === 'number' && typeof p.longitud === 'number' && p.latitud >= 55.0 && p.latitud <= 69.1 && p.longitud >= 10.9 && p.longitud <= 24.2).length} av {filteredPreschools.length} förskolor på kartan
         </p>
-        {filteredPreschools.length > filteredPreschools.filter(p => p.latitud && p.longitud && p.latitud !== 0 && p.longitud !== 0).length && <p className="text-xs text-muted-foreground">
-            {filteredPreschools.length - filteredPreschools.filter(p => p.latitud && p.longitud && p.latitud !== 0 && p.longitud !== 0).length} saknar koordinater
+        {filteredPreschools.length > filteredPreschools.filter(p => p.latitud !== null && p.longitud !== null && p.latitud !== 0 && p.longitud !== 0 && typeof p.latitud === 'number' && typeof p.longitud === 'number').length && <p className="text-xs text-muted-foreground">
+            {filteredPreschools.length - filteredPreschools.filter(p => p.latitud !== null && p.longitud !== null && p.latitud !== 0 && p.longitud !== 0 && typeof p.latitud === 'number' && typeof p.longitud === 'number').length} saknar koordinater
           </p>}
       </div>
     </div>;

@@ -6,8 +6,8 @@ export interface Preschool {
   namn: string;
   kommun: string;
   adress: string;
-  latitud: number;
-  longitud: number;
+  latitud: number | null;
+  longitud: number | null;
   antal_barn: number | null;
   huvudman: string;
   personaltäthet: number | null;

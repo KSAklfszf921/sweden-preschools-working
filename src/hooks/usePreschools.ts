@@ -40,14 +40,15 @@ export const usePreschools = () => {
 
       if (preschoolsError) throw preschoolsError;
 
-      // Transform and separate preschools with/without coordinates
+      // Transform preschools - keep NULL coordinates as null, don't convert to 0
       const transformedPreschools: Preschool[] = (preschoolsData || []).map(preschool => ({
         id: preschool.id,
         namn: preschool.Namn,
         kommun: preschool.Kommun,
         adress: preschool.Adress || '',
-        latitud: preschool.Latitud || 0, // Will be handled in Map3D
-        longitud: preschool.Longitud || 0, // Will be handled in Map3D
+        // Keep NULL coordinates as null instead of converting to 0
+        latitud: preschool.Latitud !== null ? preschool.Latitud : null,
+        longitud: preschool.Longitud !== null ? preschool.Longitud : null,
         antal_barn: preschool["Antal barn"],
         huvudman: preschool.Huvudman,
         personaltäthet: preschool.Personaltäthet,
@@ -57,14 +58,32 @@ export const usePreschools = () => {
         google_reviews_count: preschool.preschool_google_data?.[0]?.google_reviews_count,
       }));
 
-      // Trigger geocoding for missing coordinates
-      const missingCoords = transformedPreschools.filter(p => !p.latitud || !p.longitud);
+      // Find preschools that actually need geocoding (NULL or 0 coordinates)
+      const missingCoords = transformedPreschools.filter(p => 
+        p.latitud === null || p.longitud === null || p.latitud === 0 || p.longitud === 0
+      );
+      
       if (missingCoords.length > 0) {
-        console.log(`Found ${missingCoords.length} preschools without coordinates. Starting geocoding...`);
-        // Trigger geocoding in background
+        console.log(`Found ${missingCoords.length} preschools needing geocoding. Triggering background processing...`);
+        
+        // Prepare data for geocoding service with proper format
+        const preschoolsForGeocoding = missingCoords.map(p => ({
+          id: p.id,
+          Namn: p.namn,
+          Adress: p.adress,
+          Kommun: p.kommun,
+          Latitud: p.latitud,
+          Longitud: p.longitud
+        }));
+        
+        // Trigger geocoding in background with smaller batches
         supabase.functions.invoke('geocoding-service', {
-          body: { preschools: missingCoords.slice(0, 50) } // Process in batches
-        }).catch(console.error);
+          body: { preschools: preschoolsForGeocoding.slice(0, 25) } // Smaller batches for reliability
+        }).then(response => {
+          console.log('Geocoding service response:', response);
+        }).catch(error => {
+          console.error('Geocoding service error:', error);
+        });
       }
 
       setPreschools(transformedPreschools);

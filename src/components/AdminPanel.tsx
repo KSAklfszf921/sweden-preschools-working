@@ -36,6 +36,8 @@ import { useMapStore } from '@/stores/mapStore';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminRealTimeMonitor } from '@/hooks/useAdminRealTimeMonitor';
+import { useAdminCoordinateStats } from '@/hooks/useAdminCoordinateStats';
+import { CoordinateBatchProcessor } from '@/components/CoordinateBatchProcessor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
@@ -98,9 +100,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [statsLoading, setStatsLoading] = useState(false);
   const { preschools } = useMapStore();
   const { toast } = useToast();
+  const { stats: coordinateStats, isLoading: coordinateStatsLoading, refresh: refreshStats } = useAdminCoordinateStats();
 
   const missingCoords = preschools.filter(p => 
-    !p.latitud || !p.longitud || p.latitud === 0 || p.longitud === 0
+    p.latitud === null || p.longitud === null || p.latitud === 0 || p.longitud === 0
   );
 
   const loadAdminStats = async () => {
@@ -523,19 +526,110 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                 </TabsContent>
 
                 <TabsContent value="geocoding" className="mt-6">
-                  <Card className="glass-popup">
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-6">
-                        <div>
-                          <h3 className="text-xl font-heading font-semibold mb-2">Koordinat-hantering</h3>
-                          <p className="text-muted-foreground">
-                            Hämta GPS-koordinater för förskolor som saknar dem
-                          </p>
+                  <div className="space-y-6">
+                    {/* Enhanced Coordinate Statistics */}
+                    <Card className="glass-popup">
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xl font-heading font-semibold">Koordinat-statistik</h3>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={refreshStats}
+                            disabled={coordinateStatsLoading}
+                            className="flex items-center gap-2"
+                          >
+                            <RefreshCw className={`h-4 w-4 ${coordinateStatsLoading ? 'animate-spin' : ''}`} />
+                            Uppdatera
+                          </Button>
                         </div>
-                        <Badge variant={missingCoords.length > 0 ? "destructive" : "default"}>
-                          {missingCoords.length} saknar koordinater
-                        </Badge>
+                        
+                        {coordinateStatsLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <RefreshCw className="h-6 w-6 animate-spin" />
+                            <span className="ml-2">Laddar koordinatstatistik...</span>
+                          </div>
+                        ) : coordinateStats ? (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-4 gap-4">
+                              <div className="text-center p-4 bg-background/50 rounded-lg">
+                                <div className="text-2xl font-bold">{coordinateStats.total}</div>
+                                <p className="text-xs text-muted-foreground">Totalt förskolor</p>
+                              </div>
+                              <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                                <div className="text-2xl font-bold text-green-600">{coordinateStats.withCoordinates}</div>
+                                <p className="text-xs text-muted-foreground">Med koordinater</p>
+                              </div>
+                              <div className="text-center p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                                <div className="text-2xl font-bold text-red-600">{coordinateStats.missingCoordinates}</div>
+                                <p className="text-xs text-muted-foreground">Saknar koordinater</p>
+                              </div>
+                              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                                <div className="text-2xl font-bold text-blue-600">
+                                  {Math.round((coordinateStats.withCoordinates / coordinateStats.total) * 100)}%
+                                </div>
+                                <p className="text-xs text-muted-foreground">Täckning</p>
+                              </div>
+                            </div>
+
+                            {/* Top kommuner with missing coordinates */}
+                            {Object.entries(coordinateStats.byKommun).filter(([_, stats]) => stats.missing > 0).length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="font-medium">Kommuner med saknade koordinater:</h4>
+                                <div className="space-y-1 max-h-40 overflow-y-auto">
+                                  {Object.entries(coordinateStats.byKommun)
+                                    .filter(([_, stats]) => stats.missing > 0)
+                                    .sort((a, b) => b[1].missing - a[1].missing)
+                                    .slice(0, 10)
+                                    .map(([kommun, stats]) => (
+                                      <div key={kommun} className="flex justify-between items-center text-sm p-2 bg-background/30 rounded">
+                                        <span className="truncate font-medium">{kommun}</span>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-red-600 font-semibold">{stats.missing}</span>
+                                          <span className="text-muted-foreground">av {stats.total}</span>
+                                          <Badge variant="outline">{stats.percentage}%</Badge>
+                                        </div>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            Kunde inte ladda koordinatstatistik
+                          </div>
+                        )}
                       </div>
+                    </Card>
+
+                    {/* Batch Processor */}
+                    <CoordinateBatchProcessor 
+                      missingCoordinatesCount={missingCoords.length}
+                      onComplete={() => {
+                        loadAdminStats();
+                        refreshStats();
+                        toast({
+                          title: "Koordinater uppdaterade",
+                          description: "Förskoledata har uppdaterats med nya koordinater."
+                        });
+                      }}
+                    />
+
+                    {/* Legacy Geocoding Controls */}
+                    <Card className="glass-popup">
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <h3 className="text-xl font-heading font-semibold mb-2">Äldre geocoding-verktyg</h3>
+                            <p className="text-muted-foreground">
+                              Fallback-verktyg för manuell geocoding-hantering
+                            </p>
+                          </div>
+                          <Badge variant={missingCoords.length > 0 ? "destructive" : "default"}>
+                            {missingCoords.length} saknar koordinater
+                          </Badge>
+                        </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div className="space-y-4">
@@ -673,9 +767,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                           </ScrollArea>
                         </div>
                       )}
-                    </div>
-                  </Card>
-                </TabsContent>
+                     </div>
+                   </Card>
+                   </div>
+                 </TabsContent>
 
                 <TabsContent value="system" className="mt-6">
                   <div className="grid gap-6">
