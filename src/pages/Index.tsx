@@ -33,7 +33,9 @@ const Index = () => {
     searchBoxCollapsed,
     setSearchBoxCollapsed
   } = useMapStore();
-  const { selectedPreschools, setIsOpen } = useComparisonStore();
+  const comparisonStore = useComparisonStore();
+  const selectedPreschools = comparisonStore.selectedPreschools || [];
+  const setIsOpen = comparisonStore.setIsOpen;
   const isMobile = useIsMobile();
   const [showLanding, setShowLanding] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
