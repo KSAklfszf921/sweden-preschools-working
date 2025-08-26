@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { ChevronUp, MapPin, Star, Users, GraduationCap, Building2, Home, X, Phone, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ChevronUp, MapPin, Star, Users, GraduationCap, Building2, Home, X, Phone, Clock, AlertTriangle, CheckCircle, MessageSquare, ChevronDown } from 'lucide-react';
 
 interface PreschoolListPanelProps {
   className?: string;
@@ -202,14 +202,19 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({
   onClick
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [showReviews, setShowReviews] = useState(false);
   const [googleData, setGoogleData] = useState<any>(null);
 
   // Fetch Google data on mount if not already available
   useEffect(() => {
-    if (preschool.google_rating || preschool.google_reviews_count) {
+    if (preschool.google_rating || preschool.google_reviews_count || preschool.google_reviews || preschool.contact_phone) {
       setGoogleData({
         google_rating: preschool.google_rating,
-        google_reviews_count: preschool.google_reviews_count
+        google_reviews_count: preschool.google_reviews_count,
+        reviews: preschool.google_reviews,
+        contact_phone: preschool.contact_phone,
+        website_url: preschool.website_url,
+        opening_hours: preschool.opening_hours
       });
     }
   }, [preschool]);
@@ -277,6 +282,11 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({
   const staffDensity = preschool.personaltäthet;
   const staffDensityInfo = staffDensity ? getStaffDensityInfo(staffDensity) : null;
   const StaffIcon = staffDensityInfo?.icon;
+
+  // Parse reviews if they exist
+  const reviews = googleData?.reviews ? 
+    (typeof googleData.reviews === 'string' ? JSON.parse(googleData.reviews) : googleData.reviews) : [];
+  const hasReviews = reviews && Array.isArray(reviews) && reviews.length > 0;
 
   return (
     <TooltipProvider>
@@ -412,6 +422,66 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Reviews section - only show if reviews exist */}
+          {hasReviews && (
+            <div className="border-t border-gray-200 pt-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowReviews(!showReviews);
+                }}
+                className="flex items-center justify-between w-full p-2 text-xs text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>{reviews.length} recensioner</span>
+                </div>
+                <ChevronDown className={`h-3 w-3 transition-transform ${showReviews ? 'rotate-180' : ''}`} />
+              </button>
+              
+              <AnimatePresence>
+                {showReviews && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-2 space-y-2 max-h-48 overflow-y-auto"
+                  >
+                    {reviews.slice(0, 3).map((review: any, index: number) => (
+                      <div key={index} className="p-2 bg-gray-50 rounded-md">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-xs text-gray-700">{review.author_name}</span>
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star 
+                                key={i} 
+                                className={`h-2 w-2 ${
+                                  i < review.rating 
+                                    ? 'text-yellow-400 fill-yellow-400' 
+                                    : 'text-gray-300'
+                                }`} 
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 line-clamp-2">{review.text}</p>
+                        <span className="text-xs text-gray-400 mt-1">
+                          {new Date(review.time * 1000).toLocaleDateString('sv-SE')}
+                        </span>
+                      </div>
+                    ))}
+                    {reviews.length > 3 && (
+                      <p className="text-xs text-gray-500 text-center py-1">
+                        +{reviews.length - 3} fler recensioner
+                      </p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
         </div>
       </motion.div>
     </TooltipProvider>

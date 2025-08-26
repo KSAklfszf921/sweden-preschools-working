@@ -34,7 +34,11 @@ export const usePreschools = () => {
           "Antal barngrupper",
           preschool_google_data (
             google_rating,
-            google_reviews_count
+            google_reviews_count,
+            reviews,
+            contact_phone,
+            website_url,
+            opening_hours
           )
         `);
 
@@ -56,6 +60,10 @@ export const usePreschools = () => {
         antal_barngrupper: preschool["Antal barngrupper"],
         google_rating: preschool.preschool_google_data?.[0]?.google_rating,
         google_reviews_count: preschool.preschool_google_data?.[0]?.google_reviews_count,
+        google_reviews: preschool.preschool_google_data?.[0]?.reviews,
+        contact_phone: preschool.preschool_google_data?.[0]?.contact_phone,
+        website_url: preschool.preschool_google_data?.[0]?.website_url,
+        opening_hours: preschool.preschool_google_data?.[0]?.opening_hours,
       }));
 
       // Find preschools that actually need geocoding (NULL or 0 coordinates)
