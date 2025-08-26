@@ -54,13 +54,16 @@ export const Map3D: React.FC<Map3DProps> = ({
     map.current.on('style.load', () => {
       if (!map.current) return;
 
-      // Add terrain source
-      map.current.addSource('mapbox-dem', {
-        'type': 'raster-dem',
-        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        'tileSize': 512,
-        'maxzoom': 14
-      });
+      // Check if terrain source already exists before adding
+      if (!map.current.getSource('mapbox-dem')) {
+        // Add terrain source
+        map.current.addSource('mapbox-dem', {
+          'type': 'raster-dem',
+          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          'tileSize': 512,
+          'maxzoom': 14
+        });
+      }
 
       // Add terrain layer
       map.current.setTerrain({
@@ -188,14 +191,20 @@ export const Map3D: React.FC<Map3DProps> = ({
     // Determine cluster settings based on zoom level
     const shouldCluster = currentZoom < 10;
     
-    // Add source with dynamic clustering
-    map.current.addSource('preschools', {
-      type: 'geojson',
-      data: geojsonData,
-      cluster: shouldCluster,
-      clusterMaxZoom: 10, // Max zoom to cluster points on
-      clusterRadius: 50 // Radius of each cluster when clustering points
-    });
+    // Check if source exists, if so update it, otherwise add new source
+    if (map.current.getSource('preschools')) {
+      const source = map.current.getSource('preschools') as mapboxgl.GeoJSONSource;
+      source.setData(geojsonData);
+    } else {
+      // Add source with dynamic clustering
+      map.current.addSource('preschools', {
+        type: 'geojson',
+        data: geojsonData,
+        cluster: shouldCluster,
+        clusterMaxZoom: 10, // Max zoom to cluster points on
+        clusterRadius: 50 // Radius of each cluster when clustering points
+      });
+    }
 
     if (shouldCluster) {
       // Add cluster circles
