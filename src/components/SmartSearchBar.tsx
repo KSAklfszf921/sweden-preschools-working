@@ -400,46 +400,46 @@ const SmartSearchBar: React.FC = () => {
 
             <TabsContent value="search" className="space-y-3 mt-3">
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Kommun</label>
-                  <Select
-                    value={searchFilters.kommuner?.[0] || ''}
-                    onValueChange={(value) => {
-                      setSearchFilters({ ...searchFilters, kommuner: value ? [value] : undefined });
-                    }}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Välj kommun" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border border-border shadow-lg max-h-60 overflow-y-auto z-50">
-                      <SelectItem value="">Alla kommuner</SelectItem>
-                      {uniqueKommuner.slice(0, 50).map(kommun => (
-                        <SelectItem key={kommun} value={kommun} className="text-xs">
-                          {kommun}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Kommun</label>
+                <Select
+                  value={searchFilters.kommuner?.[0] || 'all'}
+                  onValueChange={(value) => {
+                    setSearchFilters({ ...searchFilters, kommuner: value === 'all' ? undefined : [value] });
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Välj kommun" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-border shadow-lg max-h-60 overflow-y-auto z-50">
+                    <SelectItem value="all">Alla kommuner</SelectItem>
+                    {uniqueKommuner.slice(0, 50).map(kommun => (
+                      <SelectItem key={kommun} value={kommun} className="text-xs">
+                        {kommun}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Huvudman</label>
-                  <Select
-                    value={searchFilters.huvudman || ''}
-                    onValueChange={(value) => {
-                      setSearchFilters({ ...searchFilters, huvudman: value || undefined });
-                    }}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Välj typ" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border border-border shadow-lg z-50">
-                      <SelectItem value="">Alla typer</SelectItem>
-                      <SelectItem value="Kommunal">Kommunal</SelectItem>
-                      <SelectItem value="Enskild">Fristående</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Huvudman</label>
+                <Select
+                  value={searchFilters.huvudman || 'all'}
+                  onValueChange={(value) => {
+                    setSearchFilters({ ...searchFilters, huvudman: value === 'all' ? undefined : value });
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Välj typ" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-border shadow-lg z-50">
+                    <SelectItem value="all">Alla typer</SelectItem>
+                    <SelectItem value="Kommunal">Kommunal</SelectItem>
+                    <SelectItem value="Enskild">Fristående</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               </div>
             </TabsContent>
 
