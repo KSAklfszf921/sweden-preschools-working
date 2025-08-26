@@ -71,10 +71,11 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
         <Button
           onClick={() => setIsExpanded(true)}
           variant="secondary"
-          className="bg-card/90 backdrop-blur-sm shadow-nordic"
+          size="sm"
+          className="bg-card/90 backdrop-blur-sm shadow-nordic px-3 py-1.5"
         >
-          <MapPin className="h-4 w-4 mr-2" />
-          {visiblePreschools.length}
+          <MapPin className="h-3 w-3 mr-1" />
+          <span className="text-xs font-medium">{visiblePreschools.length}</span>
         </Button>
       </motion.div>
     );
@@ -85,26 +86,25 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
-      className={`fixed top-4 right-4 bottom-4 w-80 z-40 ${className}`}
+      className={`fixed top-4 right-4 bottom-4 w-64 z-40 ${className}`}
     >
-      <Card className="h-full bg-card/95 backdrop-blur-sm shadow-nordic border-border">
-        {/* Header */}
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">{getContextTitle()}</h3>
+      <Card className="h-full bg-card/95 backdrop-blur-sm shadow-nordic border-border">{/* Header */}
+        <div className="p-3 border-b border-border">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="font-medium text-sm text-foreground">{getContextTitle()}</h3>
             <Button
               onClick={() => setIsExpanded(false)}
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0"
+              className="h-5 w-5 p-0"
             >
-              <ChevronUp className="h-4 w-4" />
+              <ChevronUp className="h-3 w-3" />
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">{getContextSubtitle()}</p>
+          <p className="text-xs text-muted-foreground mb-2">{getContextSubtitle()}</p>
           
           {mapZoom > 6 && (
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-1 mt-2">
               <Button
                 onClick={() => setListSortOrder('rating')}
                 variant={listSortOrder === 'rating' ? 'default' : 'outline'}
@@ -137,16 +137,16 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
         <div className="flex-1 overflow-hidden">
           {mapZoom <= 6 ? (
             // Heatmap view - show aggregated stats
-            <div className="p-4 space-y-4">
+            <div className="p-3 space-y-3">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-1">
+                <div className="text-xl font-bold text-primary mb-1">
                   {visiblePreschools.length}
                 </div>
-                <div className="text-sm text-muted-foreground">förskolor totalt</div>
+                <div className="text-xs text-muted-foreground">förskolor totalt</div>
               </div>
               
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Genomsnittligt betyg:</span>
                   <span className="font-medium text-foreground">
                     {visiblePreschools.length > 0 
@@ -155,7 +155,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
                     }
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Genomsnittlig personaltäthet:</span>
                   <span className="font-medium text-foreground">
                     {visiblePreschools.length > 0 
@@ -170,7 +170,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
             // List view
             <div 
               ref={scrollContainerRef}
-              className="h-full overflow-y-auto p-2 space-y-2"
+              className="h-full overflow-y-auto p-1.5 space-y-1.5"
               onScroll={handleScroll}
             >
               <AnimatePresence>
@@ -192,11 +192,11 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
               </AnimatePresence>
               
               {displayedItems < visiblePreschools.length && (
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-2">
+                  <p className="text-xs text-muted-foreground">
                     Visar {displayedItems} av {visiblePreschools.length}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-0.5 opacity-75">
                     Scrolla för att se fler
                   </p>
                 </div>
@@ -218,23 +218,23 @@ interface PreschoolListItemProps {
 const PreschoolListItem: React.FC<PreschoolListItemProps> = ({ preschool, isSelected, onClick }) => {
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      className={`p-2 rounded-md border cursor-pointer transition-all duration-200 ${
         isSelected 
           ? 'border-primary bg-primary/5 shadow-sm' 
           : 'border-border hover:border-primary/50 bg-card'
       }`}
       onClick={onClick}
     >
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div className="flex items-start justify-between">
-          <h4 className="font-medium text-foreground text-sm leading-tight line-clamp-2">
+          <h4 className="font-medium text-foreground text-xs leading-tight line-clamp-2">
             {preschool.namn}
           </h4>
           {preschool.google_rating && (
-            <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-              <Star className="h-3 w-3 fill-current text-yellow-500" />
+            <div className="flex items-center gap-0.5 ml-1 flex-shrink-0">
+              <Star className="h-2.5 w-2.5 fill-current text-yellow-500" />
               <span className="text-xs font-medium text-foreground">
                 {preschool.google_rating.toFixed(1)}
               </span>
@@ -242,21 +242,21 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({ preschool, isSele
           )}
         </div>
         
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <MapPin className="h-3 w-3" />
-          <span className="truncate">{preschool.kommun}</span>
+        <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
+          <MapPin className="h-2.5 w-2.5" />
+          <span className="truncate text-xs">{preschool.kommun}</span>
         </div>
         
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-0.5">
           {preschool.antal_barn && (
-            <Badge variant="secondary" className="text-xs">
-              <Users className="h-3 w-3 mr-1" />
+            <Badge variant="secondary" className="text-xs px-1 py-0 h-4">
+              <Users className="h-2.5 w-2.5 mr-0.5" />
               {preschool.antal_barn}
             </Badge>
           )}
           {preschool.andel_med_förskollärarexamen && (
-            <Badge variant="outline" className="text-xs">
-              <GraduationCap className="h-3 w-3 mr-1" />
+            <Badge variant="outline" className="text-xs px-1 py-0 h-4">
+              <GraduationCap className="h-2.5 w-2.5 mr-0.5" />
               {Math.round(preschool.andel_med_förskollärarexamen)}%
             </Badge>
           )}
