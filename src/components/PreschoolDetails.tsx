@@ -255,63 +255,80 @@ export const PreschoolDetails: React.FC = () => {
           {/* Content - Tabbed Interface */}
           <div className="flex-1 overflow-y-auto">
             <Tabs defaultValue="overview" className="w-full h-full">
-              
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview">Översikt</TabsTrigger>
+                <TabsTrigger value="photos">Bilder</TabsTrigger>
+                <TabsTrigger value="reviews">Recensioner</TabsTrigger>
+                <TabsTrigger value="contact">Kontakt</TabsTrigger>
+              </TabsList>
 
-              <TabsContent value="overview" className="p-6 space-y-6 py-0 px-[10px]">
-                {/* Key Metrics Cards */}
-                <div className="grid grid-cols-1 gap-4">
-                  <Card className="p-4 px-[5px] py-[5px]">
-                    <div className="flex items-center gap-3">
-                      <Users className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-lg font-bold">{selectedPreschool.antal_barn || 'N/A'}</p>
-                        <p className="text-sm text-muted-foreground">Barn totalt</p>
-                        {selectedPreschool.antal_barngrupper && <p className="text-xs text-muted-foreground">
-                            {selectedPreschool.antal_barngrupper} grupper
-                          </p>}
-                      </div>
+              <TabsContent value="overview" className="p-6 space-y-4 py-0 px-[10px]">
+                {/* Street View at top */}
+                {streetViewUrl && (
+                  <Card className="p-0 overflow-hidden">
+                    <img src={streetViewUrl} alt="Gatuvy av förskolan" className="w-full h-48 object-cover" />
+                  </Card>
+                )}
+
+                {/* Key Metrics in two columns */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Card className="p-3">
+                    <div className="text-center">
+                      <Users className="h-4 w-4 text-primary mx-auto mb-1" />
+                      <p className="text-lg font-bold">{selectedPreschool.antal_barn || 'N/A'}</p>
+                      <p className="text-xs text-muted-foreground">Antal barn</p>
                     </div>
                   </Card>
 
-                  <Card className="p-4 px-[5px] py-[5px]">
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-lg font-bold">
-                          {selectedPreschool.andel_med_förskollärarexamen ? `${selectedPreschool.andel_med_förskollärarexamen}%` : 'N/A'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Andel förskollärare</p>
+                  <Card className="p-3">
+                    <div className="text-center">
+                      <div className="mx-auto mb-1 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">{selectedPreschool.antal_barngrupper || 'N/A'}</span>
                       </div>
+                      <p className="text-lg font-bold">{selectedPreschool.antal_barngrupper || 'N/A'}</p>
+                      <p className="text-xs text-muted-foreground">Grupper</p>
                     </div>
                   </Card>
 
-                  <Card className="p-4 px-[5px] py-[5px]">
-                    <div className="flex items-center gap-3">
-                      <Star className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-lg font-bold">
-                          {selectedPreschool.personaltäthet ? selectedPreschool.personaltäthet.toFixed(1) : 'N/A'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Personaltäthet</p>
+                  {selectedPreschool.antal_barn && selectedPreschool.antal_barngrupper && (
+                    <Card className="p-3">
+                      <div className="text-center">
+                        <div className="mx-auto mb-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                          <span className="text-white text-xs">∅</span>
+                        </div>
+                        <p className="text-lg font-bold">{Math.round(selectedPreschool.antal_barn / selectedPreschool.antal_barngrupper)}</p>
+                        <p className="text-xs text-muted-foreground">Barngruppsstorlek</p>
                       </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  )}
+
+                  {selectedPreschool.personaltäthet && (
+                    <Card className="p-3">
+                      <div className="text-center">
+                        <Star className="h-4 w-4 text-primary mx-auto mb-1" />
+                        <p className="text-lg font-bold">{selectedPreschool.personaltäthet.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">Personaltäthet</p>
+                      </div>
+                    </Card>
+                  )}
+
+                  {selectedPreschool.andel_med_förskollärarexamen && (
+                    <Card className="p-3 col-span-2">
+                      <div className="text-center">
+                        <GraduationCap className="h-4 w-4 text-primary mx-auto mb-2" />
+                        <p className="text-lg font-bold">{Math.round(selectedPreschool.andel_med_förskollärarexamen)}%</p>
+                        <p className="text-xs text-muted-foreground">Andel förskollärare</p>
+                      </div>
+                    </Card>
+                  )}
                 </div>
 
-                {/* Street View */}
-                {streetViewUrl && <Card className="p-4 px-[5px] py-0">
-                    
-                    <img src={streetViewUrl} alt="Gatuvy av förskolan" className="w-full h-40 object-cover rounded-lg" />
-                  </Card>}
-
                 {/* Basic Info */}
-                <Card className="p-4 py-[5px]">
-                  <h3 className="font-semibold mb-3">Information</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Huvudman:</span>
-                      <Badge variant="secondary">{selectedPreschool.huvudman}</Badge>
-                    </div>
+                <Card className="p-3">
+                  <h3 className="font-semibold mb-2 text-sm">Information</h3>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-sm">Huvudman:</span>
+                    <Badge variant="secondary" className="text-xs">{selectedPreschool.huvudman}</Badge>
                   </div>
                 </Card>
               </TabsContent>
@@ -330,17 +347,45 @@ export const PreschoolDetails: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="reviews" className="p-6">
-                {isLoadingGoogle ? <div className="text-center py-8">
+                {isLoadingGoogle ? (
+                  <div className="text-center py-8">
                     <p className="text-muted-foreground">Laddar recensioner...</p>
-                  </div> : googleData?.reviews && (Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).length > 0 ? <div className="space-y-4">
-                    {(Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).map((review: any, index: number) => <Card key={index} className="p-4">
+                  </div>
+                ) : googleData?.reviews && (Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).length > 0 ? (
+                  <div className="space-y-4">
+                    {/* Average rating summary */}
+                    {googleData.google_rating && (
+                      <Card className="p-4 bg-yellow-50">
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-1 mb-2">
+                            {renderStarRating(googleData.google_rating, googleData.google_reviews_count)}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Baserat på {googleData.google_reviews_count || 0} recensioner
+                          </p>
+                        </div>
+                      </Card>
+                    )}
+                    
+                    {/* Individual reviews */}
+                    {(Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).map((review: any, index: number) => (
+                      <Card key={index} className="p-4">
                         <div className="flex items-start gap-3">
                           <User className="h-8 w-8 text-muted-foreground" />
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="font-medium">{review.author_name}</span>
                               <div className="flex items-center gap-1">
-                                {[...Array(5)].map((_, i) => <Star key={i} className={`h-3 w-3 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'}`} />)}
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`h-3 w-3 ${
+                                      i < review.rating 
+                                        ? 'text-yellow-400 fill-yellow-400' 
+                                        : 'text-muted-foreground'
+                                    }`} 
+                                  />
+                                ))}
                               </div>
                               <span className="text-xs text-muted-foreground">
                                 {new Date(review.time * 1000).toLocaleDateString('sv-SE')}
@@ -349,11 +394,15 @@ export const PreschoolDetails: React.FC = () => {
                             <p className="text-sm text-foreground">{review.text}</p>
                           </div>
                         </div>
-                      </Card>)}
-                  </div> : <div className="text-center py-8">
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
                     <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">Inga recensioner tillgängliga</p>
-                  </div>}
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="contact" className="p-6">

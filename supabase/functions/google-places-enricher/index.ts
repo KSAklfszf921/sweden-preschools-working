@@ -152,14 +152,21 @@ async function processImages(preschoolId: string, photos: any[], googleApiKey: s
         });
 
       if (!uploadError) {
-        // Store image metadata
+        // Get the public URL for the stored image
+        const { data: publicUrlData } = supabase.storage
+          .from('preschool-images')
+          .getPublicUrl(filePath);
+
+        // Store image metadata with Supabase storage URL
         await supabase
           .from('preschool_images')
-          .insert({
+          .upsert({
             preschool_id: preschoolId,
-            image_url: photoUrl,
-            image_type: 'google_photo',
+            image_url: publicUrlData.publicUrl,
+            image_type: 'google_places',
             storage_path: filePath
+          }, {
+            onConflict: 'preschool_id,storage_path'
           });
       }
     }
