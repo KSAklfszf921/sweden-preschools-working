@@ -71,6 +71,11 @@ interface MapState {
   // Layer visibility
   layerVisibility: LayerVisibility;
   
+  // List module states
+  visiblePreschools: Preschool[];
+  listContext: 'viewport' | 'search' | 'nearby' | 'rated';
+  listSortOrder: 'distance' | 'rating' | 'name' | 'quality';
+  
   // Statistics and insights
   selectedCommune: string | null;
   statisticsData: StatisticsData | null;
@@ -96,6 +101,12 @@ interface MapState {
   
   // Layer actions
   setLayerVisibility: (layer: keyof LayerVisibility, visible: boolean) => void;
+  
+  // List module actions
+  setVisiblePreschools: (preschools: Preschool[]) => void;
+  setListContext: (context: 'viewport' | 'search' | 'nearby' | 'rated') => void;
+  setListSortOrder: (order: 'distance' | 'rating' | 'name' | 'quality') => void;
+  updateVisiblePreschoolsFromViewport: (bounds: { north: number; south: number; east: number; west: number }) => void;
   
   // Statistics actions
   setSelectedCommune: (commune: string | null) => void;
@@ -130,6 +141,11 @@ export const useMapStore = create<MapState>((set, get) => ({
     markers: true,
     communeBorders: false,
   },
+  
+  // List module defaults
+  visiblePreschools: [],
+  listContext: 'viewport',
+  listSortOrder: 'distance',
   
   // Statistics defaults
   selectedCommune: null,
@@ -184,6 +200,43 @@ export const useMapStore = create<MapState>((set, get) => ({
   setStatisticsData: (statisticsData) => set({ statisticsData }),
   
   setShowStatistics: (showStatistics) => set({ showStatistics }),
+  
+  // List module actions
+  setVisiblePreschools: (visiblePreschools) => set({ visiblePreschools }),
+  
+  setListContext: (listContext) => set({ listContext }),
+  
+  setListSortOrder: (listSortOrder) => set({ listSortOrder }),
+  
+  updateVisiblePreschoolsFromViewport: (bounds) => {
+    const { filteredPreschools, listSortOrder } = get();
+    
+    // Filter preschools within viewport bounds
+    let visibleInViewport = filteredPreschools.filter(preschool => 
+      preschool.latitud && preschool.longitud &&
+      preschool.latitud >= bounds.south && preschool.latitud <= bounds.north &&
+      preschool.longitud >= bounds.west && preschool.longitud <= bounds.east
+    );
+    
+    // Sort based on current sort order
+    switch (listSortOrder) {
+      case 'rating':
+        visibleInViewport.sort((a, b) => (b.google_rating || 0) - (a.google_rating || 0));
+        break;
+      case 'name':
+        visibleInViewport.sort((a, b) => a.namn.localeCompare(b.namn));
+        break;
+      case 'quality':
+        visibleInViewport.sort((a, b) => (b.andel_med_förskollärarexamen || 0) - (a.andel_med_förskollärarexamen || 0));
+        break;
+      case 'distance':
+      default:
+        // Distance sorting requires user position, for now keep default order
+        break;
+    }
+    
+    set({ visiblePreschools: visibleInViewport });
+  },
   
   // Performance actions
   setPerformanceMode: (performanceMode) => set({ performanceMode }),

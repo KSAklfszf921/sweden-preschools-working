@@ -3,6 +3,7 @@ import { Map3D } from '@/components/Map3D';
 import { SearchFilters } from '@/components/SearchFilters';
 import { PreschoolDetails } from '@/components/PreschoolDetails';
 import { MissingCoordinatesPanel } from '@/components/MissingCoordinatesPanel';
+import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { usePreschools } from '@/hooks/usePreschools';
 import { motion } from 'framer-motion';
 
@@ -56,14 +57,23 @@ const Index = () => {
           <SearchFilters />
         </motion.div>
 
-        {/* Missing coordinates panel - overlay on map */}
+        {/* Missing coordinates panel - overlay on map center */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="absolute left-1/2 transform -translate-x-1/2 top-4 z-30"
+        >
+          <MissingCoordinatesPanel />
+        </motion.div>
+
+        {/* Preschool List Panel - right side */}
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="absolute right-4 top-4 z-30 w-80"
+          transition={{ delay: 0.4 }}
         >
-          <MissingCoordinatesPanel />
+          <PreschoolListPanel />
         </motion.div>
 
         {/* 3D Map */}
