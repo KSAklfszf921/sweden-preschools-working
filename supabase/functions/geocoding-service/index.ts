@@ -46,10 +46,10 @@ interface BatchStats {
   startTime: Date;
 }
 
-// Constants based on the technical guide
-const OPTIMAL_BATCH_SIZE = 400;
-const DELAY_BETWEEN_REQUESTS = 200;
-const DELAY_BETWEEN_BATCHES = 1000;
+// Constants optimized for stability
+const OPTIMAL_BATCH_SIZE = 10; // Reduced for testing
+const DELAY_BETWEEN_REQUESTS = 300;
+const DELAY_BETWEEN_BATCHES = 2000;
 
 // Sweden's geographical boundaries
 const SWEDEN_BOUNDS = {
@@ -251,19 +251,21 @@ serve(async (req) => {
   }
 
   try {
-    const { preschools } = await req.json();
+    console.log('🔧 Geocoding service started');
     
-    if (!preschools || !Array.isArray(preschools)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid preschools data' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get Google API key
+    // Validate environment variables first
     const googleApiKey = Deno.env.get('GOOGLE_GEOCODING_API_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    console.log('🔍 Environment check:', {
+      googleApiKey: googleApiKey ? '✅ Present' : '❌ Missing',
+      supabaseUrl: supabaseUrl ? '✅ Present' : '❌ Missing',
+      supabaseKey: supabaseKey ? '✅ Present' : '❌ Missing'
+    });
+
     if (!googleApiKey) {
-      console.error('Missing GOOGLE_GEOCODING_API_KEY');
+      console.error('❌ Missing GOOGLE_GEOCODING_API_KEY');
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -273,10 +275,30 @@ serve(async (req) => {
       );
     }
 
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('❌ Missing Supabase configuration');
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Missing Supabase configuration' 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { preschools } = await req.json();
+    
+    if (!preschools || !Array.isArray(preschools)) {
+      console.error('❌ Invalid preschools data:', typeof preschools);
+      return new Response(
+        JSON.stringify({ error: 'Invalid preschools data' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('✅ Supabase client initialized');
 
     console.log(`🚀 Starting geocoding process for ${preschools.length} preschools`);
     
