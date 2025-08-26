@@ -178,14 +178,14 @@ export type Database = {
           {
             foreignKeyName: "preschool_google_data_preschool_id_fkey"
             columns: ["preschool_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "Förskolor"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "preschool_google_data_preschool_id_fkey"
             columns: ["preschool_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "v_forskolor_geo"
             referencedColumns: ["id"]
           },
