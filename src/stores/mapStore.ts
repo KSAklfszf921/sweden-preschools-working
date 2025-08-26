@@ -213,30 +213,57 @@ export const useMapStore = create<MapState>((set, get) => ({
     const newFilters = { ...state.searchFilters, ...filters };
     set({ searchFilters: newFilters });
     
-    // Auto-center map based on filters
-    if (filters.kommuner && filters.kommuner.length > 0) {
-      const kommun = filters.kommuner[0];
-      const kommunCenter = getKommunCenter(kommun);
-      if (kommunCenter) {
-        set({ mapCenter: kommunCenter, mapZoom: 9 });
-      }
-    } else if (filters.center && filters.nearbyMode) {
-      // Center on user location with appropriate zoom
-      set({ mapCenter: filters.center, mapZoom: 12 });
-    } else if (filters.query && !filters.kommuner) {
-      // If searching by text, try to find a preschool to center on
-      const filteredPreschools = state.preschools.filter(p => 
-        p.namn.toLowerCase().includes(filters.query!.toLowerCase())
-      );
-      if (filteredPreschools.length > 0) {
-        const preschool = filteredPreschools[0];
-        if (preschool.longitud && preschool.latitud) {
-          set({ mapCenter: [preschool.longitud, preschool.latitud], mapZoom: 14 });
+    // Apply filters first to get updated filteredPreschools
+    state.applyFilters();
+    
+    // Auto-center map based on filters - do this after applying filters
+    setTimeout(() => {
+      const updatedState = get();
+      
+      if (filters.kommuner && filters.kommuner.length > 0) {
+        const kommun = filters.kommuner[0];
+        const kommunCenter = getKommunCenter(kommun);
+        if (kommunCenter) {
+          set({ mapCenter: kommunCenter, mapZoom: 9 });
+        }
+      } else if (filters.center && filters.nearbyMode) {
+        // Center on user location with appropriate zoom
+        set({ mapCenter: filters.center, mapZoom: 12 });
+      } else if (filters.query && !filters.kommuner) {
+        // If searching by text, try to find a preschool to center on
+        const filteredPreschools = updatedState.filteredPreschools;
+        if (filteredPreschools.length > 0) {
+          const preschool = filteredPreschools[0];
+          if (preschool.longitud && preschool.latitud) {
+            set({ mapCenter: [preschool.longitud, preschool.latitud], mapZoom: 14 });
+          }
+        }
+      } else if (updatedState.filteredPreschools.length > 0 && Object.keys(newFilters).length > 0) {
+        // Auto-center on filtered results if we have any
+        const filtered = updatedState.filteredPreschools;
+        const lats = filtered.map(p => p.latitud).filter(Boolean);
+        const lngs = filtered.map(p => p.longitud).filter(Boolean);
+        
+        if (lats.length > 0 && lngs.length > 0) {
+          const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+          const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+          
+          // Calculate appropriate zoom based on result spread
+          const latSpread = Math.max(...lats) - Math.min(...lats);
+          const lngSpread = Math.max(...lngs) - Math.min(...lngs);
+          const maxSpread = Math.max(latSpread, lngSpread);
+          
+          let zoom = 10;
+          if (maxSpread < 0.01) zoom = 15;
+          else if (maxSpread < 0.05) zoom = 13;
+          else if (maxSpread < 0.1) zoom = 11;
+          else if (maxSpread < 0.5) zoom = 9;
+          else zoom = 7;
+          
+          set({ mapCenter: [centerLng, centerLat], mapZoom: zoom });
         }
       }
-    }
-    
-    state.applyFilters();
+    }, 100);
   },
 
   clearFilters: () => {
