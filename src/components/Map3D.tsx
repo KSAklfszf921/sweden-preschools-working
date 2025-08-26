@@ -119,8 +119,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
-    // Remove existing preschool layers and sources
-    ['preschools-heatmap', 'preschools-clusters', 'preschools-cluster-count', 'preschools-unclustered'].forEach(layerId => {
+    // Remove existing preschool layers and sources (including new pulse layer)
+    ['preschools-heatmap', 'preschools-heatmap-pulse', 'preschools-clusters', 'preschools-cluster-count', 'preschools-unclustered'].forEach(layerId => {
       if (map.current?.getLayer(layerId)) {
         map.current.removeLayer(layerId);
       }
@@ -177,12 +177,18 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       }))
     };
 
-    // Add heatmap for low zoom levels (1-6)
+    // Add revolutionary heatmap for low zoom levels (1-6)
     if (shouldShowHeatmap) {
       map.current.addSource('preschools-heatmap', {
         type: 'geojson',
         data: geojsonData
       });
+
+      // Calculate adaptive intensity based on data density and zoom level
+      const dataCount = validPreschools.length;
+      const baseIntensity = Math.log10(Math.max(dataCount, 10)) / 4; // Logarithmic scaling
+      const zoomIntensity = Math.pow(currentZoom / 6, 1.5); // Stronger at higher zoom
+      const adaptiveIntensity = Math.min(baseIntensity * zoomIntensity * 0.8, 2);
 
       map.current.addLayer({
         id: 'preschools-heatmap',
@@ -190,29 +196,108 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         source: 'preschools-heatmap',
         maxzoom: 7,
         paint: {
-          'heatmap-weight': ['get', 'weight'],
-          'heatmap-intensity': 1,
+          // Enhanced weight calculation with data-driven expressions
+          'heatmap-weight': [
+            'interpolate',
+            ['exponential', 1.2],
+            ['get', 'weight'],
+            0, 0.1,
+            0.5, 0.8,
+            1, 1.5,
+            2, 2.5,
+            5, 4
+          ],
+          // Adaptive intensity based on zoom and data density
+          'heatmap-intensity': [
+            'interpolate',
+            ['exponential', 1.5],
+            ['zoom'],
+            1, adaptiveIntensity * 0.3,
+            3, adaptiveIntensity * 0.6,
+            5, adaptiveIntensity * 1.0,
+            6, adaptiveIntensity * 1.2
+          ],
+          // Revolutionary 7-step gradient: transparent → ice blue → sky blue → turquoise → orange → red → dark red
           'heatmap-color': [
             'interpolate',
-            ['linear'],
+            ['exponential', 1.8],
             ['heatmap-density'],
-            0, 'rgba(0,0,255,0)',
-            0.1, 'hsl(207, 89%, 85%)',
-            0.3, 'hsl(207, 89%, 60%)',
-            0.5, 'hsl(207, 89%, 45%)',
-            0.7, 'hsl(47, 100%, 55%)',
-            1, 'hsl(0, 84%, 60%)'
+            0, 'rgba(0, 0, 0, 0)',           // Completely transparent
+            0.05, 'rgba(173, 216, 230, 0.1)', // Very light ice blue, almost transparent
+            0.15, 'rgba(135, 206, 250, 0.4)', // Light sky blue with low opacity
+            0.25, 'rgba(70, 130, 180, 0.6)',  // Steel blue with medium opacity
+            0.4, 'rgba(64, 224, 208, 0.75)',  // Turquoise with good opacity
+            0.6, 'rgba(255, 140, 0, 0.85)',   // Dark orange with high opacity
+            0.8, 'rgba(255, 69, 0, 0.9)',     // Red-orange with very high opacity
+            1, 'rgba(139, 0, 0, 0.95)'        // Dark red with maximum opacity
           ],
+          // Adaptive radius that grows with zoom for better granularity
           'heatmap-radius': [
+            'interpolate',
+            ['exponential', 1.8],
+            ['zoom'],
+            1, Math.max(6, 15 - dataCount / 500),    // Smaller radius for dense data
+            2, Math.max(8, 18 - dataCount / 400),
+            3, Math.max(12, 22 - dataCount / 300),
+            4, Math.max(16, 28 - dataCount / 200),
+            5, Math.max(20, 35 - dataCount / 150),
+            6, Math.max(25, 45 - dataCount / 100)
+          ],
+          // Dynamic opacity that increases with zoom for better visibility
+          'heatmap-opacity': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            1, 8,
-            6, 25
-          ],
-          'heatmap-opacity': 0.8
+            1, 0.4,
+            2, 0.5,
+            3, 0.65,
+            4, 0.75,
+            5, 0.85,
+            6, 0.9
+          ]
         }
       });
+
+      // Add pulsing animation overlay for high-intensity areas
+      if (layerVisibility.heatmap && currentZoom >= 4) {
+        map.current.addLayer({
+          id: 'preschools-heatmap-pulse',
+          type: 'heatmap',
+          source: 'preschools-heatmap',
+          maxzoom: 7,
+          paint: {
+            'heatmap-weight': [
+              'case',
+              ['>', ['get', 'weight'], 2],
+              ['*', ['get', 'weight'], 1.5],
+              0
+            ],
+            'heatmap-intensity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              4, 0.3,
+              6, 0.6
+            ],
+            'heatmap-color': [
+              'interpolate',
+              ['linear'],
+              ['heatmap-density'],
+              0, 'rgba(255, 255, 255, 0)',
+              0.5, 'rgba(255, 255, 255, 0.1)',
+              1, 'rgba(255, 255, 255, 0.3)'
+            ],
+            'heatmap-radius': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              4, 15,
+              6, 25
+            ],
+            'heatmap-opacity': 0.6
+          }
+        });
+      }
     }
 
     // Add clustering for medium zoom levels (7-11) 
@@ -373,20 +458,42 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
 
   }, [filteredPreschools, showClusters, setSelectedPreschool, mapZoom, heatmapType]);
 
-  // Helper function to calculate heatmap weight based on type
+  // Enhanced heatmap weight calculation with logarithmic scaling
   const getHeatmapWeight = (preschool: any, type: string) => {
+    let baseWeight = 1;
+    
     switch (type) {
       case 'density':
-        return 1;
+        // Base weight with child count influence
+        baseWeight = 1 + Math.log10(Math.max(preschool.antal_barn || 1, 1)) * 0.3;
+        break;
       case 'staff':
-        return Math.max(0.1, (preschool.personaltäthet || 0) / 10);
+        // Staff density with logarithmic scaling
+        const staffRatio = preschool.personaltäthet || 0;
+        baseWeight = Math.max(0.2, Math.log10(Math.max(staffRatio * 10, 1)) * 0.8);
+        break;
       case 'quality':
-        return Math.max(0.1, (preschool.andel_med_förskollärarexamen || 0) / 100);
+        // Teacher qualification percentage with exponential scaling
+        const qualPercent = preschool.andel_med_förskollärarexamen || 0;
+        baseWeight = Math.max(0.2, Math.pow(qualPercent / 100, 0.7) * 2);
+        break;
       case 'rating':
-        return Math.max(0.1, (preschool.google_rating || 0) / 5);
+        // Google rating with exponential emphasis on higher ratings
+        const rating = preschool.google_rating || 0;
+        baseWeight = rating > 0 ? Math.max(0.3, Math.pow(rating / 5, 1.5) * 2.5) : 0.1;
+        break;
       default:
-        return 1;
+        // Enhanced default weight considering multiple factors
+        const childrenWeight = Math.log10(Math.max(preschool.antal_barn || 1, 1)) * 0.2;
+        const ratingWeight = preschool.google_rating ? (preschool.google_rating / 5) * 0.3 : 0;
+        const groupWeight = preschool.antal_barngrupper ? Math.log10(preschool.antal_barngrupper + 1) * 0.2 : 0;
+        baseWeight = 1 + childrenWeight + ratingWeight + groupWeight;
+        break;
     }
+    
+    // Apply zoom-based weight adjustment to prevent oversaturation
+    const zoomAdjustment = Math.min(mapZoom / 6, 1);
+    return Math.max(0.1, Math.min(baseWeight * (0.5 + zoomAdjustment * 0.5), 5));
   };
 
   return (
