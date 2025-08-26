@@ -6,25 +6,32 @@ import { Separator } from '@/components/ui/separator';
 import { useMapStore } from '@/stores/mapStore';
 import { useComparisonStore } from '@/stores/comparisonStore';
 import { supabase } from '@/integrations/supabase/client';
-import { X, MapPin, Users, GraduationCap, Star, Phone, Globe, Camera, Navigation, Plus } from 'lucide-react';
+import { X, MapPin, Users, GraduationCap, Star, Phone, Globe, Camera, Navigation, Plus, Route, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PreschoolDetailsModal } from './enhanced/PreschoolDetailsModal';
+import { StarRating } from '@/components/ui/star-rating';
+import { DirectionsPanel } from '@/components/directions/DirectionsPanel';
+import { StreetViewPanel } from '@/components/streetview/StreetViewPanel';
 
 interface GoogleData {
-  rating?: number;
-  reviews_count?: number;
-  photos?: string[];
-  website?: string;
-  phone?: string;
+  google_rating?: number;
+  google_reviews_count?: number;
+  google_photos?: string[];
+  website_url?: string;
+  contact_phone?: string;
+  formatted_address?: string;
 }
 
 export const PreschoolDetails: React.FC = () => {
   const { selectedPreschool, setSelectedPreschool } = useMapStore();
   const { addToComparison, removeFromComparison, isInComparison } = useComparisonStore();
   const [showDetailedModal, setShowDetailedModal] = useState(false);
+  const [showDirections, setShowDirections] = useState(false);
+  const [showStreetView, setShowStreetView] = useState(false);
   const [googleData, setGoogleData] = useState<GoogleData | null>(null);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | undefined>();
 
   useEffect(() => {
     if (selectedPreschool) {
@@ -52,9 +59,12 @@ export const PreschoolDetails: React.FC = () => {
         // Use cached data if it's less than 24 hours old
         if (hoursDiff < 24) {
           setGoogleData({
-            rating: cachedData.google_rating,
-            reviews_count: cachedData.google_reviews_count,
-            photos: cachedData.google_photos || []
+            google_rating: cachedData.google_rating,
+            google_reviews_count: cachedData.google_reviews_count,
+            google_photos: cachedData.google_photos || [],
+            website_url: cachedData.website_url,
+            contact_phone: cachedData.contact_phone,
+            formatted_address: cachedData.formatted_address
           });
           
           // Load photo URLs
@@ -66,23 +76,32 @@ export const PreschoolDetails: React.FC = () => {
         }
       }
 
-      // Fetch fresh data from Google Places API
-      const { data, error } = await supabase.functions.invoke('google-places', {
+      // Fetch fresh data from Google Places enricher
+      const { data, error } = await supabase.functions.invoke('google-places-enricher', {
         body: {
-          action: 'searchPlace',
           preschoolId: selectedPreschool.id,
           lat: selectedPreschool.latitud,
           lng: selectedPreschool.longitud,
-          address: `${selectedPreschool.namn} ${selectedPreschool.adress} ${selectedPreschool.kommun}`
+          address: selectedPreschool.adress,
+          name: selectedPreschool.namn
         }
       });
 
       if (error) throw error;
 
-      if (data.success) {
-        setGoogleData(data.data);
-        if (data.data.photos && data.data.photos.length > 0) {
-          loadPhotoUrls(data.data.photos);
+      if (data?.success) {
+        // Refetch cached data after enrichment
+        const { data: refreshedData } = await supabase
+          .from('preschool_google_data')
+          .select('*')
+          .eq('preschool_id', selectedPreschool.id)
+          .single();
+        
+        if (refreshedData) {
+          setGoogleData(refreshedData);
+          if (refreshedData.google_photos && refreshedData.google_photos.length > 0) {
+            loadPhotoUrls(refreshedData.google_photos);
+          }
         }
       }
     } catch (error) {
@@ -164,16 +183,17 @@ export const PreschoolDetails: React.FC = () => {
             </div>
 
             {/* Google Rating */}
-            {googleData?.rating && (
-              <div className="flex items-center gap-2 mt-3">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-semibold">{googleData.rating.toFixed(1)}</span>
-                </div>
-                {googleData.reviews_count && (
-                  <span className="text-sm text-muted-foreground">
-                    ({googleData.reviews_count} recensioner)
-                  </span>
+            {googleData?.google_rating && (
+              <div className="mt-3">
+                <StarRating 
+                  rating={googleData.google_rating} 
+                  reviewCount={googleData.google_reviews_count || 0}
+                  size="md"
+                />
+                {googleData.google_rating >= 4.5 && (
+                  <Badge variant="default" className="ml-2 text-xs">
+                    Högbetyg
+                  </Badge>
                 )}
               </div>
             )}
@@ -251,13 +271,13 @@ export const PreschoolDetails: React.FC = () => {
             </div>
 
             {/* Contact Info */}
-            {(googleData?.website || googleData?.phone) && (
+            {(googleData?.website_url || googleData?.contact_phone) && (
               <div className="p-6 border-b border-border">
                 <h3 className="font-semibold mb-3">Kontakt</h3>
                 <div className="space-y-2">
-                  {googleData.website && (
+                  {googleData.website_url && (
                     <a
-                      href={googleData.website}
+                      href={googleData.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 text-primary hover:underline"
@@ -266,13 +286,13 @@ export const PreschoolDetails: React.FC = () => {
                       Webbsida
                     </a>
                   )}
-                  {googleData.phone && (
+                  {googleData.contact_phone && (
                     <a
-                      href={`tel:${googleData.phone}`}
+                      href={`tel:${googleData.contact_phone}`}
                       className="flex items-center gap-2 text-primary hover:underline"
                     >
                       <Phone className="w-4 h-4" />
-                      {googleData.phone}
+                      {googleData.contact_phone}
                     </a>
                   )}
                 </div>
@@ -307,17 +327,65 @@ export const PreschoolDetails: React.FC = () => {
             >
               Visa alla detaljer
             </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                onClick={() => setShowDirections(!showDirections)} 
+                variant="outline"
+                size="sm"
+              >
+                <Route className="w-4 h-4 mr-2" />
+                Restid
+              </Button>
+              <Button 
+                onClick={() => setShowStreetView(!showStreetView)} 
+                variant="outline"
+                size="sm"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Gatuvy
+              </Button>
+            </div>
             <Button 
               onClick={openDirections} 
               variant="outline"
               className="w-full"
             >
               <Navigation className="w-4 h-4 mr-2" />
-              Vägbeskrivning
+              Öppna i Google Maps
             </Button>
           </div>
         </Card>
       </motion.div>
+
+      {/* Additional Panels */}
+      {showDirections && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed right-4 bottom-4 w-96 z-40"
+        >
+          <DirectionsPanel
+            preschool={selectedPreschool}
+            userLocation={userLocation}
+            onClose={() => setShowDirections(false)}
+          />
+        </motion.div>
+      )}
+
+      {showStreetView && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed left-4 bottom-4 w-96 z-40"
+        >
+          <StreetViewPanel
+            preschool={selectedPreschool}
+            onClose={() => setShowStreetView(false)}
+          />
+        </motion.div>
+      )}
 
       {/* Detailed Modal */}
       <PreschoolDetailsModal

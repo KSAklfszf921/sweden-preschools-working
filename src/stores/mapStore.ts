@@ -33,6 +33,11 @@ export interface SearchFilters {
   query?: string;
   maxChildren?: number;
   nearbyMode?: boolean; // Track if "nearby" mode is active
+  travelTime?: {
+    userLocation: { lat: number; lng: number };
+    maxMinutes: number;
+    transportMode: 'walking' | 'bicycling' | 'driving' | 'transit';
+  };
 }
 
 export type HeatmapType = 'density' | 'staff' | 'quality' | 'rating';
@@ -207,7 +212,8 @@ export const useMapStore = create<MapState>((set, get) => ({
       filters.minExamen ||
       filters.maxExamen ||
       filters.minBarngrupper ||
-      filters.maxBarngrupper
+      filters.maxBarngrupper ||
+      filters.travelTime
     );
   },
 

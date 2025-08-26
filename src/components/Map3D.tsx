@@ -283,6 +283,14 @@ export const Map3D: React.FC<Map3DProps> = ({
       paint: {
         'circle-color': [
           'case',
+          // Color by Google rating if available
+          ['>', ['get', 'google_rating'], 4.5],
+          'hsl(120, 70%, 45%)', // Green for excellent rating
+          ['>', ['get', 'google_rating'], 4.0],
+          'hsl(60, 70%, 50%)',  // Yellow for good rating
+          ['>', ['get', 'google_rating'], 0],
+          'hsl(25, 70%, 55%)',  // Orange for lower rating
+          // Fallback to ownership type if no rating
           ['==', ['get', 'huvudman'], 'Kommunal'],
           'hsl(210, 70%, 50%)', // Blue for municipal
           ['==', ['get', 'huvudman'], 'Privat'],
@@ -292,14 +300,30 @@ export const Map3D: React.FC<Map3DProps> = ({
           'hsl(25, 70%, 55%)'   // Orange for others/unknown
         ],
         'circle-radius': [
-          'interpolate',
-          ['linear'],
-          ['get', 'antal_barn'],
-          0, 18,    // Minimum large size
-          20, 20,   // Small preschools
-          50, 25,   // Medium preschools  
-          100, 30,  // Large preschools
-          200, 35   // Very large preschools
+          'case',
+          // Larger radius for highly rated preschools
+          ['>', ['get', 'google_rating'], 4.5],
+          [
+            'interpolate',
+            ['linear'],
+            ['get', 'antal_barn'],
+            0, 22,    // Minimum size for highly rated
+            20, 26,   // Small highly rated preschools
+            50, 32,   // Medium highly rated preschools  
+            100, 38,  // Large highly rated preschools
+            200, 44   // Very large highly rated preschools
+          ],
+          // Standard radius for others
+          [
+            'interpolate',
+            ['linear'],
+            ['get', 'antal_barn'],
+            0, 18,    // Minimum size
+            20, 20,   // Small preschools
+            50, 25,   // Medium preschools  
+            100, 30,  // Large preschools
+            200, 35   // Very large preschools
+          ]
         ],
         'circle-stroke-width': 3,
         'circle-stroke-color': '#ffffff',
