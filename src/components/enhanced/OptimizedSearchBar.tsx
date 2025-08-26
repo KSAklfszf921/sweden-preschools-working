@@ -96,111 +96,155 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
 
   // Minimized view
   if (!isExpanded) {
-    return <motion.div initial={{
-      opacity: 0,
-      x: -20
-    }} animate={{
-      opacity: 1,
-      x: 0
-    }} className={`absolute left-4 top-4 z-30 ${className}`}>
-        <Card className="glass-search border-0 shadow-lg card-hover">
-          <div className="p-3">
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setIsExpanded(true)} variant="ghost" size="sm" className="h-8 px-2 hover-scale transition-all duration-200 font-heading">
-                <Search className="h-4 w-4 mr-1 text-primary" />
-                <span className="font-medium text-base">Sök förskolor</span>
-                {hasActiveFilters && <Badge variant="secondary" className="ml-2 h-4 px-1 text-xs">
-                    {filterCount}
-                  </Badge>}
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-            
-            
-          </div>
-        </Card>
-      </motion.div>;
-  }
-  return <motion.div initial={{
-    opacity: 0,
-    x: -20
-  }} animate={{
-    opacity: 1,
-    x: 0
-  }} className={`absolute left-4 top-4 z-30 w-96 ${className}`}>
-      <Card className="glass-search border-0 shadow-lg card-hover">
-        <div className="p-5">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-primary" />
-              <h3 className="font-heading font-semibold text-base">Sök förskolor</h3>
-              {hasActiveFilters && <Badge variant="secondary" className="h-5">
+    return <motion.div 
+      initial={{ opacity: 0, x: -20, scale: 0.95 }} 
+      animate={{ opacity: 1, x: 0, scale: 1 }} 
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={`absolute left-6 top-6 z-30 ${className}`}
+    >
+      <Card className="glass-search border-0 shadow-nordic hover-glow-subtle">
+        <div className="p-4">
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setIsExpanded(true)} 
+              variant="ghost" 
+              size="sm" 
+              className="h-10 px-4 hover-scale transition-all duration-300 font-heading text-primary hover:text-primary hover:bg-primary/10"
+            >
+              <Search className="h-5 w-5 mr-2 text-primary" />
+              <span className="font-semibold text-lg">Sök förskolor</span>
+              {hasActiveFilters && (
+                <Badge variant="secondary" className="ml-3 h-5 px-2 text-xs bg-primary/15 text-primary border-primary/20">
                   {filterCount}
-                </Badge>}
-            </div>
-            <Button onClick={() => setIsExpanded(false)} variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <ChevronUp className="h-3 w-3" />
+                </Badge>
+              )}
+              <ChevronDown className="h-4 w-4 ml-2 opacity-60" />
             </Button>
           </div>
-
-          {/* Search Input */}
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input ref={inputRef} type="text" placeholder="Sök kommun eller förskola..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 pr-10 border-0 focus:ring-2 focus:ring-primary/20" />
-              {searchQuery && <Button size="sm" variant="ghost" onClick={clearSearch} className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted/50">
-                  <X className="h-3 w-3" />
-                </Button>}
+        </div>
+      </Card>
+    </motion.div>;
+  }
+  return <motion.div 
+    initial={{ opacity: 0, x: -20, scale: 0.95 }} 
+    animate={{ opacity: 1, x: 0, scale: 1 }} 
+    transition={{ duration: 0.4, ease: "easeOut" }}
+    className={`absolute left-6 top-6 z-30 w-80 ${className}`}
+  >
+    <Card className="glass-search border-0 shadow-nordic hover-glow-subtle">
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Search className="h-5 w-5 text-primary" />
             </div>
+            <div>
+              <h3 className="font-heading font-bold text-lg text-foreground">Sök förskolor</h3>
+              {hasActiveFilters && (
+                <Badge variant="secondary" className="mt-1 h-5 bg-primary/15 text-primary border-primary/20">
+                  {filterCount} aktiva filter
+                </Badge>
+              )}
+            </div>
+          </div>
+          <Button 
+            onClick={() => setIsExpanded(false)} 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0 hover:bg-muted/50 rounded-full"
+          >
+            <ChevronUp className="h-4 w-4" />
+          </Button>
+        </div>
 
-            {/* Quick filters */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Kommun</label>
-                <Select value={searchFilters.kommuner?.[0] || 'all'} onValueChange={value => {
+        {/* Search Input */}
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input 
+              ref={inputRef} 
+              type="text" 
+              placeholder="Sök kommun eller förskola..." 
+              value={searchQuery} 
+              onChange={e => setSearchQuery(e.target.value)} 
+              className="pl-12 pr-12 h-12 border-0 bg-muted/30 focus:bg-background focus:ring-2 focus:ring-primary/30 rounded-xl text-base font-medium placeholder:text-muted-foreground/60" 
+            />
+            {searchQuery && (
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={clearSearch} 
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted/50 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Quick filters */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Kommun</label>
+              <Select value={searchFilters.kommuner?.[0] || 'all'} onValueChange={value => {
                 setSearchFilters({
                   ...searchFilters,
                   kommuner: value === 'all' ? undefined : [value]
                 });
               }}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Välj kommun" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    <SelectItem value="all">Alla kommuner</SelectItem>
-                    {uniqueKommuner.slice(0, 50).map(kommun => <SelectItem key={kommun} value={kommun} className="text-xs">
-                        {kommun}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+                <SelectTrigger className="h-10 text-sm bg-muted/30 border-0 focus:ring-2 focus:ring-primary/30 rounded-lg">
+                  <SelectValue placeholder="Välj kommun" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  <SelectItem value="all">Alla kommuner</SelectItem>
+                  {uniqueKommuner.slice(0, 50).map(kommun => (
+                    <SelectItem key={kommun} value={kommun} className="text-sm">
+                      {kommun}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Huvudman</label>
-                <Select value={searchFilters.huvudman || 'all'} onValueChange={value => {
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Huvudman</label>
+              <Select value={searchFilters.huvudman || 'all'} onValueChange={value => {
                 setSearchFilters({
                   ...searchFilters,
                   huvudman: value === 'all' ? undefined : value
                 });
               }}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Välj typ" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alla typer</SelectItem>
-                    <SelectItem value="Kommunal">Kommunal</SelectItem>
-                    <SelectItem value="Enskild">Fristående</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <SelectTrigger className="h-10 text-sm bg-muted/30 border-0 focus:ring-2 focus:ring-primary/30 rounded-lg">
+                  <SelectValue placeholder="Välj typ" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alla typer</SelectItem>
+                  <SelectItem value="Kommunal">Kommunal</SelectItem>
+                  <SelectItem value="Enskild">Fristående</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
 
-            {/* Location button */}
-            <Button onClick={handleGetCurrentLocation} variant={userLocation ? "default" : "outline"} size="sm" className="w-full" disabled={isLocating}>
-              {isLocating ? <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" /> : userLocation ? <Target className="w-4 h-4 mr-2" /> : <Navigation className="w-4 h-4 mr-2" />}
+          {/* Location button */}
+          <Button 
+            onClick={handleGetCurrentLocation} 
+            variant={userLocation ? "default" : "outline"} 
+            size="lg" 
+            className="w-full h-12 bg-gradient-primary hover:bg-gradient-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg hover:shadow-glow transition-all duration-300" 
+            disabled={isLocating}
+          >
+            {isLocating ? (
+              <div className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full mr-3" />
+            ) : userLocation ? (
+              <Target className="w-5 h-5 mr-3" />
+            ) : (
+              <Navigation className="w-5 h-5 mr-3" />
+            )}
+            <span className="text-base">
               {isLocating ? "Hämtar position..." : userLocation ? "Position aktiv" : "Hitta närliggande"}
-            </Button>
+            </span>
+          </Button>
 
             {/* Results count */}
             
