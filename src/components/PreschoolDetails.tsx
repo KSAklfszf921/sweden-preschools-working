@@ -7,6 +7,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { supabase } from '@/integrations/supabase/client';
 import { X, MapPin, Users, GraduationCap, Star, Phone, Globe, Camera, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PreschoolDetailsModal } from './enhanced/PreschoolDetailsModal';
 
 interface GoogleData {
   rating?: number;
@@ -18,6 +19,7 @@ interface GoogleData {
 
 export const PreschoolDetails: React.FC = () => {
   const { selectedPreschool, setSelectedPreschool } = useMapStore();
+  const [showDetailedModal, setShowDetailedModal] = useState(false);
   const [googleData, setGoogleData] = useState<GoogleData | null>(null);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
@@ -277,14 +279,32 @@ export const PreschoolDetails: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="p-6 border-t border-border">
-            <Button onClick={openDirections} className="w-full">
+          <div className="p-6 border-t border-border space-y-2">
+            <Button 
+              onClick={() => setShowDetailedModal(true)}
+              variant="default"
+              className="w-full"
+            >
+              Visa alla detaljer
+            </Button>
+            <Button 
+              onClick={openDirections} 
+              variant="outline"
+              className="w-full"
+            >
               <Navigation className="w-4 h-4 mr-2" />
               Vägbeskrivning
             </Button>
           </div>
         </Card>
       </motion.div>
+
+      {/* Detailed Modal */}
+      <PreschoolDetailsModal
+        preschool={selectedPreschool}
+        isOpen={showDetailedModal}
+        onClose={() => setShowDetailedModal(false)}
+      />
     </AnimatePresence>
   );
 };

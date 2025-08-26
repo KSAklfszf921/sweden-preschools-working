@@ -15,6 +15,8 @@ export interface Preschool {
   antal_barngrupper: number;
   google_rating?: number;
   google_reviews_count?: number;
+  contact_phone?: string;
+  website_url?: string;
 }
 
 export interface SearchFilters {

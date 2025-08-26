@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapStore, Preschool } from '@/stores/mapStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,19 +79,44 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       // Add terrain layer
       map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
 
-      // Add sky layer for atmosphere
+      // Add Nordic-inspired sky and atmosphere
       map.current.addLayer({
         'id': 'sky',
         'type': 'sky',
         'paint': {
           'sky-type': 'atmosphere',
           'sky-atmosphere-sun': [0.0, 0.0],
-          'sky-atmosphere-sun-intensity': 15
+          'sky-atmosphere-sun-intensity': 12,
+          'sky-atmosphere-color': 'hsl(210, 85%, 85%)', // Nordic blue atmosphere
+          'sky-atmosphere-halo-color': 'hsl(207, 89%, 90%)' // Light Nordic halo
         }
       });
 
+      // Apply Nordic color scheme to base map layers
+      try {
+        // Water layers - Swedish lake blue
+        map.current.setPaintProperty('water', 'fill-color', 'hsl(210, 85%, 45%)');
+        
+        // Land areas - Nordic light tone
+        map.current.setPaintProperty('land', 'background-color', 'hsl(85, 40%, 92%)');
+        
+        // Roads - subtle Nordic gray
+        map.current.setPaintProperty('road-primary', 'line-color', 'hsl(220, 15%, 70%)');
+        map.current.setPaintProperty('road-secondary', 'line-color', 'hsl(220, 15%, 75%)');
+        
+        // Buildings - light Nordic tone
+        map.current.setPaintProperty('building', 'fill-color', 'hsl(220, 15%, 85%)');
+      } catch (error) {
+        console.log('Some style layers not available for customization:', error);
+      }
+
       setIsLoading(false);
     });
+
+    // Add Swedish language support
+    map.current.addControl(new MapboxLanguage({
+      defaultLanguage: 'sv'
+    }));
 
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl({

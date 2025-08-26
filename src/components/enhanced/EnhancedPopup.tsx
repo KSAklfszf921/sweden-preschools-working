@@ -14,7 +14,9 @@ import {
   ExternalLink,
   Building2,
   Phone,
-  Clock
+  Clock,
+  Globe,
+  MessageSquare
 } from 'lucide-react';
 import { Preschool } from '@/stores/mapStore';
 
@@ -202,6 +204,47 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Contact Info Preview (if available from Google) */}
+          {(preschool.contact_phone || preschool.website_url) && (
+            <>
+              <Separator />
+              <div className="grid grid-cols-1 gap-2">
+                {preschool.contact_phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3 w-3 text-primary" />
+                    <a 
+                      href={`tel:${preschool.contact_phone}`}
+                      className="text-xs text-nordic-blue hover:underline"
+                    >
+                      {preschool.contact_phone}
+                    </a>
+                  </div>
+                )}
+                {preschool.website_url && (
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-3 w-3 text-primary" />
+                    <a 
+                      href={preschool.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-nordic-blue hover:underline"
+                    >
+                      Hemsida
+                    </a>
+                  </div>
+                )}
+                {preschool.google_reviews_count && preschool.google_reviews_count > 0 && (
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-3 w-3 text-primary" />
+                    <span className="text-xs text-muted-foreground">
+                      {preschool.google_reviews_count} recensioner
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {/* Group Info */}
           {preschool.antal_barngrupper && (
