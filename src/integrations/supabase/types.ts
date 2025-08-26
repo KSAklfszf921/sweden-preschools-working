@@ -473,72 +473,96 @@ export type Database = {
           },
         ]
       }
-      skolverket_forskoledata: {
+      skolverket_alla_rader: {
         Row: {
-          child_groups_total: string | null
-          children_1_5_years_count: string | null
-          children_1_5_years_percentage: string | null
-          children_other_mother_tongue_percentage: string | null
-          children_per_group: string | null
-          children_per_teacher: string | null
-          county: string | null
-          id: string | null
-          municipality_code: number | null
-          municipality_name: string | null
-          municipality_size: string | null
-          preschool_units_private: string | null
-          preschool_units_total: string | null
-          private_provision_percentage: string | null
-          public_provision_percentage: string | null
-          quality_category: string | null
-          staff_density_children_per_position: number | null
-          teacher_license_percentage: number | null
-          teacher_qualification_percentage: number | null
-          total_enrolled_children: string | null
+          andel_forskollare_procent: number | null
+          andel_legitimation_procent: number | null
+          barn_1_5_ar_andel_procent: number | null
+          barn_1_5_ar_antal: number | null
+          barn_enskild_regi_procent: number | null
+          barn_kommunal_regi_procent: number | null
+          barn_per_barngrupp: number | null
+          barn_per_forskollare: number | null
+          barn_per_heltidstjanst: number | null
+          barn_totalt_inskrivna: number | null
+          barngrupper_totalt: number | null
+          data_kategorier: string | null
+          data_typ: string | null
+          dataaar: number | null
+          datakalla: string | null
+          forskoleenheter_totalt: number | null
+          id: string
+          kommun_kod: number | null
+          kommun_namn: string
+          kvalitet_kategori: string | null
+          kvalitetspoang: number | null
+          lan: string | null
+          obekvaem_tid_platser: number | null
+          oppen_forskola_verksamheter: number | null
+          pedagogisk_omsorg_barn_totalt: number | null
+          pedagogisk_omsorg_verksamheter: number | null
+          skapad: string | null
+          uppdaterad: string | null
         }
         Insert: {
-          child_groups_total?: string | null
-          children_1_5_years_count?: string | null
-          children_1_5_years_percentage?: string | null
-          children_other_mother_tongue_percentage?: string | null
-          children_per_group?: string | null
-          children_per_teacher?: string | null
-          county?: string | null
-          id?: string | null
-          municipality_code?: number | null
-          municipality_name?: string | null
-          municipality_size?: string | null
-          preschool_units_private?: string | null
-          preschool_units_total?: string | null
-          private_provision_percentage?: string | null
-          public_provision_percentage?: string | null
-          quality_category?: string | null
-          staff_density_children_per_position?: number | null
-          teacher_license_percentage?: number | null
-          teacher_qualification_percentage?: number | null
-          total_enrolled_children?: string | null
+          andel_forskollare_procent?: number | null
+          andel_legitimation_procent?: number | null
+          barn_1_5_ar_andel_procent?: number | null
+          barn_1_5_ar_antal?: number | null
+          barn_enskild_regi_procent?: number | null
+          barn_kommunal_regi_procent?: number | null
+          barn_per_barngrupp?: number | null
+          barn_per_forskollare?: number | null
+          barn_per_heltidstjanst?: number | null
+          barn_totalt_inskrivna?: number | null
+          barngrupper_totalt?: number | null
+          data_kategorier?: string | null
+          data_typ?: string | null
+          dataaar?: number | null
+          datakalla?: string | null
+          forskoleenheter_totalt?: number | null
+          id?: string
+          kommun_kod?: number | null
+          kommun_namn: string
+          kvalitet_kategori?: string | null
+          kvalitetspoang?: number | null
+          lan?: string | null
+          obekvaem_tid_platser?: number | null
+          oppen_forskola_verksamheter?: number | null
+          pedagogisk_omsorg_barn_totalt?: number | null
+          pedagogisk_omsorg_verksamheter?: number | null
+          skapad?: string | null
+          uppdaterad?: string | null
         }
         Update: {
-          child_groups_total?: string | null
-          children_1_5_years_count?: string | null
-          children_1_5_years_percentage?: string | null
-          children_other_mother_tongue_percentage?: string | null
-          children_per_group?: string | null
-          children_per_teacher?: string | null
-          county?: string | null
-          id?: string | null
-          municipality_code?: number | null
-          municipality_name?: string | null
-          municipality_size?: string | null
-          preschool_units_private?: string | null
-          preschool_units_total?: string | null
-          private_provision_percentage?: string | null
-          public_provision_percentage?: string | null
-          quality_category?: string | null
-          staff_density_children_per_position?: number | null
-          teacher_license_percentage?: number | null
-          teacher_qualification_percentage?: number | null
-          total_enrolled_children?: string | null
+          andel_forskollare_procent?: number | null
+          andel_legitimation_procent?: number | null
+          barn_1_5_ar_andel_procent?: number | null
+          barn_1_5_ar_antal?: number | null
+          barn_enskild_regi_procent?: number | null
+          barn_kommunal_regi_procent?: number | null
+          barn_per_barngrupp?: number | null
+          barn_per_forskollare?: number | null
+          barn_per_heltidstjanst?: number | null
+          barn_totalt_inskrivna?: number | null
+          barngrupper_totalt?: number | null
+          data_kategorier?: string | null
+          data_typ?: string | null
+          dataaar?: number | null
+          datakalla?: string | null
+          forskoleenheter_totalt?: number | null
+          id?: string
+          kommun_kod?: number | null
+          kommun_namn?: string
+          kvalitet_kategori?: string | null
+          kvalitetspoang?: number | null
+          lan?: string | null
+          obekvaem_tid_platser?: number | null
+          oppen_forskola_verksamheter?: number | null
+          pedagogisk_omsorg_barn_totalt?: number | null
+          pedagogisk_omsorg_verksamheter?: number | null
+          skapad?: string | null
+          uppdaterad?: string | null
         }
         Relationships: []
       }
@@ -1219,6 +1243,10 @@ export type Database = {
       cleanup_old_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      debug_geocoding_setup: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
