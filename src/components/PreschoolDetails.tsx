@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useMapStore } from '@/stores/mapStore';
+import { useComparisonStore } from '@/stores/comparisonStore';
 import { supabase } from '@/integrations/supabase/client';
-import { X, MapPin, Users, GraduationCap, Star, Phone, Globe, Camera, Navigation } from 'lucide-react';
+import { X, MapPin, Users, GraduationCap, Star, Phone, Globe, Camera, Navigation, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PreschoolDetailsModal } from './enhanced/PreschoolDetailsModal';
 
@@ -19,6 +20,7 @@ interface GoogleData {
 
 export const PreschoolDetails: React.FC = () => {
   const { selectedPreschool, setSelectedPreschool } = useMapStore();
+  const { addToComparison, removeFromComparison, isInComparison } = useComparisonStore();
   const [showDetailedModal, setShowDetailedModal] = useState(false);
   const [googleData, setGoogleData] = useState<GoogleData | null>(null);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
@@ -114,6 +116,16 @@ export const PreschoolDetails: React.FC = () => {
     if (selectedPreschool) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedPreschool.latitud},${selectedPreschool.longitud}`;
       window.open(url, '_blank');
+    }
+  };
+
+  const handleComparisonToggle = () => {
+    if (!selectedPreschool) return;
+    
+    if (isInComparison(selectedPreschool.id)) {
+      removeFromComparison(selectedPreschool.id);
+    } else {
+      addToComparison(selectedPreschool);
     }
   };
 
@@ -280,6 +292,14 @@ export const PreschoolDetails: React.FC = () => {
 
           {/* Actions */}
           <div className="p-6 border-t border-border space-y-2">
+            <Button 
+              onClick={handleComparisonToggle}
+              variant={isInComparison(selectedPreschool.id) ? "destructive" : "secondary"}
+              className="w-full"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {isInComparison(selectedPreschool.id) ? 'Ta bort från jämförelse' : 'Lägg till jämförelse'}
+            </Button>
             <Button 
               onClick={() => setShowDetailedModal(true)}
               variant="default"

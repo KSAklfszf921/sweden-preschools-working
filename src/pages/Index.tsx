@@ -9,7 +9,10 @@ import LayerControl from '@/components/LayerControl';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LandingAnimation } from '@/components/LandingAnimation';
 import { StatisticsButton } from '@/components/StatisticsButton';
+import { ComparisonPanel } from '@/components/ComparisonPanel';
+import { ComparisonModal } from '@/components/ComparisonModal';
 import { usePreschools } from '@/hooks/usePreschools';
+import { useMapStore } from '@/stores/mapStore';
 import { motion } from 'framer-motion';
 import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,8 +21,12 @@ const Index = () => {
     isLoading,
     error
   } = usePreschools();
+  const { searchBoxCollapsed, setSearchBoxCollapsed } = useMapStore();
   const [showLanding, setShowLanding] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
+  
+  // Add toggle button for collapsed search box
+  const showSearchToggle = searchBoxCollapsed;
   if (error) {
     return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20">
         <div className="text-center">
@@ -113,6 +120,16 @@ const Index = () => {
             <StatisticsPopup />
             <LayerControl />
           </motion.div>
+          
+          {/* Toggle button for collapsed search box */}
+          {showSearchToggle && (
+            <button
+              onClick={() => setSearchBoxCollapsed(false)}
+              className="absolute top-4 left-4 z-50 bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors"
+            >
+              🔍 Sök förskolor
+            </button>
+          )}
 
           {/* Admin Panel Toggle - Bottom Right */}
           <motion.div initial={{
@@ -134,6 +151,10 @@ const Index = () => {
 
           {/* Admin Panel */}
           <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
+
+          {/* Comparison Panel and Modal */}
+          <ComparisonPanel />
+          <ComparisonModal />
 
           {/* Loading overlay */}
           {isLoading && !showLanding && <motion.div initial={{

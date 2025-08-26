@@ -35,7 +35,9 @@ export const EnhancedSearchBox: React.FC<EnhancedSearchBoxProps> = ({ onLocation
     clearSearchFilters, 
     hasActiveFilters,
     searchFilters,
-    preschools
+    preschools,
+    searchBoxCollapsed,
+    setSearchBoxCollapsed
   } = useMapStore();
 
   const municipalities = getMunicipalities(preschools);
@@ -160,7 +162,7 @@ export const EnhancedSearchBox: React.FC<EnhancedSearchBoxProps> = ({ onLocation
     return <Search className="h-4 w-4" />;
   };
 
-  if (!isExpanded) {
+  if (!isExpanded && !searchBoxCollapsed) {
     return (
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -199,7 +201,7 @@ export const EnhancedSearchBox: React.FC<EnhancedSearchBoxProps> = ({ onLocation
     <motion.div
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="absolute top-4 left-4 z-50 w-80"
+      className="absolute top-4 left-4 z-50 w-72"
     >
       <Card className="bg-card/95 backdrop-blur-lg shadow-nordic border-border/50">
         <div className="p-4 space-y-4">
@@ -210,7 +212,10 @@ export const EnhancedSearchBox: React.FC<EnhancedSearchBoxProps> = ({ onLocation
               Sök förskolor
             </h3>
             <Button
-              onClick={() => setIsExpanded(false)}
+              onClick={() => {
+                setIsExpanded(false);
+                setSearchBoxCollapsed(true);
+              }}
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0"

@@ -89,6 +89,10 @@ interface MapState {
   // Performance
   performanceMode: 'high' | 'medium' | 'low';
   
+  // UI state
+  searchBoxCollapsed: boolean;
+  listPanelCollapsed: boolean;
+  
   // Actions
   setPreschools: (preschools: Preschool[]) => void;
   setFilteredPreschools: (preschools: Preschool[]) => void;
@@ -97,6 +101,10 @@ interface MapState {
   clearSearchFilters: () => void;
   hasActiveFilters: boolean;
   setLoading: (loading: boolean) => void;
+  
+  // UI actions
+  setSearchBoxCollapsed: (collapsed: boolean) => void;
+  setListPanelCollapsed: (collapsed: boolean) => void;
   setMapCenter: (center: LngLatLike) => void;
   setMapZoom: (zoom: number) => void;
   setShowClusters: (show: boolean) => void;
@@ -161,6 +169,10 @@ export const useMapStore = create<MapState>((set, get) => ({
   
   // Performance defaults
   performanceMode: 'high',
+  
+  // UI state defaults
+  searchBoxCollapsed: false,
+  listPanelCollapsed: false,
 
   setPreschools: (preschools) => {
     set({ preschools });
@@ -183,8 +195,20 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   get hasActiveFilters() {
     const filters = get().searchFilters;
-    return Object.keys(filters).length > 0 && 
-           Object.values(filters).some(value => value !== undefined && value !== null);
+    return Boolean(
+      (filters.kommuner && filters.kommuner.length > 0) ||
+      (filters.huvudman && filters.huvudman !== 'alla') ||
+      (filters.maxChildren && filters.maxChildren < 200) ||
+      filters.nearbyMode ||
+      (filters.radius && filters.center) ||
+      filters.query ||
+      filters.minPersonaltäthet ||
+      filters.maxPersonaltäthet ||
+      filters.minExamen ||
+      filters.maxExamen ||
+      filters.minBarngrupper ||
+      filters.maxBarngrupper
+    );
   },
 
   setLoading: (isLoading) => set({ isLoading }),
@@ -258,6 +282,10 @@ export const useMapStore = create<MapState>((set, get) => ({
   
   // Performance actions
   setPerformanceMode: (performanceMode) => set({ performanceMode }),
+  
+  // UI actions
+  setSearchBoxCollapsed: (searchBoxCollapsed) => set({ searchBoxCollapsed }),
+  setListPanelCollapsed: (listPanelCollapsed) => set({ listPanelCollapsed }),
 
   applyFilters: () => {
     const { preschools, searchFilters } = get();
@@ -327,7 +355,9 @@ export const useMapStore = create<MapState>((set, get) => ({
           preschool.latitud, preschool.longitud
         );
         
-        if (distance > searchFilters.radius) {
+        // Convert radius from meters to kilometers for comparison
+        const radiusInKm = searchFilters.radius / 1000;
+        if (distance > radiusInKm) {
           return false;
         }
       }
