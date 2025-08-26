@@ -20,9 +20,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Optimize build for production deployment
+    // Optimize build for production deployment (removed terser for deployment compatibility)
     target: 'es2015',
-    minify: 'terser',
+    minify: 'esbuild', // Use esbuild instead of terser for compatibility
     sourcemap: false,
     rollupOptions: {
       output: {

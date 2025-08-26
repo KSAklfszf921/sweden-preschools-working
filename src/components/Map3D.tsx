@@ -50,7 +50,7 @@ export const Map3D: React.FC<Map3DProps> = ({
     // Initialize map with compatible style for deployment
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12', // Compatible public style for deployment
+      style: 'mapbox://styles/mapbox/streets-v11', // Use v11 for MapboxLanguage compatibility
       center: [15.5, 62.0],
       zoom: 5.5,
       pitch: 30,
