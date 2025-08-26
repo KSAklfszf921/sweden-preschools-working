@@ -125,6 +125,54 @@ export type Database = {
         }
         Relationships: []
       }
+      preschool_google_data: {
+        Row: {
+          created_at: string | null
+          google_photos: string[] | null
+          google_place_id: string | null
+          google_rating: number | null
+          google_reviews_count: number | null
+          id: string
+          last_updated: string | null
+          preschool_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          google_photos?: string[] | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_reviews_count?: number | null
+          id?: string
+          last_updated?: string | null
+          preschool_id: string
+        }
+        Update: {
+          created_at?: string | null
+          google_photos?: string[] | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_reviews_count?: number | null
+          id?: string
+          last_updated?: string | null
+          preschool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preschool_google_data_preschool_id_fkey"
+            columns: ["preschool_id"]
+            isOneToOne: false
+            referencedRelation: "Förskolor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preschool_google_data_preschool_id_fkey"
+            columns: ["preschool_id"]
+            isOneToOne: false
+            referencedRelation: "v_forskolor_geo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -146,6 +194,66 @@ export type Database = {
           proj4text?: string | null
           srid?: number
           srtext?: string | null
+        }
+        Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          preschool_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          preschool_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          preschool_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_preschool_id_fkey"
+            columns: ["preschool_id"]
+            isOneToOne: false
+            referencedRelation: "Förskolor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_preschool_id_fkey"
+            columns: ["preschool_id"]
+            isOneToOne: false
+            referencedRelation: "v_forskolor_geo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_search_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          search_name: string | null
+          search_query: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          search_name?: string | null
+          search_query: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          search_name?: string | null
+          search_query?: Json
+          user_id?: string
         }
         Relationships: []
       }
