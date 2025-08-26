@@ -47,11 +47,15 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
     }
   };
   const getContextTitle = () => {
-    return 'Alla förskolor';
+    const count = visiblePreschools.length;
+    const formattedCount = new Intl.NumberFormat('sv-SE').format(count);
+    return `Antal förskolor: ${formattedCount} st.`;
   };
+  
   const getContextSubtitle = () => {
-    if (mapZoom <= 6) return `${visiblePreschools.length} förskolor i området`;
-    return `${visiblePreschools.length} förskolor visas`;
+    if (hasActiveFilters) return 'Matchade filter';
+    if (mapZoom <= 6) return 'Visas i området';
+    return 'Synliga på kartan';
   };
   const currentPreschools = visiblePreschools.slice(0, displayedItems);
   const handlePreschoolClick = (preschool: any) => {
@@ -95,9 +99,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
             </div>
             <div>
               <h3 className="text-gray-900 font-bold text-lg font-heading">{getContextTitle()}</h3>
-              <p className="text-xs text-gray-600 font-medium">
-                {visiblePreschools.length} {hasActiveFilters ? 'matchade' : 'förskolor'}
-              </p>
+              <p className="text-xs text-gray-600 font-medium">{getContextSubtitle()}</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
