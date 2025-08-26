@@ -61,7 +61,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
     return <motion.div 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
-      className={`fixed ${isMobile ? 'bottom-20 right-4' : 'top-4 right-4'} z-50 ${className}`}
+      className={`fixed ${isMobile ? 'bottom-20 right-4' : 'left-4 top-20'} z-50 ${className}`}
     >
       <Button 
         onClick={() => setIsExpanded(true)} 
@@ -153,12 +153,15 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
 
   // Desktop layout
   return <motion.div initial={{
-    x: '100%'
+    opacity: 0,
+    y: 20
   }} animate={{
-    x: 0
+    opacity: 1,
+    y: 0
   }} exit={{
-    x: '100%'
-  }} className={`fixed top-4 right-4 w-64 z-40 ${className}`} style={{
+    opacity: 0,
+    y: 20
+  }} className={`fixed left-4 top-20 w-96 z-40 ${className}`} style={{
     height: Math.max(MIN_VISIBLE_ITEMS * 60 + 120, 300) + 'px'
   }}>
       <Card className="h-full glass-search border-0 shadow-lg card-hover transition-all duration-300 flex flex-col rounded-xl">
