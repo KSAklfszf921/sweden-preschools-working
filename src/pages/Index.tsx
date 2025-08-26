@@ -56,8 +56,7 @@ const Index = () => {
         </div>
       </div>;
   }
-  return (
-    <OfflineHandler>
+  return <OfflineHandler>
       <PerformanceOptimizer>
         <AccessibilityEnhancements />
         <MobileOptimizations />
@@ -67,24 +66,22 @@ const Index = () => {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" id="main-content">
         {/* Header */}
         <motion.header initial={{
-        opacity: 0,
-        y: -20
-      }} animate={{
-        opacity: showLanding ? 0 : 1,
-        y: 0
-      }} transition={{
-        delay: showLanding ? 0 : 0.5
-      }} className="relative z-40 bg-gradient-to-r from-primary/5 via-background to-secondary/5 border-b border-border/20 backdrop-blur-sm">
+          opacity: 0,
+          y: -20
+        }} animate={{
+          opacity: showLanding ? 0 : 1,
+          y: 0
+        }} transition={{
+          delay: showLanding ? 0 : 0.5
+        }} className="relative z-40 bg-gradient-to-r from-primary/5 via-background to-secondary/5 border-b border-border/20 backdrop-blur-sm">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Logo and Title Section */}
               <div className="flex items-center space-x-4">
                 <img src={preschoolIcon} alt="Sveriges Förskolor" className="w-12 h-12 rounded-xl shadow-lg" />
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                    Sveriges Förskolor
-                  </h1>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">Hitta och jämför förskolor i hela Sverige</p>
+                  <h1 className="text-3xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-[#000a0e]/[0.71] font-semibold text-justify mx-0 py-[5px] my-[5px]">Förskolor i Sverige</h1>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Hitta och jämför förskolor – i hela landet</p>
                 </div>
               </div>
 
@@ -108,14 +105,14 @@ const Index = () => {
       <div className="relative">
           {/* Smart Search Bar */}
           <motion.div initial={{
-          opacity: 0,
-          x: -20
-        }} animate={{
-          opacity: showLanding ? 0 : 1,
-          x: 0
-        }} transition={{
-          delay: showLanding ? 0 : 1.0
-        }} className="absolute left-4 top-4 z-30">
+            opacity: 0,
+            x: -20
+          }} animate={{
+            opacity: showLanding ? 0 : 1,
+            x: 0
+          }} transition={{
+            delay: showLanding ? 0 : 1.0
+          }} className="absolute left-4 top-4 z-30">
         <ErrorBoundary>
           <LoadingBoundary>
             <OptimizedSearchBar />
@@ -126,29 +123,29 @@ const Index = () => {
 
           {/* Preschool List Panel - right side */}
           <motion.div initial={{
-          opacity: 0,
-          x: 20
-        }} animate={{
-          opacity: showLanding ? 0 : 1,
-          x: 0
-        }} transition={{
-          delay: showLanding ? 0 : 1.5
-        }}>
+            opacity: 0,
+            x: 20
+          }} animate={{
+            opacity: showLanding ? 0 : 1,
+            x: 0
+          }} transition={{
+            delay: showLanding ? 0 : 1.5
+          }}>
             <PreschoolListPanel />
           </motion.div>
 
           {/* 3D Map with animated entry */}
           <motion.div initial={{
-          opacity: 0,
-          scale: 0.1
-        }} animate={{
-          opacity: showLanding ? 0 : 1,
-          scale: showLanding ? 0.1 : 1
-        }} transition={{
-          delay: showLanding ? 0 : 0.5,
-          duration: showLanding ? 0 : 3,
-          ease: [0.25, 0.46, 0.45, 0.94]
-        }} className="h-screen">
+            opacity: 0,
+            scale: 0.1
+          }} animate={{
+            opacity: showLanding ? 0 : 1,
+            scale: showLanding ? 0.1 : 1
+          }} transition={{
+            delay: showLanding ? 0 : 0.5,
+            duration: showLanding ? 0 : 3,
+            ease: [0.25, 0.46, 0.45, 0.94]
+          }} className="h-screen">
             <Map3D className="w-full h-full" />
             <StatisticsPopup />
             <LayerControl />
@@ -179,14 +176,14 @@ const Index = () => {
           
           {/* Admin Button */}
           <motion.div initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: showLanding ? 0 : 1,
-          y: 0
-        }} transition={{
-          delay: showLanding ? 0 : 1.4
-        }} className="fixed bottom-4 right-4 z-40">
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: showLanding ? 0 : 1,
+            y: 0
+          }} transition={{
+            delay: showLanding ? 0 : 1.4
+          }} className="fixed bottom-4 right-4 z-40">
             <Button onClick={() => setShowAdmin(true)} variant="outline" size="sm" className="bg-card/95 backdrop-blur-sm hover:bg-accent/50" title="Öppna adminpanel">
               <Settings className="w-4 h-4" />
             </Button>
@@ -194,20 +191,20 @@ const Index = () => {
 
           {/* Loading overlay */}
           {isLoading && !showLanding && <motion.div initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1
-        }} exit={{
-          opacity: 0
-        }} className="absolute inset-0 bg-background/80 backdrop-blur-lg flex items-center justify-center z-50">
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} exit={{
+            opacity: 0
+          }} className="absolute inset-0 bg-background/80 backdrop-blur-lg flex items-center justify-center z-50">
               <div className="text-center">
                 <motion.div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" animate={{
-              rotate: 360
-            }} transition={{
-              duration: 1,
-              repeat: Infinity,
-              ease: "linear"
-            }} />
+                rotate: 360
+              }} transition={{
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear"
+              }} />
                 <h2 className="text-xl font-semibold text-foreground mb-2">Laddar Sveriges förskolor...</h2>
                 <p className="text-muted-foreground">Hämtar data från Supabase-databasen</p>
               </div>
@@ -215,7 +212,6 @@ const Index = () => {
         </div>
       </div>
       </PerformanceOptimizer>
-    </OfflineHandler>
-  );
+    </OfflineHandler>;
 };
 export default Index;
