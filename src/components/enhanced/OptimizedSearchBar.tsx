@@ -132,73 +132,73 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
     className={`absolute left-8 top-8 z-30 w-96 ${className}`}
   >
     <Card className="glass-search border-0 shadow-elegant hover-glow-subtle">
-      <div className="p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-primary/10">
-              <Search className="h-6 w-6 text-primary" />
+        <div className="p-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-gray-100">
+                <Search className="h-5 w-5 text-gray-700" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-lg text-gray-900">Sök förskolor</h3>
+                {hasActiveFilters && (
+                  <Badge variant="secondary" className="mt-1 h-5 px-2 bg-gray-100 text-gray-800 border-gray-200 rounded-md text-xs">
+                    {filterCount} aktiva filter
+                  </Badge>
+                )}
+              </div>
             </div>
-            <div>
-              <h3 className="font-heading font-bold text-xl text-foreground">Sök förskolor</h3>
-              {hasActiveFilters && (
-                <Badge variant="secondary" className="mt-2 h-6 px-3 bg-primary/15 text-primary border-primary/20 rounded-lg">
-                  {filterCount} aktiva filter
-                </Badge>
-              )}
-            </div>
-          </div>
           <Button 
             onClick={() => setIsExpanded(false)} 
             variant="ghost" 
             size="sm" 
-            className="h-10 w-10 p-0 hover:bg-muted/50 rounded-xl transition-smooth"
+            className="h-8 w-8 p-0 hover:bg-gray-100 rounded-lg transition-smooth"
           >
-            <ChevronUp className="h-5 w-5" />
+            <ChevronUp className="h-4 w-4 text-gray-600" />
           </Button>
         </div>
 
         {/* Search Input */}
-        <div className="space-y-6">
+        <div className="space-y-3">
           <div className="relative">
-            <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
             <Input 
               ref={inputRef} 
               type="text" 
               placeholder="Sök kommun eller förskola..." 
               value={searchQuery} 
               onChange={e => setSearchQuery(e.target.value)} 
-              className="pl-14 pr-14 h-14 border-0 bg-muted/30 focus:bg-background focus:ring-2 focus:ring-primary/30 rounded-xl text-base font-medium placeholder:text-muted-foreground/60 transition-smooth" 
+              className="pl-10 pr-10 h-10 border-0 bg-white/50 focus:bg-white focus:ring-2 focus:ring-gray-400/30 rounded-lg text-sm font-medium placeholder:text-gray-500 text-gray-900 transition-smooth" 
             />
             {searchQuery && (
               <Button 
                 size="sm" 
                 variant="ghost" 
                 onClick={clearSearch} 
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted/50 rounded-lg transition-smooth"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100 rounded-md transition-smooth"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 text-gray-600" />
               </Button>
             )}
           </div>
 
           {/* Quick filters */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-sm font-semibold text-foreground mb-3 block">Kommun</label>
+              <label className="text-xs font-semibold text-gray-900 mb-2 block">Kommun</label>
               <Select value={searchFilters.kommuner?.[0] || 'all'} onValueChange={value => {
                 setSearchFilters({
                   ...searchFilters,
                   kommuner: value === 'all' ? undefined : [value]
                 });
               }}>
-                <SelectTrigger className="h-12 text-sm bg-muted/30 border-0 focus:ring-2 focus:ring-primary/30 rounded-xl transition-smooth">
+                <SelectTrigger className="h-9 text-xs bg-white/50 border-0 focus:ring-2 focus:ring-gray-400/30 rounded-lg transition-smooth text-gray-900">
                   <SelectValue placeholder="Välj kommun" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60 overflow-y-auto">
-                  <SelectItem value="all">Alla kommuner</SelectItem>
+                  <SelectItem value="all" className="text-gray-900">Alla kommuner</SelectItem>
                   {uniqueKommuner.slice(0, 50).map(kommun => (
-                    <SelectItem key={kommun} value={kommun} className="text-sm">
+                    <SelectItem key={kommun} value={kommun} className="text-xs text-gray-900">
                       {kommun}
                     </SelectItem>
                   ))}
@@ -207,20 +207,20 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-foreground mb-3 block">Huvudman</label>
+              <label className="text-xs font-semibold text-gray-900 mb-2 block">Huvudman</label>
               <Select value={searchFilters.huvudman || 'all'} onValueChange={value => {
                 setSearchFilters({
                   ...searchFilters,
                   huvudman: value === 'all' ? undefined : value
                 });
               }}>
-                <SelectTrigger className="h-12 text-sm bg-muted/30 border-0 focus:ring-2 focus:ring-primary/30 rounded-xl transition-smooth">
+                <SelectTrigger className="h-9 text-xs bg-white/50 border-0 focus:ring-2 focus:ring-gray-400/30 rounded-lg transition-smooth text-gray-900">
                   <SelectValue placeholder="Välj typ" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alla typer</SelectItem>
-                  <SelectItem value="Kommunal">Kommunal</SelectItem>
-                  <SelectItem value="Enskild">Fristående</SelectItem>
+                  <SelectItem value="all" className="text-gray-900">Alla typer</SelectItem>
+                  <SelectItem value="Kommunal" className="text-gray-900">Kommunal</SelectItem>
+                  <SelectItem value="Enskild" className="text-gray-900">Fristående</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -230,18 +230,18 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
           <Button 
             onClick={handleGetCurrentLocation} 
             variant={userLocation ? "default" : "outline"} 
-            size="lg" 
-            className="w-full h-14 bg-gradient-primary hover:bg-gradient-primary/90 text-primary-foreground font-semibold rounded-xl shadow-elegant hover:shadow-glow transition-smooth hover-scale" 
+            size="sm" 
+            className="w-full h-9 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-smooth" 
             disabled={isLocating}
           >
             {isLocating ? (
-              <div className="animate-spin w-6 h-6 border-2 border-current border-t-transparent rounded-full mr-4" />
+              <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
             ) : userLocation ? (
-              <Target className="w-6 h-6 mr-4" />
+              <Target className="w-4 h-4 mr-2" />
             ) : (
-              <Navigation className="w-6 h-6 mr-4" />
+              <Navigation className="w-4 h-4 mr-2" />
             )}
-            <span className="text-lg font-medium">
+            <span className="text-sm font-medium">
               {isLocating ? "Hämtar position..." : userLocation ? "Position aktiv" : "Hitta närliggande"}
             </span>
           </Button>

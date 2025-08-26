@@ -18,9 +18,9 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
     
-    --primary: 142 76% 36%;
+    --primary: 0 0% 20%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 142 76% 50%;
+    --primary-glow: 0 0% 40%;
     
     --secondary: 210 30% 96%;
     --secondary-foreground: 224 71% 4%;
@@ -167,11 +167,11 @@ All colors MUST be HSL.
 
 /* Enhanced glassmorphism effects with semantic colors */
 .glass-effect {
-  background: hsla(var(--background), 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid hsla(var(--border), 0.3);
-  box-shadow: var(--shadow-elegant);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  border: 1px solid rgba(200, 200, 200, 0.3);
+  box-shadow: 0 2px 12px -4px rgba(0, 0, 0, 0.12);
 }
 
 .glass-popup {
@@ -202,11 +202,11 @@ All colors MUST be HSL.
 }
 
 .glass-search {
-  background: hsla(var(--background), 0.95);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid hsla(var(--border), 0.3);
-  box-shadow: var(--shadow-nordic);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  box-shadow: 0 2px 12px -4px rgba(0, 0, 0, 0.12);
   border-radius: var(--radius);
 }
 
