@@ -10,9 +10,11 @@ export const NearbyPreschoolsButton: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [radius, setRadius] = useState([2]);
   const [isActive, setIsActive] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const { setSearchFilters, setMapCenter, setMapZoom } = useMapStore();
 
   const handleNearbySearch = () => {
+    setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -21,27 +23,32 @@ export const NearbyPreschoolsButton: React.FC = () => {
         setMapCenter(center);
         setMapZoom(12);
         setSearchFilters({ 
-          radius: radius[0], 
+          radius: radius[0] * 1000, // Convert to meters
           center: center 
         });
         setIsActive(true);
         setIsExpanded(false);
+        setIsLocating(false);
       },
       (error) => {
         console.error('Error getting location:', error);
+        setIsLocating(false);
+        alert('Kunde inte hämta din position. Kontrollera att du tillåter platsåtkomst.');
       }
     );
   };
 
-  const handleDeactivate = () => {
+  const handleCancelLocation = () => {
     setSearchFilters({});
     setIsActive(false);
     setIsExpanded(false);
+    setMapCenter([15.0, 62.0]);
+    setMapZoom(5);
   };
 
   const toggleExpanded = () => {
     if (isActive) {
-      handleDeactivate();
+      handleCancelLocation();
     } else {
       setIsExpanded(!isExpanded);
     }
@@ -54,9 +61,14 @@ export const NearbyPreschoolsButton: React.FC = () => {
         variant={isActive ? "destructive" : "outline"}
         size="sm"
         className="text-xs h-7"
+        disabled={isLocating}
       >
-        <Navigation className="w-3 h-3 mr-1" />
-        {isActive ? "Stäng av" : "Förskolor nära mig"}
+        {isLocating ? (
+          <div className="animate-spin w-3 h-3 border-2 border-current border-t-transparent rounded-full mr-1" />
+        ) : (
+          <Navigation className="w-3 h-3 mr-1" />
+        )}
+        {isLocating ? "Hämtar position..." : isActive ? "Avbryt platshämtning" : "Förskolor nära mig"}
       </Button>
 
       <AnimatePresence>

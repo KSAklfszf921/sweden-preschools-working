@@ -228,7 +228,10 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
                 <label className="text-xs text-muted-foreground mb-1 block">Kommun</label>
                 <Select
                   value={searchFilters.kommuner?.[0] || ''}
-                  onValueChange={(value) => setSearchFilters({ kommuner: value ? [value] : undefined })}
+                  onValueChange={(value) => {
+                    setSearchFilters({ kommuner: value ? [value] : undefined });
+                    // Auto-apply filter and update map/list immediately
+                  }}
                 >
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Välj kommun" />
@@ -248,7 +251,10 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
                 <label className="text-xs text-muted-foreground mb-1 block">Huvudman</label>
                 <Select
                   value={searchFilters.huvudman || ''}
-                  onValueChange={(value) => setSearchFilters({ huvudman: value || undefined })}
+                  onValueChange={(value) => {
+                    setSearchFilters({ huvudman: value || undefined });
+                    // Auto-apply filter and update map/list immediately
+                  }}
                 >
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Välj typ" />

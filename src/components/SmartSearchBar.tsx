@@ -46,15 +46,25 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
           setIsLoading(false);
         }, (error) => {
           console.error('Geolocation error:', error);
+          alert('Kunde inte hämta din position. Kontrollera att du tillåter platsåtkomst.');
           setIsLoading(false);
         });
       } else {
-        // Check if it's a kommun name
+        // Auto-search and apply filters immediately for kommun names
         const kommun = uniqueKommuner.find(k => 
           k.toLowerCase().includes(searchQuery.toLowerCase())
         );
         if (kommun) {
           setSearchFilters({ kommuner: kommun ? [kommun] : undefined });
+        } else {
+          // Search in preschool names
+          const matchingPreschools = preschools.filter(p => 
+            p.namn.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          if (matchingPreschools.length > 0) {
+            const ids = matchingPreschools.map(p => p.id);
+            setSearchFilters({ ids });
+          }
         }
         setIsLoading(false);
       }
@@ -119,20 +129,23 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
             </Button>
           </div>
 
-          {/* Results summary */}
+          {/* Results summary and clear button */}
           {hasActiveSearch && (
             <div className="mt-2 flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
                 {filteredPreschools.length.toLocaleString()} förskolor
               </span>
-              <Button
-                onClick={clearSearch}
-                variant="ghost"
-                size="sm"
-                className="h-5 px-2 text-xs"
-              >
-                Rensa
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  onClick={clearSearch}
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Rensa alla
+                </Button>
+              </div>
             </div>
           )}
         </div>

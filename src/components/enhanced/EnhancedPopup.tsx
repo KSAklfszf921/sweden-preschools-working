@@ -48,6 +48,7 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
         return;
       }
 
+      // First, try to fetch existing images from database
       const { data: imageData, error } = await supabase
         .from('preschool_images')
         .select('image_url')
@@ -56,11 +57,17 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
         .limit(2)
         .order('created_at');
 
-      if (error) {
-        console.error('Error fetching images:', error);
-        // Fallback: Try Google Places enricher
+      if (!error && imageData && imageData.length > 0) {
+        const imageUrls = imageData.map(img => img.image_url);
+        imageCache.current.set(preschool.id, imageUrls);
+        setImages(imageUrls);
+        return;
+      }
+
+      // If no images found in database, try to fetch from Google Places
+      if (preschool.latitud && preschool.longitud) {
         try {
-          await supabase.functions.invoke('google-places-enricher', {
+          const { data: enrichResult, error: enrichError } = await supabase.functions.invoke('google-places-enricher', {
             body: {
               preschoolId: preschool.id,
               lat: preschool.latitud,
@@ -69,15 +76,27 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
               name: preschool.namn
             }
           });
+
+          if (!enrichError && enrichResult?.success) {
+            // After enrichment, try fetching images again
+            const { data: newImageData } = await supabase
+              .from('preschool_images')
+              .select('image_url')
+              .eq('preschool_id', preschool.id)
+              .eq('image_type', 'google_places')
+              .limit(2)
+              .order('created_at');
+
+            if (newImageData && newImageData.length > 0) {
+              const imageUrls = newImageData.map(img => img.image_url);
+              imageCache.current.set(preschool.id, imageUrls);
+              setImages(imageUrls);
+            }
+          }
         } catch (enrichError) {
           console.error('Google Places enricher error:', enrichError);
         }
-        return;
       }
-
-      const imageUrls = imageData?.map(img => img.image_url) || [];
-      imageCache.current.set(preschool.id, imageUrls);
-      setImages(imageUrls);
     } catch (error) {
       console.error('Error fetching images:', error);
     }
