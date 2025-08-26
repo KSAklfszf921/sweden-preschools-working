@@ -12,6 +12,7 @@ import { StatisticsButton } from '@/components/StatisticsButton';
 import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
 import { MobileNavigation } from '@/components/enhanced/MobileNavigation';
+import EnhancedStatisticsPanel from '@/components/enhanced/EnhancedStatisticsPanel';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
 import { SmartNotificationSystem } from '@/components/enhanced/SmartNotificationSystem';
 import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
@@ -161,6 +162,7 @@ const Index = () => {
 
           {/* Enhanced features */}
           <SmartNotificationSystem />
+          <EnhancedStatisticsPanel />
           
           {/* Mobile Navigation */}
           {isMobile && <MobileNavigation />}
