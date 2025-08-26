@@ -21,7 +21,8 @@ serve(async (req) => {
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    const { preschoolId, lat, lng, address, name } = await req.json();
+    const requestData = await req.json();
+    const { preschoolId, lat, lng, address, name } = requestData;
 
     console.log(`Enriching preschool ${preschoolId} - ${name} at ${address}`);
 
@@ -42,8 +43,8 @@ serve(async (req) => {
 
       placeId = bestMatch.place_id;
 
-      // 2. Get detailed place information
-      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=place_id,name,rating,user_ratings_total,photos,reviews,formatted_address,website,formatted_phone_number,opening_hours&key=${googleApiKey}`;
+    // 2. Get detailed place information with extended fields
+      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=place_id,name,rating,user_ratings_total,photos,reviews,formatted_address,website,formatted_phone_number,opening_hours,types,price_level,business_status,editorial_summary&key=${googleApiKey}`;
       
       const detailsResponse = await fetch(detailsUrl);
       const detailsData = await detailsResponse.json();
@@ -93,10 +94,14 @@ serve(async (req) => {
       throw error;
     }
 
-    // 5. Download and store images in background
+    // 5. Download and store images in background with priority
     if (placeDetails?.photos && placeDetails.photos.length > 0) {
-      // Use EdgeRuntime.waitUntil for background image processing
-      EdgeRuntime.waitUntil(processImages(preschoolId, placeDetails.photos, googleApiKey, supabase));
+      EdgeRuntime.waitUntil(
+        processImages(preschoolId, placeDetails.photos, googleApiKey, supabase, {
+          priority: requestData.priority || 0,
+          maxImages: 5 // Store more images
+        })
+      );
     }
 
     console.log(`Successfully enriched preschool ${preschoolId} with Google data`);
@@ -128,49 +133,108 @@ serve(async (req) => {
   }
 });
 
-// Background function to process and store images
-async function processImages(preschoolId: string, photos: any[], googleApiKey: string, supabase: any) {
+// Enhanced background function to process and store images
+async function processImages(
+  preschoolId: string, 
+  photos: any[], 
+  googleApiKey: string, 
+  supabase: any,
+  options: { priority?: number; maxImages?: number } = {}
+) {
+  const { maxImages = 5 } = options;
+  console.log(`📸 Processing ${Math.min(photos.length, maxImages)} images for preschool ${preschoolId}`);
+  
   try {
-    for (let i = 0; i < Math.min(photos.length, 3); i++) { // Process max 3 images
+    const imagePromises = [];
+    
+    for (let i = 0; i < Math.min(photos.length, maxImages); i++) {
       const photo = photos[i];
-      const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${googleApiKey}`;
       
-      // Download image
-      const imageResponse = await fetch(photoUrl);
-      if (!imageResponse.ok) continue;
-      
-      const imageBlob = await imageResponse.blob();
-      const fileName = `${preschoolId}_google_${i}.jpg`;
-      const filePath = `preschool-images/${fileName}`;
-      
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('preschool-images')
-        .upload(filePath, imageBlob, {
-          contentType: 'image/jpeg',
-          upsert: true
-        });
+      imagePromises.push(
+        (async () => {
+          try {
+            // Try different image sizes for optimization
+            const sizes = [800, 600, 400];
+            let imageBlob = null;
+            let maxWidth = 800;
+            
+            for (const size of sizes) {
+              const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${size}&photo_reference=${photo.photo_reference}&key=${googleApiKey}`;
+              const imageResponse = await fetch(photoUrl);
+              
+              if (imageResponse.ok) {
+                imageBlob = await imageResponse.blob();
+                maxWidth = size;
+                break;
+              }
+            }
+            
+            if (!imageBlob) {
+              console.log(`⚠️ Failed to download image ${i} for preschool ${preschoolId}`);
+              return;
+            }
+            
+            const fileName = `${preschoolId}_google_${i}_${maxWidth}.jpg`;
+            const filePath = `preschool-images/${fileName}`;
+            
+            // Upload to Supabase Storage with retry logic
+            let uploadSuccess = false;
+            let retries = 3;
+            
+            while (!uploadSuccess && retries > 0) {
+              const { error: uploadError } = await supabase.storage
+                .from('preschool-images')
+                .upload(filePath, imageBlob, {
+                  contentType: 'image/jpeg',
+                  upsert: true
+                });
 
-      if (!uploadError) {
-        // Get the public URL for the stored image
-        const { data: publicUrlData } = supabase.storage
-          .from('preschool-images')
-          .getPublicUrl(filePath);
+              if (!uploadError) {
+                uploadSuccess = true;
+                
+                // Get the public URL for the stored image
+                const { data: publicUrlData } = supabase.storage
+                  .from('preschool-images')
+                  .getPublicUrl(filePath);
 
-        // Store image metadata with Supabase storage URL
-        await supabase
-          .from('preschool_images')
-          .upsert({
-            preschool_id: preschoolId,
-            image_url: publicUrlData.publicUrl,
-            image_type: 'google_places',
-            storage_path: filePath
-          }, {
-            onConflict: 'preschool_id,storage_path'
-          });
-      }
+                // Store image metadata
+                await supabase
+                  .from('preschool_images')
+                  .upsert({
+                    preschool_id: preschoolId,
+                    image_url: publicUrlData.publicUrl,
+                    image_type: 'google_places',
+                    storage_path: filePath,
+                    width: maxWidth,
+                    height: Math.round(maxWidth * 0.75) // Estimate aspect ratio
+                  }, {
+                    onConflict: 'preschool_id,storage_path'
+                  });
+                
+                console.log(`✅ Uploaded image ${i} for preschool ${preschoolId} (${maxWidth}px)`);
+              } else {
+                console.error(`❌ Upload error for image ${i}:`, uploadError);
+                retries--;
+                if (retries > 0) {
+                  await new Promise(resolve => setTimeout(resolve, 1000 * (4 - retries)));
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`💥 Error processing image ${i} for preschool ${preschoolId}:`, error);
+          }
+        })()
+      );
+      
+      // Small delay between image processing
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
+    
+    // Wait for all images to be processed
+    await Promise.allSettled(imagePromises);
+    console.log(`🎯 Completed image processing for preschool ${preschoolId}`);
+    
   } catch (error) {
-    console.error('Error processing images:', error);
+    console.error(`🚨 Error in processImages for preschool ${preschoolId}:`, error);
   }
 }

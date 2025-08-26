@@ -25,7 +25,7 @@ export const useBackgroundGoogleEnrichment = () => {
         .not('Latitud', 'is', null)
         .not('Longitud', 'is', null)
         .not('id', 'in', existingIds.length > 0 ? existingIds : ['00000000-0000-0000-0000-000000000000'])
-        .limit(5); // Very small batches for discrete processing
+        .limit(8); // Slightly larger batches for better efficiency
 
       if (preschoolsWithoutData && preschoolsWithoutData.length > 0) {
         // Process one preschool at a time to be as discrete as possible
@@ -54,10 +54,10 @@ export const useBackgroundGoogleEnrichment = () => {
     } finally {
       isRunningRef.current = false;
       
-      // Schedule next run in 5 minutes
+      // Schedule next run in 10 minutes for better resource management
       timeoutRef.current = setTimeout(() => {
         enrichPreschoolsSilently();
-      }, 5 * 60 * 1000);
+      }, 10 * 60 * 1000);
     }
   }, []);
 

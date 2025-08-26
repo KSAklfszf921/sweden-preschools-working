@@ -19,16 +19,19 @@ export const useGoogleDataEnrichment = () => {
   const enrichMissingData = useCallback(async () => {
     if (progress.isRunning) return;
 
-    console.log('Starting Google data enrichment for preschools without data...');
+    console.log('🚀 Starting optimized Google data enrichment...');
     setProgress(prev => ({ ...prev, isRunning: true, processed: 0, errors: 0 }));
 
     try {
-      // Get preschools without Google data or with old data (>7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      // Get existing Google data IDs to exclude
+      const { data: existingGoogleData } = await supabase
+        .from('preschool_google_data')
+        .select('preschool_id, last_updated');
 
-      // First get preschools without Google data
-      const { data: preschoolsWithoutData, error: error1 } = await supabase
+      const existingIds = existingGoogleData?.map(item => item.preschool_id) || [];
+      
+      // Get preschools needing enrichment
+      const { data: preschoolsToEnrich, error } = await supabase
         .from('Förskolor')
         .select(`
           id,
@@ -39,42 +42,36 @@ export const useGoogleDataEnrichment = () => {
         `)
         .not('Latitud', 'is', null)
         .not('Longitud', 'is', null)
-        .not('id', 'in', [])
-        .limit(25); // Smaller batches for better performance
+        .not('id', 'in', existingIds.length > 0 ? existingIds : ['00000000-0000-0000-0000-000000000000'])
+        .order('"Antal barn"', { ascending: false })
+        .limit(100); // Larger batches for better coverage
 
-      // Then get preschools with old data (>7 days)
-      const { data: preschoolsWithOldData, error: error2 } = await supabase
-        .from('Förskolor')
-        .select(`
-          id,
-          "Namn",
-          "Adress",
-          "Latitud",
-          "Longitud"
-        `)
-        .not('Latitud', 'is', null)
-        .not('Longitud', 'is', null)
-        .in('id', [])
-        .limit(25);
-
-      if (error1 || error2) {
-        console.error('Error fetching preschools:', error1 || error2);
+      if (error) {
+        console.error('Error fetching preschools:', error);
         return;
       }
 
-      const preschools = [...(preschoolsWithoutData || []), ...(preschoolsWithOldData || [])];
-      const preschoolsToEnrich = preschools || [];
+      if (!preschoolsToEnrich || preschoolsToEnrich.length === 0) {
+        console.log('✅ No preschools need enrichment');
+        return;
+      }
 
-      console.log(`Found ${preschoolsToEnrich.length} preschools to enrich`);
+      console.log(`📊 Found ${preschoolsToEnrich.length} preschools to enrich`);
       setProgress(prev => ({ ...prev, total: preschoolsToEnrich.length }));
 
-      // Process in smaller batches to respect rate limits and be more discrete
-      const batchSize = 3;
+      // Enhanced batch processing with retries and parallel execution
+      const batchSize = 10; // Larger batches for efficiency
+      const maxRetries = 3;
+      
       for (let i = 0; i < preschoolsToEnrich.length; i += batchSize) {
         const batch = preschoolsToEnrich.slice(i, i + batchSize);
         
-        await Promise.allSettled(
-          batch.map(async (preschool) => {
+        console.log(`🔄 Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(preschoolsToEnrich.length / batchSize)}`);
+        
+        // Process batch in parallel with retries
+        const batchPromises = batch.map(async (preschool) => {
+          let retries = 0;
+          while (retries < maxRetries) {
             try {
               const { error: enrichError } = await supabase.functions.invoke('google-places-enricher', {
                 body: {
@@ -87,35 +84,43 @@ export const useGoogleDataEnrichment = () => {
               });
 
               if (enrichError) {
-                console.error(`Error enriching preschool ${preschool.id}:`, enrichError);
-                setProgress(prev => ({ ...prev, errors: prev.errors + 1 }));
+                throw enrichError;
               }
               
               setProgress(prev => ({ ...prev, processed: prev.processed + 1 }));
+              return { success: true, preschool: preschool.id };
             } catch (error) {
-              console.error(`Error processing preschool ${preschool.id}:`, error);
-              setProgress(prev => ({ 
-                ...prev, 
-                processed: prev.processed + 1,
-                errors: prev.errors + 1 
-              }));
+              retries++;
+              if (retries >= maxRetries) {
+                console.error(`❌ Failed to enrich ${preschool.id} after ${maxRetries} retries:`, error);
+                setProgress(prev => ({ 
+                  ...prev, 
+                  processed: prev.processed + 1,
+                  errors: prev.errors + 1 
+                }));
+                return { success: false, preschool: preschool.id, error };
+              }
+              // Wait before retry with exponential backoff
+              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries - 1)));
             }
-          })
-        );
+          }
+        });
 
-        // Longer wait between batches for more discrete processing
+        await Promise.allSettled(batchPromises);
+
+        // Rate limiting between batches
         if (i + batchSize < preschoolsToEnrich.length) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Shorter wait for efficiency
         }
       }
 
-      console.log(`Google data enrichment completed. Processed: ${progress.processed + preschoolsToEnrich.length}, Errors: ${progress.errors}`);
+      console.log(`✅ Google data enrichment completed. Processed: ${progress.processed}, Errors: ${progress.errors}`);
     } catch (error) {
-      console.error('Error in enrichment process:', error);
+      console.error('❌ Error in enrichment process:', error);
     } finally {
       setProgress(prev => ({ ...prev, isRunning: false }));
     }
-  }, [progress.isRunning]);
+  }, [progress]);
 
   const getEnrichmentStats = useCallback(async () => {
     try {
