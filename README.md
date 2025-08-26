@@ -1,4 +1,4 @@
-# Swedish Preschool Map 🏫
+ # Swedish Preschool Map 🏫
 
 En interaktiv karttjänst för att utforska förskolors i Sverige med 3D-visualisering och omfattande statistik.
 
