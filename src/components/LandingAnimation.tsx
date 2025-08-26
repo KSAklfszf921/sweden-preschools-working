@@ -7,49 +7,62 @@ interface LandingAnimationProps {
 }
 
 export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }) => {
-  const [stage, setStage] = useState(0);
   const [preschoolCount, setPreschoolCount] = useState(0);
+  const [animationProgress, setAnimationProgress] = useState(0);
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   const totalPreschools = 8739;
 
-  // Stage progression effect
+  // Main animation effect - single source of truth
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (stage < 4) {
-        setStage(stage + 1);
-      } else {
-        // Ensure final count is shown for at least 1 second before completing
-        setTimeout(onComplete, preschoolCount === totalPreschools ? 1000 : 300);
-      }
-    }, stage === 0 ? 600 : 500);
+    const totalDuration = 3500; // 3.5 seconds total animation
+    const countingDuration = 2000; // 2 seconds for counting
+    const finalDisplayDuration = 1000; // 1 second to show final count
+    const startTime = Date.now();
 
-    return () => clearTimeout(timer);
-  }, [stage, onComplete, preschoolCount, totalPreschools]);
+    const animationTimer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / totalDuration, 1);
+      
+      setAnimationProgress(progress);
 
-  // Counting animation effect - starts exactly at stage 2 (when loading preschools)
-  useEffect(() => {
-    if (stage === 2 && preschoolCount === 0) {
-      const duration = 2000; // 2 seconds to count up (matches progress bar timing)
-      const startTime = Date.now();
-
-      const countTimer = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+      // Counting phase starts after initial setup (at 20% progress)
+      const countingStartProgress = 0.2;
+      const countingEndProgress = 0.8;
+      
+      if (progress >= countingStartProgress && progress <= countingEndProgress) {
+        const countingProgress = (progress - countingStartProgress) / (countingEndProgress - countingStartProgress);
         
         // Easing function: slow start, fast end (cubic ease-in)
-        const easedProgress = progress * progress * progress;
+        const easedProgress = countingProgress * countingProgress * countingProgress;
         
         const newCount = Math.floor(easedProgress * totalPreschools);
         setPreschoolCount(newCount);
-        
-        if (progress >= 1) {
-          clearInterval(countTimer);
-          setPreschoolCount(totalPreschools);
-        }
-      }, 16); // ~60fps for smooth animation
+      } else if (progress > countingEndProgress) {
+        // Ensure final count is set
+        setPreschoolCount(totalPreschools);
+      }
 
-      return () => clearInterval(countTimer);
-    }
-  }, [stage, preschoolCount, totalPreschools]);
+      // Complete animation
+      if (progress >= 1) {
+        clearInterval(animationTimer);
+        setIsAnimationComplete(true);
+        setTimeout(onComplete, finalDisplayDuration);
+      }
+    }, 16); // ~60fps for smooth animation
+
+    return () => clearInterval(animationTimer);
+  }, [onComplete, totalPreschools]);
+
+  // Calculate current stage based on animation progress
+  const getCurrentStage = () => {
+    if (animationProgress < 0.2) return 0;
+    if (animationProgress < 0.4) return 1;
+    if (animationProgress < 0.6) return 2;
+    if (animationProgress < 0.8) return 3;
+    return 4;
+  };
+
+  const currentStage = getCurrentStage();
 
   return (
     <AnimatePresence>
@@ -91,14 +104,14 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
                 key={index}
                 initial={{ opacity: 0.3, scale: 0.9 }}
                 animate={{
-                  opacity: stage >= index ? 1 : 0.3,
-                  scale: stage >= index ? 1 : 0.9
+                  opacity: currentStage >= index ? 1 : 0.3,
+                  scale: currentStage >= index ? 1 : 0.9
                 }}
                 transition={{ delay, duration: 0.3 }}
                 className="text-center"
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto ${
-                  stage >= index ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  currentStage >= index ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                 }`}>
                   <Icon className="w-6 h-6" />
                 </div>
@@ -112,15 +125,15 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
             <motion.div
               className="h-full bg-gradient-to-r from-primary to-secondary"
               initial={{ width: 0 }}
-              animate={{ width: `${(stage / 4) * 100}%` }}
-              transition={{ duration: 0.5 }}
+              animate={{ width: `${animationProgress * 100}%` }}
+              transition={{ duration: 0.1 }}
             />
           </div>
 
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: stage >= 2 ? 1 : 0 }}
-            transition={{ delay: stage >= 2 ? 0.2 : 3 }}
+            animate={{ opacity: currentStage >= 2 ? 1 : 0 }}
+            transition={{ delay: currentStage >= 2 ? 0.2 : 3 }}
             className="text-sm text-muted-foreground mt-4"
           >
             {preschoolCount.toLocaleString('sv-SE')} förskolor laddade
