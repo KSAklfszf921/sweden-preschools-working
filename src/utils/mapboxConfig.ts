@@ -62,11 +62,11 @@ export const mapboxConfig = {
     heatmapMaxZoom: 9,
     heatmapIntensity: 0.8,
     
-    // Marker sizing based on child count
+    // Marker sizing based on child count - larger for better clickability
     markerSizes: {
-      small: 8, // 1-20 children
-      medium: 12, // 21-50 children  
-      large: 16, // 51+ children
+      small: 12, // 1-20 children
+      medium: 18, // 21-50 children  
+      large: 24, // 51+ children
       cluster: 20 // Cluster markers
     }
   }

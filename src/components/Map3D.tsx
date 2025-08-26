@@ -93,23 +93,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         }
       });
 
-      // Apply Nordic color scheme to base map layers
-      try {
-        // Water layers - Swedish lake blue
-        map.current.setPaintProperty('water', 'fill-color', 'hsl(210, 85%, 45%)');
-        
-        // Land areas - Nordic light tone
-        map.current.setPaintProperty('land', 'background-color', 'hsl(85, 40%, 92%)');
-        
-        // Roads - subtle Nordic gray
-        map.current.setPaintProperty('road-primary', 'line-color', 'hsl(220, 15%, 70%)');
-        map.current.setPaintProperty('road-secondary', 'line-color', 'hsl(220, 15%, 75%)');
-        
-        // Buildings - light Nordic tone
-        map.current.setPaintProperty('building', 'fill-color', 'hsl(220, 15%, 85%)');
-      } catch (error) {
-        console.log('Some style layers not available for customization:', error);
-      }
+      // Use standard map colors - removed custom color overrides
 
       setIsLoading(false);
     });

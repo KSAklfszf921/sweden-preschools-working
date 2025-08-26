@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, X, MapPin, Building, Globe, Navigation, Sliders } from 'lucide-react';
+import { Search, X, MapPin, Building, Globe, Sliders } from 'lucide-react';
+import { NearbyPreschoolsButton } from './NearbyPreschoolsButton';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -253,17 +254,9 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({ className }) => 
 
               {/* Quick Action Buttons */}
               <div className="flex gap-2 mb-3">
+                <NearbyPreschoolsButton />
                 <Button
-                  onClick={handleNearMe}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-7"
-                >
-                  <Navigation className="w-3 h-3 mr-1" />
-                  Nära mig
-                </Button>
-                <Button
-                  onClick={hasActiveFilters ? clearFilters : () => applyFilters()}
+                  onClick={searchQuery && !hasActiveFilters ? () => applyFilters() : clearFilters}
                   variant={hasActiveFilters ? "destructive" : "default"}
                   size="sm"
                   className="text-xs h-7"

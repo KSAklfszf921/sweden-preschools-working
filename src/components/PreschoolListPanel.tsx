@@ -44,15 +44,12 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
   };
 
   const getContextTitle = () => {
-    if (mapZoom <= 6) return 'Heatmap-vy';
-    if (mapZoom <= 11) return 'Område';
-    return 'I denna vy';
+    return 'Alla förskolor';
   };
 
   const getContextSubtitle = () => {
-    if (mapZoom <= 6) return 'Zoom in för att se förskolor';
-    if (mapZoom <= 11) return `${visiblePreschools.length} förskolor i området`;
-    return `${visiblePreschools.length} synliga förskolor`;
+    if (mapZoom <= 6) return `${visiblePreschools.length} förskolor i området`;
+    return `${visiblePreschools.length} förskolor visas`;
   };
 
   const currentPreschools = visiblePreschools.slice(0, displayedItems);
@@ -86,7 +83,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
-      className={`fixed top-4 right-4 bottom-4 w-64 z-40 ${className}`}
+      className={`fixed top-4 right-4 ${mapZoom <= 6 ? 'h-48' : 'bottom-4'} w-64 z-40 ${className}`}
     >
       <Card className="h-full bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300">
         {/* Header */}

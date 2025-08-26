@@ -8,6 +8,7 @@ import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LandingAnimation } from '@/components/LandingAnimation';
+import { StatisticsButton } from '@/components/StatisticsButton';
 import { usePreschools } from '@/hooks/usePreschools';
 import { motion } from 'framer-motion';
 import { Settings } from 'lucide-react';
@@ -71,6 +72,16 @@ const Index = () => {
             className="absolute left-4 top-4 z-30"
           >
             <SmartSearchBar />
+          </motion.div>
+
+          {/* Statistics Button */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: showLanding ? 0 : 1, y: 0 }}
+            transition={{ delay: showLanding ? 0 : 1.2 }}
+            className="absolute left-4 top-20 z-30"
+          >
+            <StatisticsButton />
           </motion.div>
 
           {/* Preschool List Panel - right side */}
