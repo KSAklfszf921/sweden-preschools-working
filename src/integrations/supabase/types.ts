@@ -191,6 +191,57 @@ export type Database = {
           },
         ]
       }
+      preschool_images: {
+        Row: {
+          created_at: string | null
+          height: number | null
+          id: string
+          image_type: string | null
+          image_url: string
+          preschool_id: string
+          storage_path: string | null
+          updated_at: string | null
+          width: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          height?: number | null
+          id?: string
+          image_type?: string | null
+          image_url: string
+          preschool_id: string
+          storage_path?: string | null
+          updated_at?: string | null
+          width?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          height?: number | null
+          id?: string
+          image_type?: string | null
+          image_url?: string
+          preschool_id?: string
+          storage_path?: string | null
+          updated_at?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preschool_images_preschool_id_fkey"
+            columns: ["preschool_id"]
+            isOneToOne: false
+            referencedRelation: "Förskolor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preschool_images_preschool_id_fkey"
+            columns: ["preschool_id"]
+            isOneToOne: false
+            referencedRelation: "v_forskolor_geo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null

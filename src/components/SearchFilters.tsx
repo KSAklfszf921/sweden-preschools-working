@@ -226,11 +226,8 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Alla typer</SelectItem>
-                    {uniqueHuvudman.map(huvudman => (
-                      <SelectItem key={huvudman} value={huvudman} className="text-xs">
-                        {huvudman}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="Kommunal">Kommunal</SelectItem>
+                    <SelectItem value="Enskild">Fristående</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -12,6 +12,7 @@ import { PreschoolDetailsModal } from './enhanced/PreschoolDetailsModal';
 import { StarRating } from '@/components/ui/star-rating';
 import { DirectionsPanel } from '@/components/directions/DirectionsPanel';
 import { StreetViewPanel } from '@/components/streetview/StreetViewPanel';
+import { ClickOutside } from '@/components/ui/click-outside';
 
 interface GoogleData {
   google_rating?: number;
@@ -32,10 +33,12 @@ export const PreschoolDetails: React.FC = () => {
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | undefined>();
+  const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (selectedPreschool) {
       fetchGoogleData();
+      fetchStoredImages();
     }
   }, [selectedPreschool]);
 
@@ -111,6 +114,30 @@ export const PreschoolDetails: React.FC = () => {
     }
   };
 
+  const fetchStoredImages = async () => {
+    if (!selectedPreschool) return;
+
+    try {
+      const { data: imageData, error } = await supabase
+        .from('preschool_images')
+        .select('image_url, image_type')
+        .eq('preschool_id', selectedPreschool.id)
+        .eq('image_type', 'google_places')
+        .order('created_at');
+
+      if (error) {
+        console.error('Error fetching stored images:', error);
+        return;
+      }
+
+      if (imageData && imageData.length > 0) {
+        setImages(imageData.map(img => img.image_url));
+      }
+    } catch (error) {
+      console.error('Error fetching stored images:', error);
+    }
+  };
+
   const loadPhotoUrls = async (photoReferences: string[]) => {
     try {
       const photoUrls = await Promise.all(
@@ -150,15 +177,19 @@ export const PreschoolDetails: React.FC = () => {
 
   if (!selectedPreschool) return null;
 
+  // Use stored images if available, otherwise fall back to photos
+  const displayImages = images.length > 0 ? images : photos;
+
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, x: 300 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 300 }}
-        transition={{ duration: 0.3 }}
-        className="fixed right-4 top-4 bottom-4 w-96 z-50"
-      >
+      <ClickOutside onClickOutside={() => setSelectedPreschool(null)}>
+        <motion.div
+          initial={{ opacity: 0, x: 300 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 300 }}
+          transition={{ duration: 0.3 }}
+          className="fixed right-4 top-4 bottom-4 w-96 z-50"
+        >
         <Card className="h-full bg-card/95 backdrop-blur-sm border-border/50 flex flex-col">
           {/* Header */}
           <div className="p-6 border-b border-border">
@@ -202,23 +233,29 @@ export const PreschoolDetails: React.FC = () => {
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
             {/* Photos */}
-            {photos.length > 0 && (
+            {displayImages.length > 0 && (
               <div className="p-6 border-b border-border">
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <Camera className="w-4 h-4" />
                   Bilder
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {photos.map((photoUrl, index) => (
+                  {displayImages.slice(0, 4).map((imageUrl, index) => (
                     <img
                       key={index}
-                      src={photoUrl}
+                      src={imageUrl}
                       alt={`${selectedPreschool.namn} bild ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-md"
+                      className="w-full h-24 object-cover rounded-md hover:scale-105 transition-transform duration-200 cursor-pointer"
                       loading="lazy"
+                      onClick={() => setShowDetailedModal(true)}
                     />
                   ))}
                 </div>
+                {displayImages.length > 4 && (
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    +{displayImages.length - 4} fler bilder - klicka för att se alla
+                  </p>
+                )}
               </div>
             )}
 
@@ -355,7 +392,8 @@ export const PreschoolDetails: React.FC = () => {
             </Button>
           </div>
         </Card>
-      </motion.div>
+        </motion.div>
+      </ClickOutside>
 
       {/* Additional Panels */}
       {showDirections && (

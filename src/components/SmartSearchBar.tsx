@@ -1,189 +1,142 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, X, MapPin, Building, Globe, Sliders } from 'lucide-react';
-import { NearbyPreschoolsButton } from './NearbyPreschoolsButton';
+import React, { useState } from 'react';
+import { Search, X, MapPin, Filter, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useMapStore } from '@/stores/mapStore';
-interface SearchSuggestion {
-  type: 'kommun' | 'preschool' | 'address';
-  name: string;
-  kommun?: string;
-  matches: number;
-}
+
 interface SmartSearchBarProps {
   className?: string;
 }
+
 export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
   className
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const {
-    preschools,
-    setSearchFilters,
     searchFilters,
+    setSearchFilters,
+    preschools,
+    filteredPreschools,
     setMapCenter,
-    setMapZoom,
-    filteredPreschools
+    setMapZoom
   } = useMapStore();
 
-  // Filter states
-  const [huvudmanFilter, setHuvudmanFilter] = useState<string>('');
-  const [antalBarnRange, setAntalBarnRange] = useState<[number, number]>([0, 200]);
-  const [personalRange, setPersonalRange] = useState<[number, number]>([0, 20]);
-  const [examRange, setExamRange] = useState<[number, number]>([0, 100]);
-  const hasActiveFilters = searchQuery || huvudmanFilter || antalBarnRange[0] > 0 || antalBarnRange[1] < 200 || personalRange[0] > 0 || personalRange[1] < 20 || examRange[0] > 0 || examRange[1] < 100;
+  // Get unique values for dropdowns
+  const uniqueKommuner = [...new Set(preschools.map(p => p.kommun))].sort();
 
-  // Generate suggestions based on search query
-  useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-    const query = searchQuery.toLowerCase();
-    const newSuggestions: SearchSuggestion[] = [];
+  const handleLocationSearch = async () => {
+    if (!searchQuery.trim()) return;
 
-    // Get unique kommuner and count matches
-    const kommunMap = new Map<string, number>();
-    const preschoolMatches: SearchSuggestion[] = [];
-    preschools.forEach(preschool => {
-      // Count kommun matches
-      if (preschool.kommun?.toLowerCase().includes(query)) {
-        kommunMap.set(preschool.kommun, (kommunMap.get(preschool.kommun) || 0) + 1);
-      }
-
-      // Check preschool name matches
-      if (preschool.namn?.toLowerCase().includes(query)) {
-        preschoolMatches.push({
-          type: 'preschool',
-          name: preschool.namn,
-          kommun: preschool.kommun,
-          matches: 1
+    setIsLoading(true);
+    try {
+      if (searchQuery.toLowerCase() === 'min position') {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const center: [number, number] = [position.coords.longitude, position.coords.latitude];
+          setSearchFilters({
+            center: center,
+            radius: 10000 // 10km radius
+          });
+          setMapCenter(center);
+          setMapZoom(12);
+          setIsLoading(false);
+        }, (error) => {
+          console.error('Geolocation error:', error);
+          setIsLoading(false);
         });
+      } else {
+        // Check if it's a kommun name
+        const kommun = uniqueKommuner.find(k => 
+          k.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        if (kommun) {
+          setSearchFilters({ kommuner: kommun ? [kommun] : undefined });
+        }
+        setIsLoading(false);
       }
-    });
-
-    // Add kommun suggestions
-    Array.from(kommunMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).forEach(([kommun, count]) => {
-      newSuggestions.push({
-        type: 'kommun',
-        name: kommun,
-        matches: count
-      });
-    });
-
-    // Add top preschool matches
-    preschoolMatches.slice(0, 2).forEach(match => newSuggestions.push(match));
-    setSuggestions(newSuggestions.slice(0, 5));
-    setSelectedIndex(-1);
-  }, [searchQuery, preschools]);
-  const handleExpand = () => {
-    setIsExpanded(true);
-    setTimeout(() => inputRef.current?.focus(), 100);
-  };
-  const handleCollapse = () => {
-    setIsExpanded(false);
-    setSearchQuery('');
-    setSuggestions([]);
-    setSelectedIndex(-1);
-  };
-  const handleSuggestionSelect = (suggestion: SearchSuggestion) => {
-    if (suggestion.type === 'kommun') {
-      // Apply kommun filter and zoom to kommun
-      applyFilters({
-        kommun: suggestion.name
-      });
-
-      // Find centrum of kommun for map positioning
-      const kommunPreschools = preschools.filter(p => p.kommun === suggestion.name && p.latitud && p.longitud);
-      if (kommunPreschools.length > 0) {
-        const avgLat = kommunPreschools.reduce((sum, p) => sum + p.latitud!, 0) / kommunPreschools.length;
-        const avgLng = kommunPreschools.reduce((sum, p) => sum + p.longitud!, 0) / kommunPreschools.length;
-        setMapCenter([avgLng, avgLat]);
-        setMapZoom(11);
-      }
-    } else if (suggestion.type === 'preschool') {
-      const preschool = preschools.find(p => p.namn === suggestion.name);
-      if (preschool && preschool.latitud && preschool.longitud) {
-        setMapCenter([preschool.longitud, preschool.latitud]);
-        setMapZoom(15);
-        applyFilters({
-          kommun: preschool.kommun || ''
-        });
-      }
+    } catch (error) {
+      console.error('Search error:', error);
+      setIsLoading(false);
     }
-    setSearchQuery(suggestion.name);
-    setIsExpanded(false);
-    setSuggestions([]);
   };
-  const applyFilters = (overrides = {}) => {
-    const filters = {
-      kommun: huvudmanFilter ? '' : searchQuery,
-      huvudman: huvudmanFilter,
-      minPersonaltäthet: personalRange[0] > 0 ? personalRange[0] : undefined,
-      maxPersonaltäthet: personalRange[1] < 20 ? personalRange[1] : undefined,
-      minExamen: examRange[0] > 0 ? examRange[0] : undefined,
-      maxExamen: examRange[1] < 100 ? examRange[1] : undefined,
-      minBarngrupper: antalBarnRange[0] > 0 ? antalBarnRange[0] : undefined,
-      maxBarngrupper: antalBarnRange[1] < 200 ? antalBarnRange[1] : undefined,
-      ...overrides
-    };
-    setSearchFilters(filters);
-  };
-  const clearFilters = () => {
+
+  const clearSearch = () => {
     setSearchQuery('');
-    setHuvudmanFilter('');
-    setAntalBarnRange([0, 200]);
-    setPersonalRange([0, 20]);
-    setExamRange([0, 100]);
     setSearchFilters({});
-    setMapCenter([15.5, 62.0]);
-    setMapZoom(5.5);
+    setMapCenter([15.0, 62.0]);
+    setMapZoom(5);
   };
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      handleCollapse();
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex(prev => Math.min(prev + 1, suggestions.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex(prev => Math.max(prev - 1, -1));
-    } else if (e.key === 'Enter' && selectedIndex >= 0) {
-      e.preventDefault();
-      handleSuggestionSelect(suggestions[selectedIndex]);
-    }
-  };
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'kommun':
-        return <Globe className="w-4 h-4" />;
-      case 'preschool':
-        return <Building className="w-4 h-4" />;
-      default:
-        return <MapPin className="w-4 h-4" />;
-    }
-  };
-  const handleNearMe = () => {
-    navigator.geolocation.getCurrentPosition(position => {
-      const {
-        latitude,
-        longitude
-      } = position.coords;
-      setMapCenter([longitude, latitude]);
-      setMapZoom(12);
-    }, error => {
-      console.error('Error getting location:', error);
-    });
-  };
-  return;
+
+  const hasActiveSearch = searchQuery.length > 0 || Object.keys(searchFilters).length > 0;
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-md mx-4 ${className}`}
+    >
+      <Card className="bg-card/95 backdrop-blur-lg shadow-lg border-border/50">
+        <div className="p-3">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 relative">
+              <Input
+                placeholder="Sök kommun, förskola eller 'min position'"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleLocationSearch();
+                  }
+                }}
+                className="pr-8 h-9 text-sm"
+              />
+              {searchQuery && (
+                <Button
+                  onClick={() => setSearchQuery('')}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            <Button 
+              onClick={handleLocationSearch}
+              disabled={isLoading || !searchQuery.trim()}
+              size="sm"
+              className="h-9 px-3"
+            >
+              {isLoading ? (
+                <div className="animate-spin w-3 h-3 border-2 border-primary-foreground border-t-transparent rounded-full" />
+              ) : (
+                <Search className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
+
+          {/* Results summary */}
+          {hasActiveSearch && (
+            <div className="mt-2 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                {filteredPreschools.length.toLocaleString()} förskolor
+              </span>
+              <Button
+                onClick={clearSearch}
+                variant="ghost"
+                size="sm"
+                className="h-5 px-2 text-xs"
+              >
+                Rensa
+              </Button>
+            </div>
+          )}
+        </div>
+      </Card>
+    </motion.div>
+  );
 };

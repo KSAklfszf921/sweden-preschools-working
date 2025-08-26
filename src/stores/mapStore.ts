@@ -319,9 +319,12 @@ export const useMapStore = create<MapState>((set, get) => ({
         }
       }
 
-      // Huvudman filter
-      if (searchFilters.huvudman && preschool.huvudman !== searchFilters.huvudman) {
-        return false;
+      // Huvudman filter - handle both database value and display mapping
+      if (searchFilters.huvudman) {
+        const filterValue = searchFilters.huvudman === 'Fristående' ? 'Enskild' : searchFilters.huvudman;
+        if (preschool.huvudman !== filterValue) {
+          return false;
+        }
       }
 
       // Personaltäthet filter
@@ -364,6 +367,30 @@ export const useMapStore = create<MapState>((set, get) => ({
         // Convert radius from meters to kilometers for comparison
         const radiusInKm = searchFilters.radius / 1000;
         if (distance > radiusInKm) {
+          return false;
+        }
+      }
+
+      // Travel time filter (placeholder for now - would need Google Directions API integration)
+      if (searchFilters.travelTime) {
+        // This would require calling Google Directions API for each preschool
+        // For now, we'll use a simple distance approximation
+        const userLat = searchFilters.travelTime.userLocation.lat;
+        const userLng = searchFilters.travelTime.userLocation.lng;
+        
+        const distance = getDistance(userLat, userLng, preschool.latitud, preschool.longitud);
+        
+        // Rough approximation: cycling speed ~15 km/h, walking ~5 km/h, driving ~30 km/h, transit ~20 km/h
+        const speedKmh = {
+          walking: 5,
+          bicycling: 15,
+          driving: 30,
+          transit: 20
+        }[searchFilters.travelTime.transportMode];
+        
+        const estimatedTimeMinutes = (distance / speedKmh) * 60;
+        
+        if (estimatedTimeMinutes > searchFilters.travelTime.maxMinutes) {
           return false;
         }
       }
