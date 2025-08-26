@@ -83,7 +83,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
-      className={`fixed top-4 right-4 ${mapZoom <= 6 ? 'h-48' : 'bottom-4'} w-64 z-40 ${className}`}
+      className={`fixed top-20 right-4 ${mapZoom <= 6 ? 'h-48' : 'bottom-4'} w-64 z-40 ${className}`}
     >
       <Card className="h-full bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300">
         {/* Header */}
