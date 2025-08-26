@@ -9,6 +9,7 @@ interface PreschoolListPanelProps {
   className?: string;
 }
 const ITEMS_PER_PAGE = 6;
+const MIN_VISIBLE_ITEMS = 6;
 export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
   className
 }) => {
@@ -72,58 +73,51 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
     x: 0
   }} exit={{
     x: '100%'
-  }} className={`fixed top-4 right-4 ${mapZoom <= 6 ? 'h-48' : 'bottom-4'} w-64 z-40 ${className}`}>
-      <Card className="h-full bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300">
+  }} className={`fixed top-20 right-4 w-64 z-40 ${className}`} style={{ height: Math.max(MIN_VISIBLE_ITEMS * 60 + 120, 300) + 'px' }}>
+      <Card className="h-full bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300 flex flex-col">
         {/* Header */}
-        <div className="p-3 border-b border-border">
+        <div className="p-2 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-medium text-sm text-foreground">{getContextTitle()}</h3>
             <Button onClick={() => setIsExpanded(false)} variant="ghost" size="sm" className="h-5 w-5 p-0">
               <ChevronUp className="h-3 w-3" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mb-2">{getContextSubtitle()}</p>
-          
-          {mapZoom > 6}
+          <p className="text-xs text-muted-foreground">{getContextSubtitle()}</p>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
-          {mapZoom <= 6 ?
-        // Heatmap view - show aggregated stats
-        <div className="p-3 space-y-3">
-              
-              
-              
-            </div> :
-        // List view
-        <div ref={scrollContainerRef} className="h-full overflow-y-auto p-1.5 space-y-1.5" onScroll={handleScroll}>
-              <AnimatePresence>
-                {currentPreschools.map((preschool, index) => <motion.div key={preschool.id} initial={{
-              opacity: 0,
-              y: 20
-            }} animate={{
-              opacity: 1,
-              y: 0
-            }} exit={{
-              opacity: 0,
-              y: -20
-            }} transition={{
-              delay: index * 0.05
-            }}>
-                    <PreschoolListItem preschool={preschool} isSelected={selectedPreschool?.id === preschool.id} onClick={() => handlePreschoolClick(preschool)} />
-                  </motion.div>)}
-              </AnimatePresence>
-              
-              {displayedItems < visiblePreschools.length && <div className="text-center py-2">
-                  <p className="text-xs text-muted-foreground">
-                    Visar {displayedItems} av {visiblePreschools.length}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 opacity-75">
-                    Scrolla för att se fler
-                  </p>
-                </div>}
-            </div>}
+        <div className="flex-1 overflow-hidden min-h-0">
+          <div ref={scrollContainerRef} className="h-full overflow-y-auto p-2 space-y-1 animate-fade-in" onScroll={handleScroll}>
+            <AnimatePresence>
+              {currentPreschools.map((preschool, index) => 
+                <motion.div 
+                  key={preschool.id} 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -10 }} 
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <PreschoolListItem 
+                    preschool={preschool} 
+                    isSelected={selectedPreschool?.id === preschool.id} 
+                    onClick={() => handlePreschoolClick(preschool)} 
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            {displayedItems < visiblePreschools.length && (
+              <div className="text-center py-2 border-t border-border/30">
+                <p className="text-xs text-muted-foreground">
+                  Visar {displayedItems} av {visiblePreschools.length}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 opacity-75">
+                  Scrolla för att se fler
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </Card>
     </motion.div>;
@@ -138,39 +132,50 @@ const PreschoolListItem: React.FC<PreschoolListItemProps> = ({
   isSelected,
   onClick
 }) => {
-  return <motion.div whileHover={{
-    scale: 1.01
-  }} whileTap={{
-    scale: 0.99
-  }} className={`p-2 rounded-md border cursor-pointer transition-all duration-200 ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/50 bg-card'}`} onClick={onClick}>
-      <div className="space-y-1.5">
-        <div className="flex items-start justify-between">
-          <h4 className="font-medium text-foreground text-xs leading-tight line-clamp-2">
-            {preschool.namn}
-          </h4>
-          {preschool.google_rating && <div className="flex items-center gap-0.5 ml-1 flex-shrink-0">
-              <Star className="h-2.5 w-2.5 fill-current text-yellow-500" />
-              <span className="text-xs font-medium text-foreground">
-                {preschool.google_rating.toFixed(1)}
-              </span>
-            </div>}
-        </div>
-        
-        <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
-          <MapPin className="h-2.5 w-2.5" />
-          <span className="truncate text-xs">{preschool.kommun}</span>
-        </div>
-        
-        <div className="flex flex-wrap gap-0.5">
-          {preschool.antal_barn && <Badge variant="secondary" className="text-xs px-1 py-0 h-4">
-              <Users className="h-2.5 w-2.5 mr-0.5" />
-              {preschool.antal_barn}
-            </Badge>}
-          {preschool.andel_med_förskollärarexamen && <Badge variant="outline" className="text-xs px-1 py-0 h-4">
-              <GraduationCap className="h-2.5 w-2.5 mr-0.5" />
-              {Math.round(preschool.andel_med_förskollärarexamen)}%
-            </Badge>}
-        </div>
+  return <motion.div 
+    whileHover={{ scale: 1.01 }} 
+    whileTap={{ scale: 0.99 }} 
+    className={`p-1.5 rounded-md border cursor-pointer transition-all duration-200 hover-scale ${
+      isSelected 
+        ? 'border-primary bg-primary/5 shadow-sm' 
+        : 'border-border hover:border-primary/50 bg-card'
+    }`} 
+    onClick={onClick}
+  >
+    <div className="space-y-1">
+      <div className="flex items-start justify-between gap-1">
+        <h4 className="font-medium text-foreground text-xs leading-tight line-clamp-1 flex-1">
+          {preschool.namn}
+        </h4>
+        {preschool.google_rating && (
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <Star className="h-2.5 w-2.5 fill-current text-yellow-500" />
+            <span className="text-xs font-medium text-foreground">
+              {preschool.google_rating.toFixed(1)}
+            </span>
+          </div>
+        )}
       </div>
-    </motion.div>;
+      
+      <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
+        <MapPin className="h-2.5 w-2.5 flex-shrink-0" />
+        <span className="truncate text-xs">{preschool.kommun}</span>
+      </div>
+      
+      <div className="flex flex-wrap gap-0.5">
+        {preschool.antal_barn && (
+          <Badge variant="secondary" className="text-xs px-1 py-0 h-4">
+            <Users className="h-2.5 w-2.5 mr-0.5" />
+            {preschool.antal_barn}
+          </Badge>
+        )}
+        {preschool.andel_med_förskollärarexamen && (
+          <Badge variant="outline" className="text-xs px-1 py-0 h-4">
+            <GraduationCap className="h-2.5 w-2.5 mr-0.5" />
+            {Math.round(preschool.andel_med_förskollärarexamen)}%
+          </Badge>
+        )}
+      </div>
+    </div>
+  </motion.div>;
 };
