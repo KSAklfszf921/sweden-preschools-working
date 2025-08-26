@@ -56,6 +56,13 @@ export default {
 					blue: 'hsl(var(--nordic-blue))',
 					light: 'hsl(var(--nordic-light))'
 				},
+				nature: {
+					forest: 'hsl(var(--forest))',
+					lake: 'hsl(var(--lake))',
+					sky: 'hsl(var(--sky))',
+					mountain: 'hsl(var(--mountain))',
+					meadow: 'hsl(var(--meadow))'
+				},
 				swedish: {
 					flag: 'hsl(var(--swedish-flag))'
 				},
@@ -140,6 +147,36 @@ export default {
 						opacity: '1',
 						transform: 'scale(1)'
 					}
+				},
+				'pulse-glow': {
+					'0%, 100%': {
+						boxShadow: '0 0 20px hsl(var(--primary) / 0.3)'
+					},
+					'50%': {
+						boxShadow: '0 0 40px hsl(var(--primary) / 0.6)'
+					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(0px)'
+					},
+					'50%': {
+						transform: 'translateY(-10px)'
+					}
+				},
+				'zoom-in': {
+					'0%': {
+						transform: 'scale(0.1) rotate(180deg)',
+						opacity: '0'
+					},
+					'50%': {
+						transform: 'scale(0.5) rotate(90deg)',
+						opacity: '0.7'
+					},
+					'100%': {
+						transform: 'scale(1) rotate(0deg)',
+						opacity: '1'
+					}
 				}
 			},
 			animation: {
@@ -147,7 +184,10 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in-up': 'fade-in-up 0.6s ease-out',
 				'slide-in-right': 'slide-in-right 0.6s ease-out',
-				'scale-in': 'scale-in 0.3s ease-out'
+				'scale-in': 'scale-in 0.3s ease-out',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+				'float': 'float 3s ease-in-out infinite',
+				'zoom-in': 'zoom-in 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
 			}
 		}
 	},

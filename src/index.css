@@ -30,6 +30,13 @@ All colors MUST be HSL.
     --accent: 207 27% 96%;
     --accent-foreground: 207 89% 32%;
 
+    /* Swedish Nature-Inspired Colors */
+    --forest: 130 35% 25%;
+    --lake: 210 85% 35%;
+    --sky: 200 75% 60%;
+    --mountain: 220 15% 45%;
+    --meadow: 85 40% 50%;
+    
     --nordic-blue: 207 89% 42%;
     --nordic-light: 207 50% 95%;
     --swedish-flag: 47 100% 50%;
@@ -99,6 +106,13 @@ All colors MUST be HSL.
     --accent: 220 39% 12%;
     --accent-foreground: 207 27% 96%;
 
+    /* Swedish Nature-Inspired Colors - Dark Mode */
+    --forest: 130 35% 35%;
+    --lake: 210 85% 55%;
+    --sky: 200 75% 70%;
+    --mountain: 220 15% 65%;
+    --meadow: 85 40% 60%;
+    
     --nordic-blue: 207 89% 55%;
     --nordic-light: 220 39% 15%;
     --swedish-flag: 47 100% 60%;

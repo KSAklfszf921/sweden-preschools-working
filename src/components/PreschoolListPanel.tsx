@@ -68,12 +68,12 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
         animate={{ x: 0 }}
         className={`fixed top-4 right-4 z-50 ${className}`}
       >
-        <Button
-          onClick={() => setIsExpanded(true)}
-          variant="secondary"
-          size="sm"
-          className="bg-card/90 backdrop-blur-sm shadow-nordic px-3 py-1.5"
-        >
+          <Button
+            onClick={() => setIsExpanded(true)}
+            variant="secondary"
+            size="sm"
+            className="bg-card/95 backdrop-blur-lg shadow-nordic px-3 py-1.5 hover:scale-110 transition-all duration-200"
+          >
           <MapPin className="h-3 w-3 mr-1" />
           <span className="text-xs font-medium">{visiblePreschools.length}</span>
         </Button>
@@ -88,7 +88,8 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({ classNam
       exit={{ x: '100%' }}
       className={`fixed top-4 right-4 bottom-4 w-64 z-40 ${className}`}
     >
-      <Card className="h-full bg-card/95 backdrop-blur-sm shadow-nordic border-border">{/* Header */}
+      <Card className="h-full bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300">
+        {/* Header */}
         <div className="p-3 border-b border-border">
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-medium text-sm text-foreground">{getContextTitle()}</h3>

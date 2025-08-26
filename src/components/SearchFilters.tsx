@@ -77,19 +77,24 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
         animate={{ opacity: 1, x: 0 }}
         className={`fixed top-4 left-4 z-30 ${className}`}
       >
-        <Card className="bg-card/95 backdrop-blur-sm shadow-nordic border-border">
+        <Card className="bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300">
           <div className="p-3">
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => setIsExpanded(true)}
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2"
+                className="h-8 px-2 hover:scale-105 transition-all duration-200"
               >
-                <Search className="h-3 w-3 mr-1" />
-                <span className="text-xs">Sök & Filter</span>
+                <motion.div
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <Search className="h-3 w-3 mr-1 text-nature-lake" />
+                </motion.div>
+                <span className="text-xs font-medium bg-gradient-to-r from-nature-lake to-nature-forest bg-clip-text text-transparent">Sök & Filter</span>
                 {hasActiveFilters && (
-                  <Badge variant="secondary" className="ml-2 h-4 px-1 text-xs">
+                  <Badge variant="secondary" className="ml-2 h-4 px-1 text-xs animate-pulse">
                     {filterCount}
                   </Badge>
                 )}
@@ -124,15 +129,20 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
       animate={{ opacity: 1, x: 0 }}
       className={`fixed top-4 left-4 z-30 w-72 ${className}`}
     >
-      <Card className="bg-card/95 backdrop-blur-sm shadow-nordic border-border">
+      <Card className="bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300">
         <div className="p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-primary" />
-              <h3 className="font-medium text-foreground">Sök & Filter</h3>
+              <motion.div
+                animate={{ rotate: hasActiveFilters ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Filter className="h-4 w-4 text-nature-lake" />
+              </motion.div>
+              <h3 className="font-medium bg-gradient-to-r from-nature-lake to-nature-forest bg-clip-text text-transparent">Sök & Filter</h3>
               {hasActiveFilters && (
-                <Badge variant="secondary" className="h-5">
+                <Badge variant="secondary" className="h-5 animate-pulse">
                   {filterCount}
                 </Badge>
               )}
