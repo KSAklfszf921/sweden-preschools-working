@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Map3D } from '@/components/Map3D';
-import { AdvancedSearchBar } from '@/components/enhanced/AdvancedSearchBar';
+import { SmartSearchBar } from '@/components/SmartSearchBar';
 import { PreschoolDetails } from '@/components/PreschoolDetails';
 import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { AdminPanel } from '@/components/AdminPanel';
@@ -109,7 +109,7 @@ const Index = () => {
         }} transition={{
           delay: showLanding ? 0 : 1.0
         }} className="absolute left-4 top-4 z-30">
-            <AdvancedSearchBar />
+            <SmartSearchBar />
           </motion.div>
 
 
