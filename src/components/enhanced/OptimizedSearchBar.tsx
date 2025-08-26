@@ -127,14 +127,14 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
   }} animate={{
     opacity: 1,
     x: 0
-  }} className={`absolute left-4 top-4 z-30 w-72 ${className}`}>
+  }} className={`absolute left-4 top-4 z-30 w-96 ${className}`}>
       <Card className="glass-search border-0 shadow-lg card-hover">
         <div className="p-5">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5 text-primary" />
-              <h3 className="font-heading font-semibold text-lg">Sök förskolor</h3>
+              <h3 className="font-heading font-semibold text-base">Sök förskolor</h3>
               {hasActiveFilters && <Badge variant="secondary" className="h-5">
                   {filterCount}
                 </Badge>}
@@ -203,9 +203,7 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
             </Button>
 
             {/* Results count */}
-            <div className="text-xs text-muted-foreground pt-2 border-t">
-              Visar {filteredPreschools.length.toLocaleString()} av {preschools.length.toLocaleString()} förskolor
-            </div>
+            
           </div>
         </div>
       </Card>
