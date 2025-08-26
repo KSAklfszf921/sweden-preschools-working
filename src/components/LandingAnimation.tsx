@@ -8,7 +8,10 @@ interface LandingAnimationProps {
 
 export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }) => {
   const [stage, setStage] = useState(0);
+  const [preschoolCount, setPreschoolCount] = useState(0);
+  const totalPreschools = 8739;
 
+  // Stage progression effect
   useEffect(() => {
     const timer = setTimeout(() => {
       if (stage < 4) {
@@ -20,6 +23,30 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
 
     return () => clearTimeout(timer);
   }, [stage, onComplete]);
+
+  // Counting animation effect - starts after stage 2 (when loading preschools)
+  useEffect(() => {
+    if (stage >= 2) {
+      const duration = 1200; // 1.2 seconds to count up
+      const steps = 60; // Number of animation steps
+      const increment = totalPreschools / steps;
+      const stepDuration = duration / steps;
+
+      let currentStep = 0;
+      const countTimer = setInterval(() => {
+        currentStep++;
+        const newCount = Math.min(Math.floor(currentStep * increment), totalPreschools);
+        setPreschoolCount(newCount);
+        
+        if (currentStep >= steps) {
+          clearInterval(countTimer);
+          setPreschoolCount(totalPreschools);
+        }
+      }, stepDuration);
+
+      return () => clearInterval(countTimer);
+    }
+  }, [stage, totalPreschools]);
 
   return (
     <AnimatePresence>
@@ -89,11 +116,11 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
 
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 3 }}
+            animate={{ opacity: stage >= 2 ? 1 : 0 }}
+            transition={{ delay: stage >= 2 ? 0.2 : 3 }}
             className="text-sm text-muted-foreground mt-4"
           >
-            8,739 förskolor laddade
+            {preschoolCount.toLocaleString('sv-SE')} förskolor laddade
           </motion.p>
         </motion.div>
       </motion.div>
