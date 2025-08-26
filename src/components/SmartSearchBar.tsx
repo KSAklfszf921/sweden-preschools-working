@@ -62,8 +62,7 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
             p.namn.toLowerCase().includes(searchQuery.toLowerCase())
           );
           if (matchingPreschools.length > 0) {
-            const ids = matchingPreschools.map(p => p.id);
-            setSearchFilters({ ids });
+            setSearchFilters({ query: searchQuery });
           }
         }
         setIsLoading(false);

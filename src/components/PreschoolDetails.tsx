@@ -3,12 +3,12 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMapStore } from '@/stores/mapStore';
 import { useComparisonStore } from '@/stores/comparisonStore';
 import { supabase } from '@/integrations/supabase/client';
-import { X, MapPin, Users, GraduationCap, Star, Phone, Globe, Camera, Navigation, Plus, Route, Eye } from 'lucide-react';
+import { X, MapPin, Users, GraduationCap, Star, Phone, Globe, Camera, Navigation, Plus, Route, Eye, Clock, MessageSquare, ExternalLink, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PreschoolDetailsModal } from './enhanced/PreschoolDetailsModal';
 import { StarRating } from '@/components/ui/star-rating';
 import { DirectionsPanel } from '@/components/directions/DirectionsPanel';
 import { StreetViewPanel } from '@/components/streetview/StreetViewPanel';
@@ -21,12 +21,14 @@ interface GoogleData {
   website_url?: string;
   contact_phone?: string;
   formatted_address?: string;
+  opening_hours?: any;
+  reviews?: any[];
+  street_view_pano_id?: string;
 }
 
 export const PreschoolDetails: React.FC = () => {
   const { selectedPreschool, setSelectedPreschool } = useMapStore();
   const { addToComparison, removeFromComparison, isInComparison } = useComparisonStore();
-  const [showDetailedModal, setShowDetailedModal] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
   const [showStreetView, setShowStreetView] = useState(false);
   const [googleData, setGoogleData] = useState<GoogleData | null>(null);
@@ -34,11 +36,13 @@ export const PreschoolDetails: React.FC = () => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | undefined>();
   const [images, setImages] = useState<string[]>([]);
+  const [streetViewUrl, setStreetViewUrl] = useState<string>('');
 
   useEffect(() => {
     if (selectedPreschool) {
       fetchGoogleData();
       fetchStoredImages();
+      generateStreetView();
     }
   }, [selectedPreschool]);
 
@@ -67,7 +71,10 @@ export const PreschoolDetails: React.FC = () => {
             google_photos: cachedData.google_photos || [],
             website_url: cachedData.website_url,
             contact_phone: cachedData.contact_phone,
-            formatted_address: cachedData.formatted_address
+            formatted_address: cachedData.formatted_address,
+            opening_hours: (cachedData as any).opening_hours,
+            reviews: (cachedData as any).reviews,
+            street_view_pano_id: (cachedData as any).street_view_pano_id
           });
           
           // Load photo URLs
@@ -158,6 +165,59 @@ export const PreschoolDetails: React.FC = () => {
     }
   };
 
+  const generateStreetView = async () => {
+    if (!selectedPreschool) return;
+
+    try {
+      const response = await supabase.functions.invoke('street-view-generator', {
+        body: {
+          lat: selectedPreschool.latitud,
+          lng: selectedPreschool.longitud,
+          size: '600x400'
+        }
+      });
+
+      if (response.data?.success) {
+        setStreetViewUrl(response.data.data.static_url);
+      }
+    } catch (error) {
+      console.error('Error generating street view:', error);
+    }
+  };
+
+  const renderStarRating = (rating: number, reviewCount: number = 0) => {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {[...Array(5)].map((_, i) => (
+            <Star
+              key={i}
+              className={`h-4 w-4 ${
+                i < Math.floor(rating) 
+                  ? 'text-yellow-400 fill-yellow-400' 
+                  : i < rating 
+                    ? 'text-yellow-400 fill-yellow-400/50'
+                    : 'text-muted-foreground'
+              }`}
+            />
+          ))}
+        </div>
+        <span className="font-medium">{rating.toFixed(1)}</span>
+        <span className="text-sm text-muted-foreground">({reviewCount} recensioner)</span>
+      </div>
+    );
+  };
+
+  const formatOpeningHours = (hours: any) => {
+    if (!hours || !hours.weekday_text) return null;
+    
+    return hours.weekday_text.map((day: string, index: number) => (
+      <div key={index} className="text-sm">
+        {day}
+      </div>
+    ));
+  };
+
   const openDirections = () => {
     if (selectedPreschool) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedPreschool.latitud},${selectedPreschool.longitud}`;
@@ -216,11 +276,7 @@ export const PreschoolDetails: React.FC = () => {
             {/* Google Rating */}
             {googleData?.google_rating && (
               <div className="mt-3">
-                <StarRating 
-                  rating={googleData.google_rating} 
-                  reviewCount={googleData.google_reviews_count || 0}
-                  size="md"
-                />
+                {renderStarRating(googleData.google_rating, googleData.google_reviews_count)}
                 {googleData.google_rating >= 4.5 && (
                   <Badge variant="default" className="ml-2 text-xs">
                     Högbetyg
@@ -230,121 +286,217 @@ export const PreschoolDetails: React.FC = () => {
             )}
           </div>
 
-          {/* Content */}
+          {/* Content - Tabbed Interface */}
           <div className="flex-1 overflow-y-auto">
-            {/* Photos */}
-            {displayImages.length > 0 && (
-              <div className="p-6 border-b border-border">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Camera className="w-4 h-4" />
-                  Bilder
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {displayImages.slice(0, 4).map((imageUrl, index) => (
-                    <img
-                      key={index}
-                      src={imageUrl}
-                      alt={`${selectedPreschool.namn} bild ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-md hover:scale-105 transition-transform duration-200 cursor-pointer"
-                      loading="lazy"
-                      onClick={() => setShowDetailedModal(true)}
+            <Tabs defaultValue="overview" className="w-full h-full">
+              <div className="px-6 pt-4 border-b border-border">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="overview">Översikt</TabsTrigger>
+                  <TabsTrigger value="photos">Bilder</TabsTrigger>
+                  <TabsTrigger value="reviews">Recensioner</TabsTrigger>
+                  <TabsTrigger value="contact">Kontakt</TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="overview" className="p-6 space-y-6">
+                {/* Key Metrics Cards */}
+                <div className="grid grid-cols-1 gap-4">
+                  <Card className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Users className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-lg font-bold">{selectedPreschool.antal_barn || 'N/A'}</p>
+                        <p className="text-sm text-muted-foreground">Barn totalt</p>
+                        {selectedPreschool.antal_barngrupper && (
+                          <p className="text-xs text-muted-foreground">
+                            {selectedPreschool.antal_barngrupper} grupper
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-4">
+                    <div className="flex items-center gap-3">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-lg font-bold">
+                          {selectedPreschool.andel_med_förskollärarexamen ? `${selectedPreschool.andel_med_förskollärarexamen}%` : 'N/A'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Lärarexamen</p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Star className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-lg font-bold">
+                          {selectedPreschool.personaltäthet ? selectedPreschool.personaltäthet.toFixed(1) : 'N/A'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Personaltäthet</p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Street View */}
+                {streetViewUrl && (
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3">Gatuvy</h3>
+                    <img 
+                      src={streetViewUrl} 
+                      alt="Gatuvy av förskolan"
+                      className="w-full h-40 object-cover rounded-lg"
                     />
-                  ))}
-                </div>
-                {displayImages.length > 4 && (
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    +{displayImages.length - 4} fler bilder - klicka för att se alla
-                  </p>
+                  </Card>
                 )}
-              </div>
-            )}
 
-            {/* Basic Info */}
-            <div className="p-6 border-b border-border">
-              <h3 className="font-semibold mb-3">Grundinformation</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Huvudman:</span>
-                  <Badge variant="secondary">{selectedPreschool.huvudman}</Badge>
-                </div>
-                
-                {selectedPreschool.antal_barn && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Antal barn:</span>
-                    <span className="font-medium">{selectedPreschool.antal_barn}</span>
+                {/* Basic Info */}
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-3">Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Huvudman:</span>
+                      <Badge variant="secondary">{selectedPreschool.huvudman}</Badge>
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="photos" className="p-6">
+                {isLoadingGoogle ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Laddar bilder...</p>
+                  </div>
+                ) : displayImages.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {displayImages.map((imageUrl, index) => (
+                      <Card key={index} className="overflow-hidden">
+                        <img 
+                          src={imageUrl} 
+                          alt={`Bild ${index + 1} av ${selectedPreschool.namn}`}
+                          className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Inga bilder tillgängliga</p>
                   </div>
                 )}
+              </TabsContent>
 
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Barngrupper:</span>
-                  <span className="font-medium">{selectedPreschool.antal_barngrupper}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quality Metrics */}
-            <div className="p-6 border-b border-border">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <GraduationCap className="w-4 h-4" />
-                Kvalitetsmått
-              </h3>
-              <div className="space-y-3">
-                {selectedPreschool.personaltäthet && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Personaltäthet:</span>
-                    <span className="font-medium">{selectedPreschool.personaltäthet.toFixed(1)}</span>
+              <TabsContent value="reviews" className="p-6">
+                {isLoadingGoogle ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Laddar recensioner...</p>
+                  </div>
+                ) : googleData?.reviews && (Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).length > 0 ? (
+                  <div className="space-y-4">
+                    {(Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).map((review: any, index: number) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex items-start gap-3">
+                          <User className="h-8 w-8 text-muted-foreground" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-medium">{review.author_name}</span>
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-3 w-3 ${
+                                      i < review.rating 
+                                        ? 'text-yellow-400 fill-yellow-400' 
+                                        : 'text-muted-foreground'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(review.time * 1000).toLocaleDateString('sv-SE')}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground">{review.text}</p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Inga recensioner tillgängliga</p>
                   </div>
                 )}
+              </TabsContent>
 
-                {selectedPreschool.andel_med_förskollärarexamen && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Förskollärarexamen:</span>
-                    <span className="font-medium">
-                      {selectedPreschool.andel_med_förskollärarexamen.toFixed(0)}%
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Contact Info */}
-            {(googleData?.website_url || googleData?.contact_phone) && (
-              <div className="p-6 border-b border-border">
-                <h3 className="font-semibold mb-3">Kontakt</h3>
-                <div className="space-y-2">
-                  {googleData.website_url && (
-                    <a
-                      href={googleData.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-primary hover:underline"
-                    >
-                      <Globe className="w-4 h-4" />
-                      Webbsida
-                    </a>
+              <TabsContent value="contact" className="p-6">
+                <div className="space-y-4">
+                  {googleData?.contact_phone && (
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="font-medium">Telefon</p>
+                          <a 
+                            href={`tel:${googleData.contact_phone}`}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            {googleData.contact_phone}
+                          </a>
+                        </div>
+                      </div>
+                    </Card>
                   )}
-                  {googleData.contact_phone && (
-                    <a
-                      href={`tel:${googleData.contact_phone}`}
-                      className="flex items-center gap-2 text-primary hover:underline"
-                    >
-                      <Phone className="w-4 h-4" />
-                      {googleData.contact_phone}
-                    </a>
+
+                  {googleData?.website_url && (
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <Globe className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="font-medium">Hemsida</p>
+                          <a 
+                            href={googleData.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline flex items-center gap-1"
+                          >
+                            Besök hemsida
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  {googleData?.opening_hours && (
+                    <Card className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Clock className="h-5 w-5 text-primary mt-1" />
+                        <div>
+                          <p className="font-medium mb-2">Öppettider</p>
+                          <div className="space-y-1">
+                            {formatOpeningHours(JSON.parse(googleData.opening_hours))}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Loading state */}
+                  {isLoadingGoogle && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <span className="text-sm">Hämtar kontaktinformation...</span>
+                    </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* Loading state */}
-            {isLoadingGoogle && (
-              <div className="p-6 border-b border-border">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                  <span className="text-sm">Hämtar ytterligare information...</span>
-                </div>
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Actions */}
@@ -356,13 +508,6 @@ export const PreschoolDetails: React.FC = () => {
             >
               <Plus className="w-4 h-4 mr-2" />
               {isInComparison(selectedPreschool.id) ? 'Ta bort från jämförelse' : 'Lägg till jämförelse'}
-            </Button>
-            <Button 
-              onClick={() => setShowDetailedModal(true)}
-              variant="default"
-              className="w-full"
-            >
-              Visa alla detaljer
             </Button>
             <div className="grid grid-cols-2 gap-2">
               <Button 
@@ -425,12 +570,6 @@ export const PreschoolDetails: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Detailed Modal */}
-      <PreschoolDetailsModal
-        preschool={selectedPreschool}
-        isOpen={showDetailedModal}
-        onClose={() => setShowDetailedModal(false)}
-      />
     </AnimatePresence>
   );
 };
