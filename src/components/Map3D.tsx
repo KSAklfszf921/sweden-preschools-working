@@ -45,7 +45,7 @@ export const Map3D: React.FC<Map3DProps> = ({
     // Initialize map with Sweden focus - allow full world view
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/skogstadisak/cmes217k800am01qtckhcd0pi',
       center: [15.5, 62.0],
       zoom: 5.5,
       pitch: 30,
