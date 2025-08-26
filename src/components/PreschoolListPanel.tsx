@@ -158,10 +158,10 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
     x: 0
   }} exit={{
     x: '100%'
-  }} className={`fixed top-20 right-4 w-64 z-40 ${className}`} style={{
+  }} className={`fixed top-4 right-4 w-64 z-40 ${className}`} style={{
     height: Math.max(MIN_VISIBLE_ITEMS * 60 + 120, 300) + 'px'
   }}>
-      <Card className="h-full bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300 flex flex-col">
+      <Card className="h-full bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 hover:shadow-glow transition-all duration-300 flex flex-col rounded-xl">
         {/* Header */}
         <div className="p-2 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between mb-1">
