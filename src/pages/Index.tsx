@@ -12,6 +12,9 @@ import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LandingAnimation } from '@/components/LandingAnimation';
+import { MapTransitions } from '@/components/enhanced/MapTransitions';
+import { EnhancedPanel } from '@/components/enhanced/EnhancedLayout';
+import { AnimatedButton } from '@/components/enhanced/InteractiveElements';
 import { StatisticsButton } from '@/components/StatisticsButton';
 import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
@@ -44,7 +47,16 @@ const Index = () => {
   } = useComparisonStore();
   const isMobile = useIsMobile();
   const [showLanding, setShowLanding] = useState(true);
+  const [isMapVisible, setIsMapVisible] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+
+  const handleLandingComplete = () => {
+    setShowLanding(false);
+    // Start map transition after landing animation
+    setTimeout(() => {
+      setIsMapVisible(true);
+    }, 200);
+  };
 
   // Add toggle button for collapsed search box
   const showSearchToggle = searchBoxCollapsed;
@@ -61,7 +73,7 @@ const Index = () => {
         <AccessibilityEnhancements />
         <MobileOptimizations />
       {/* Landing Animation */}
-      {showLanding && <LandingAnimation onComplete={() => setShowLanding(false)} />}
+      {showLanding && <LandingAnimation onComplete={handleLandingComplete} />}
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" id="main-content">
         {/* Header */}
@@ -134,22 +146,14 @@ const Index = () => {
             <PreschoolListPanel />
           </motion.div>
 
-          {/* 3D Map with animated entry */}
-          <motion.div initial={{
-            opacity: 0,
-            scale: 0.1
-          }} animate={{
-            opacity: showLanding ? 0 : 1,
-            scale: showLanding ? 0.1 : 1
-          }} transition={{
-            delay: showLanding ? 0 : 0.5,
-            duration: showLanding ? 0 : 3,
-            ease: [0.25, 0.46, 0.45, 0.94]
-          }} className="h-screen">
-            <Map3D className="w-full h-full" />
-            <StatisticsPopup />
-            <LayerControl />
-          </motion.div>
+          {/* 3D Map with enhanced transitions */}
+          <div className="h-screen">
+            <MapTransitions isMapVisible={isMapVisible}>
+              <Map3D className="w-full h-full" />
+              <StatisticsPopup />
+              <LayerControl />
+            </MapTransitions>
+          </div>
           
           {/* Toggle button for collapsed search box */}
           {showSearchToggle && <button onClick={() => setSearchBoxCollapsed(false)} className="absolute top-4 left-4 z-50 bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
@@ -184,9 +188,14 @@ const Index = () => {
           }} transition={{
             delay: showLanding ? 0 : 1.4
           }} className="fixed bottom-4 right-4 z-40">
-            <Button onClick={() => setShowAdmin(true)} variant="outline" size="sm" className="bg-card/95 backdrop-blur-sm hover:bg-accent/50" title="Öppna adminpanel">
+            <AnimatedButton 
+              onClick={() => setShowAdmin(true)} 
+              variant="outline" 
+              size="sm" 
+              className="bg-card/95 backdrop-blur-sm hover:bg-accent/50 hover-glow-subtle"
+            >
               <Settings className="w-4 h-4" />
-            </Button>
+            </AnimatedButton>
           </motion.div>
 
           {/* Loading overlay */}

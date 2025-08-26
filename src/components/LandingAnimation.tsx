@@ -14,9 +14,9 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
       if (stage < 4) {
         setStage(stage + 1);
       } else {
-        setTimeout(onComplete, 500);
+        setTimeout(onComplete, 300);
       }
-    }, stage === 0 ? 1000 : 800);
+    }, stage === 0 ? 600 : 500);
 
     return () => clearTimeout(timer);
   }, [stage, onComplete]);
@@ -25,8 +25,9 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20 z-50 flex items-center justify-center"
+        exit={{ opacity: 0, scale: 1.1 }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+        className="fixed inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20 z-50 flex items-center justify-center backdrop-blur-sm"
       >
         {/* Welcome message */}
         <motion.div

@@ -223,7 +223,11 @@ export default {
 				'stagger': 'fade-in-up 0.6s ease-out',
 				'bounce-subtle': 'bounce-subtle 0.6s ease-out',
 				'slide-up': 'slide-up 0.4s ease-out',
-				'glow-pulse': 'glow-pulse 2s ease-in-out infinite'
+				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+				'progressive-appear': 'scale-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+				'wave-appear': 'fade-in-up 0.8s ease-out',
+				'marker-pop': 'zoom-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+				'smooth-entrance': 'fade-in-up 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
 			}
 		}
 	},
