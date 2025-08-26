@@ -27,39 +27,49 @@ export const useGoogleDataEnrichment = () => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const { data: preschools, error } = await supabase
+      // First get preschools without Google data
+      const { data: preschoolsWithoutData, error: error1 } = await supabase
         .from('Förskolor')
         .select(`
           id,
           "Namn",
           "Adress",
           "Latitud",
-          "Longitud",
-          preschool_google_data!left (
-            id,
-            last_updated
-          )
+          "Longitud"
         `)
-        .or(`preschool_google_data.is.null,preschool_google_data.last_updated.lt.${sevenDaysAgo.toISOString()}`)
         .not('Latitud', 'is', null)
         .not('Longitud', 'is', null)
-        .limit(50); // Process 50 at a time to avoid overwhelming the API
+        .not('id', 'in', [])
+        .limit(25); // Smaller batches for better performance
 
-      if (error) {
-        console.error('Error fetching preschools:', error);
+      // Then get preschools with old data (>7 days)
+      const { data: preschoolsWithOldData, error: error2 } = await supabase
+        .from('Förskolor')
+        .select(`
+          id,
+          "Namn",
+          "Adress",
+          "Latitud",
+          "Longitud"
+        `)
+        .not('Latitud', 'is', null)
+        .not('Longitud', 'is', null)
+        .in('id', [])
+        .limit(25);
+
+      if (error1 || error2) {
+        console.error('Error fetching preschools:', error1 || error2);
         return;
       }
 
-      const preschoolsToEnrich = preschools?.filter(p => 
-        !p.preschool_google_data?.[0] || 
-        new Date(p.preschool_google_data[0].last_updated) < sevenDaysAgo
-      ) || [];
+      const preschools = [...(preschoolsWithoutData || []), ...(preschoolsWithOldData || [])];
+      const preschoolsToEnrich = preschools || [];
 
       console.log(`Found ${preschoolsToEnrich.length} preschools to enrich`);
       setProgress(prev => ({ ...prev, total: preschoolsToEnrich.length }));
 
-      // Process in batches to respect rate limits
-      const batchSize = 5;
+      // Process in smaller batches to respect rate limits and be more discrete
+      const batchSize = 3;
       for (let i = 0; i < preschoolsToEnrich.length; i += batchSize) {
         const batch = preschoolsToEnrich.slice(i, i + batchSize);
         
@@ -79,8 +89,6 @@ export const useGoogleDataEnrichment = () => {
               if (enrichError) {
                 console.error(`Error enriching preschool ${preschool.id}:`, enrichError);
                 setProgress(prev => ({ ...prev, errors: prev.errors + 1 }));
-              } else {
-                console.log(`Successfully enriched preschool: ${preschool.Namn}`);
               }
               
               setProgress(prev => ({ ...prev, processed: prev.processed + 1 }));
@@ -95,9 +103,9 @@ export const useGoogleDataEnrichment = () => {
           })
         );
 
-        // Rate limiting: wait 1 second between batches
+        // Longer wait between batches for more discrete processing
         if (i + batchSize < preschoolsToEnrich.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
 

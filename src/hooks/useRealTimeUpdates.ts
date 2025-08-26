@@ -87,13 +87,28 @@ export const useRealTimeUpdates = () => {
         { event: '*', schema: 'public', table: 'preschool_google_data' },
         (payload) => {
           console.log('Google data update received:', payload);
-          // Force refresh of preschool data to include new Google data
+          // Silently update the affected preschool's Google data in state
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            toast.info('Google-data uppdaterad - laddar om förskoledata...');
-            // Trigger a refresh of preschool data
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
+            const preschoolId = payload.new?.preschool_id;
+            if (preschoolId) {
+              // Find and update the specific preschool in the store
+              const currentPreschools = useMapStore.getState().preschools;
+              const updatedPreschools = currentPreschools.map(p => {
+                if (p.id === preschoolId) {
+                  return {
+                    ...p,
+                    google_rating: payload.new?.google_rating,
+                    google_reviews_count: payload.new?.google_reviews_count,
+                    google_reviews: payload.new?.reviews,
+                    contact_phone: payload.new?.contact_phone,
+                    website_url: payload.new?.website_url,
+                    opening_hours: payload.new?.opening_hours,
+                  };
+                }
+                return p;
+              });
+              setPreschools(updatedPreschools);
+            }
           }
         }
       )
