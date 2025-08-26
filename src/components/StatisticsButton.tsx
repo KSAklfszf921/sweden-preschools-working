@@ -14,13 +14,14 @@ export const StatisticsButton: React.FC = () => {
     return value !== undefined && value !== '' && value !== null;
   }) && filteredPreschools.length !== preschools.length;
 
-  if (!hasActiveFilters) return null;
-
   const getButtonText = () => {
-    if (searchFilters.kommuner && searchFilters.kommuner.length > 0) return `Statistik för ${searchFilters.kommuner[0]}`;
-    if (searchFilters.radius) return 'Statistik för närområdet';
-    if (searchFilters.huvudman) return `Statistik för ${searchFilters.huvudman.toLowerCase()}a`;
-    return 'Statistik för filter';
+    if (hasActiveFilters) {
+      if (searchFilters.kommuner && searchFilters.kommuner.length > 0) return `Statistik för ${searchFilters.kommuner[0]}`;
+      if (searchFilters.radius) return 'Statistik för närområdet';
+      if (searchFilters.huvudman) return `Statistik för ${searchFilters.huvudman.toLowerCase()}a`;
+      return 'Statistik för filter';
+    }
+    return 'Visa statistik';
   };
 
   return (
@@ -29,6 +30,7 @@ export const StatisticsButton: React.FC = () => {
         onClick={() => setIsModalOpen(true)}
         variant="outline"
         size="sm"
+        data-testid="statistics-button"
         className="bg-card/80 backdrop-blur-xl border-border/50 shadow-lg hover:bg-card/90"
       >
         <BarChart3 className="w-4 h-4 mr-2" />

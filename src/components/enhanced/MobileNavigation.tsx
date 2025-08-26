@@ -12,11 +12,13 @@ import {
   Info
 } from 'lucide-react';
 import { useMapStore } from '@/stores/mapStore';
+import { useComparisonStore } from '@/stores/comparisonStore';
 
 export const MobileNavigation: React.FC = () => {
   const { 
     filteredPreschools
   } = useMapStore();
+  const { selectedPreschools, setIsOpen } = useComparisonStore();
 
   const navigationItems = [
     {
@@ -40,8 +42,11 @@ export const MobileNavigation: React.FC = () => {
       icon: BarChart3,
       label: 'Statistik',
       action: () => {
-        // Toggle statistics panel - will be implemented
-        console.log('Statistics panel toggle');
+        // Find and click the statistics button
+        const statsButton = document.querySelector('[data-testid="statistics-button"]') as HTMLElement;
+        if (statsButton) {
+          statsButton.click();
+        }
       },
       badge: filteredPreschools.length
     },
@@ -49,10 +54,9 @@ export const MobileNavigation: React.FC = () => {
       icon: Heart,
       label: 'Jämför',
       action: () => {
-        // Toggle comparison panel - will be implemented
-        console.log('Comparison panel toggle');
+        setIsOpen(true);
       },
-      badge: 0 // Will be updated when comparison store is implemented
+      badge: selectedPreschools.length
     }
   ];
 

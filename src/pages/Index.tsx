@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Map3D } from '@/components/Map3D';
-import { SmartSearchBar } from '@/components/SmartSearchBar';
+import { AdvancedSearchBar } from '@/components/enhanced/AdvancedSearchBar';
 import { PreschoolDetails } from '@/components/PreschoolDetails';
 import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { AdminPanel } from '@/components/AdminPanel';
@@ -11,14 +11,18 @@ import { LandingAnimation } from '@/components/LandingAnimation';
 import { StatisticsButton } from '@/components/StatisticsButton';
 import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
+import { MobileNavigation } from '@/components/enhanced/MobileNavigation';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
 import { SmartNotificationSystem } from '@/components/enhanced/SmartNotificationSystem';
 import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
+import { useComparisonStore } from '@/stores/comparisonStore';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
 import { Settings, BarChart3, GitCompare, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import preschoolIcon from '@/assets/preschool-icon.jpg';
 const Index = () => {
   const {
@@ -29,6 +33,8 @@ const Index = () => {
     searchBoxCollapsed,
     setSearchBoxCollapsed
   } = useMapStore();
+  const { selectedPreschools, setIsOpen } = useComparisonStore();
+  const isMobile = useIsMobile();
   const [showLanding, setShowLanding] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
 
@@ -81,11 +87,19 @@ const Index = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="hidden sm:flex items-center gap-2 bg-background/50 hover:bg-accent/50"
-                  onClick={() => {/* TODO: Open comparison panel */}}
+                  className="hidden sm:flex items-center gap-2 bg-background/50 hover:bg-accent/50 relative"
+                  onClick={() => setIsOpen(true)}
                 >
                   <GitCompare className="w-4 h-4" />
                   Jämför
+                  {selectedPreschools.length > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center"
+                    >
+                      {selectedPreschools.length}
+                    </Badge>
+                  )}
                 </Button>
                 <ThemeToggle />
               </div>
@@ -105,7 +119,7 @@ const Index = () => {
         }} transition={{
           delay: showLanding ? 0 : 1.0
         }} className="absolute left-4 top-4 z-30">
-            <SmartSearchBar />
+            <AdvancedSearchBar />
           </motion.div>
 
 
@@ -157,6 +171,9 @@ const Index = () => {
 
           {/* Enhanced features */}
           <SmartNotificationSystem />
+          
+          {/* Mobile Navigation */}
+          {isMobile && <MobileNavigation />}
           
           {/* Admin Button */}
           <motion.div 
