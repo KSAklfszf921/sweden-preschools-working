@@ -32,6 +32,17 @@ export interface SearchFilters {
   center?: LngLatLike;
   query?: string;
   maxChildren?: number;
+  minChildren?: number;
+  minStaff?: number;
+  maxStaff?: number;
+  minExam?: number;
+  maxExam?: number;
+  minRating?: number;
+  maxRating?: number;
+  hasGoogleRating?: boolean;
+  hasContact?: boolean;
+  sortBy?: 'namn' | 'antal_barn' | 'google_rating' | 'andel_med_förskollärarexamen';
+  sortOrder?: 'asc' | 'desc';
   nearbyMode?: boolean; // Track if "nearby" mode is active
   travelTime?: {
     userLocation: { lat: number; lng: number };
@@ -72,6 +83,7 @@ interface MapState {
   mapCenter: LngLatLike;
   mapZoom: number;
   showClusters: boolean;
+  updatePreschool: (updatedPreschool: Preschool) => void;
   
   // Heatmap states
   heatmapType: HeatmapType;
@@ -178,6 +190,12 @@ export const useMapStore = create<MapState>((set, get) => ({
   // UI state defaults
   searchBoxCollapsed: false,
   listPanelCollapsed: false,
+
+  updatePreschool: (updatedPreschool) => set((state) => ({
+    preschools: state.preschools.map(p => 
+      p.id === updatedPreschool.id ? updatedPreschool : p
+    )
+  })),
 
   setPreschools: (preschools) => {
     set({ preschools });

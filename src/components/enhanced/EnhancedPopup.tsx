@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, MapPin, Users, Star, TrendingUp, Award, Camera } from 'lucide-react';
+import { X, MapPin, Users, Star, TrendingUp, Award, Camera, Eye, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,13 +28,26 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
   nationalAverage
 }) => {
   const [images, setImages] = useState<string[]>([]);
+  const [streetViewUrl, setStreetViewUrl] = useState<string | null>(null);
+  const [streetViewError, setStreetViewError] = useState<string | null>(null);
+  const [isLoadingStreetView, setIsLoadingStreetView] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const imageCache = useRef<Map<string, string[]>>(new Map());
 
   useEffect(() => {
     fetchImages();
+    fetchStreetView();
   }, [preschool.id]);
 
   const fetchImages = async () => {
     try {
+      // Check cache first
+      const cachedImages = imageCache.current.get(preschool.id);
+      if (cachedImages) {
+        setImages(cachedImages);
+        return;
+      }
+
       const { data: imageData, error } = await supabase
         .from('preschool_images')
         .select('image_url')
@@ -45,14 +58,66 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
 
       if (error) {
         console.error('Error fetching images:', error);
+        // Fallback: Try Google Places enricher
+        try {
+          await supabase.functions.invoke('google-places-enricher', {
+            body: {
+              preschoolId: preschool.id,
+              lat: preschool.latitud,
+              lng: preschool.longitud,
+              address: preschool.adress,
+              name: preschool.namn
+            }
+          });
+        } catch (enrichError) {
+          console.error('Google Places enricher error:', enrichError);
+        }
         return;
       }
 
-      if (imageData && imageData.length > 0) {
-        setImages(imageData.map(img => img.image_url));
-      }
+      const imageUrls = imageData?.map(img => img.image_url) || [];
+      imageCache.current.set(preschool.id, imageUrls);
+      setImages(imageUrls);
     } catch (error) {
       console.error('Error fetching images:', error);
+    }
+  };
+
+  const fetchStreetView = async () => {
+    if (!preschool.latitud || !preschool.longitud) return;
+    
+    setIsLoadingStreetView(true);
+    setStreetViewError(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('street-view-generator', {
+        body: {
+          lat: preschool.latitud,
+          lng: preschool.longitud,
+          size: '400x200'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.data?.static_url) {
+        setStreetViewUrl(data.data.static_url);
+      } else {
+        throw new Error('No street view available');
+      }
+    } catch (error) {
+      console.error('Street view error:', error);
+      setStreetViewError('Gatuvy ej tillgänglig');
+      
+      // Retry logic
+      if (retryCount < 2) {
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          fetchStreetView();
+        }, 1000);
+      }
+    } finally {
+      setIsLoadingStreetView(false);
     }
   };
 
@@ -126,6 +191,44 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
 
           {/* Content */}
           <div className="p-4 space-y-4">
+            {/* Street View Header */}
+            {streetViewUrl && (
+              <div className="relative rounded-lg overflow-hidden bg-muted">
+                <img
+                  src={streetViewUrl}
+                  alt={`Gatuvy för ${preschool.namn}`}
+                  className="w-full h-24 object-cover cursor-pointer hover:scale-105 transition-transform duration-200"
+                  onClick={() => window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${preschool.latitud},${preschool.longitud}`, '_blank')}
+                  loading="lazy"
+                />
+                <div className="absolute top-2 right-2">
+                  <Badge variant="secondary" className="text-xs bg-black/50 text-white border-none">
+                    <Eye className="w-3 h-3 mr-1" />
+                    Gatuvy
+                  </Badge>
+                </div>
+              </div>
+            )}
+
+            {/* Street View Loading/Error */}
+            {isLoadingStreetView && (
+              <div className="h-24 bg-muted rounded-lg flex items-center justify-center">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                  Laddar gatuvy...
+                </div>
+              </div>
+            )}
+
+            {streetViewError && !streetViewUrl && !isLoadingStreetView && (
+              <div className="h-16 bg-muted rounded-lg flex items-center justify-center">
+                <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                  <AlertCircle className="w-3 h-3" />
+                  {streetViewError}
+                </div>
+              </div>
+            )}
+
             {/* Address */}
             <div className="flex items-start gap-3">
               <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -148,8 +251,9 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
                     key={index}
                     src={imageUrl}
                     alt={`${preschool.namn} bild ${index + 1}`}
-                    className="w-full h-20 object-cover rounded-md"
+                    className="w-full h-20 object-cover rounded-md hover:scale-105 transition-transform duration-200 cursor-pointer"
                     loading="lazy"
+                    onClick={onViewDetails}
                   />
                 ))}
               </div>

@@ -11,6 +11,7 @@ import { LandingAnimation } from '@/components/LandingAnimation';
 import { StatisticsButton } from '@/components/StatisticsButton';
 import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
+import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
 import { motion } from 'framer-motion';
@@ -39,10 +40,11 @@ const Index = () => {
       </div>;
   }
   return <>
+      <AccessibilityEnhancements />
       {/* Landing Animation */}
       {showLanding && <LandingAnimation onComplete={() => setShowLanding(false)} />}
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 bg-slate-50">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 bg-slate-50" id="main-content">
         {/* Header */}
         <motion.header initial={{
         opacity: 0,

@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMapStore, type Preschool } from '@/stores/mapStore';
+import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 
 export const usePreschools = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setPreschools, setLoading } = useMapStore();
+  
+  // Enable real-time updates
+  useRealTimeUpdates();
 
   const fetchPreschools = async () => {
     try {

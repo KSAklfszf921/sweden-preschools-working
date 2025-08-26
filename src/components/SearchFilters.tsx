@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useMapStore } from '@/stores/mapStore';
-import { Filter, X, MapPin, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { AdvancedSearch } from '@/components/enhanced/AdvancedSearch';
+import { TravelTimeCalculator } from '@/components/enhanced/TravelTimeCalculator';
+import { Filter, X, MapPin, Search, ChevronDown, ChevronUp, Settings, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchFiltersProps {
@@ -15,6 +17,9 @@ interface SearchFiltersProps {
 export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showTravelTimes, setShowTravelTimes] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   
   const {
     searchFilters,
@@ -36,12 +41,16 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
       if (searchQuery.toLowerCase() === 'min position') {
         navigator.geolocation.getCurrentPosition((position) => {
           const center: [number, number] = [position.coords.longitude, position.coords.latitude];
+          setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
           setSearchFilters({
             center: center,
             radius: 10
           });
           setMapCenter(center);
           setMapZoom(12);
+        }, (error) => {
+          console.error('Geolocation error:', error);
+          alert('Kunde inte hämta din position. Kontrollera att du tillåter platsåtkomst.');
         });
       } else {
         // Check if it's a kommun name
@@ -147,7 +156,27 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1">
+              <Button
+                onClick={() => setShowAdvancedSearch(true)}
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                title="Avancerad sökning"
+              >
+                <Settings className="h-3 w-3" />
+              </Button>
+              {userLocation && (
+                <Button
+                  onClick={() => setShowTravelTimes(!showTravelTimes)}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  title="Visa restider"
+                >
+                  <Clock className="h-3 w-3" />
+                </Button>
+              )}
               {hasActiveFilters && (
                 <Button
                   onClick={clearFilters}
@@ -257,6 +286,24 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ className }) => {
           </div>
         </div>
       </Card>
+
+      {/* Travel Times Panel */}
+      {showTravelTimes && userLocation && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="mt-4"
+        >
+          <TravelTimeCalculator userLocation={userLocation} />
+        </motion.div>
+      )}
+
+      {/* Advanced Search Modal */}
+      <AdvancedSearch
+        isOpen={showAdvancedSearch}
+        onClose={() => setShowAdvancedSearch(false)}
+      />
     </motion.div>
   );
 };
