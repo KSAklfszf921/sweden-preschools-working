@@ -93,7 +93,7 @@ export const EnhancedPopup: React.FC<EnhancedPopupProps> = ({
       exit={{ opacity: 0, scale: 0.9, y: 20 }}
       className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 max-w-md w-full mx-4 ${className}`}
     >
-      <Card className="bg-card/98 backdrop-blur-lg shadow-nordic border-border/50 overflow-hidden">
+      <Card className="glass-popup overflow-hidden hover-lift">
         {/* Header */}
         <div className="relative p-4 bg-gradient-to-r from-primary/10 to-primary-glow/10">
           <div className="flex items-start justify-between">

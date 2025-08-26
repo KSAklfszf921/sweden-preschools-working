@@ -48,12 +48,24 @@ All colors MUST be HSL.
     --input: 220 8% 94%;
     --ring: 220 15% 85%;
 
+    /* Modern gradients with glassmorphism */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-nordic: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--secondary)));
     --gradient-hero: linear-gradient(135deg, hsl(220 15% 85%), hsl(200 25% 88%), hsl(45 20% 90%));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--background) / 0.8), hsl(var(--muted) / 0.6));
     
-    --shadow-nordic: 0 10px 40px -15px hsl(var(--primary) / 0.1);
-    --shadow-glow: 0 0 30px hsl(var(--primary-glow) / 0.1);
+    /* Modern glassmorphism shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.4);
+    --shadow-card: 0 4px 15px -3px hsl(var(--foreground) / 0.1);
+    --shadow-popup: 0 8px 25px -5px hsl(var(--foreground) / 0.2);
+    --shadow-glass: 0 8px 32px 0 hsl(var(--foreground) / 0.1);
+    --shadow-soft: 0 2px 8px 0 hsl(var(--foreground) / 0.08);
+    
+    /* Glassmorphism variables */
+    --glass-bg: hsl(var(--background) / 0.85);
+    --glass-border: hsl(var(--border) / 0.2);
+    --glass-blur: blur(12px);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -127,9 +139,15 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-nordic: linear-gradient(135deg, hsl(var(--nordic-blue)), hsl(var(--nordic-light)));
     --gradient-hero: linear-gradient(135deg, hsl(207 89% 45%), hsl(207 89% 55%), hsl(220 39% 15%));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--background) / 0.75), hsl(var(--muted) / 0.5));
     
     --shadow-nordic: 0 10px 40px -15px hsl(var(--primary) / 0.5);
     --shadow-glow: 0 0 30px hsl(var(--primary-glow) / 0.3);
+    --shadow-glass: 0 8px 32px 0 hsl(0 0% 0% / 0.3);
+    
+    /* Dark mode glassmorphism */
+    --glass-bg: hsl(var(--background) / 0.75);
+    --glass-border: hsl(var(--border) / 0.15);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -150,3 +168,32 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Glassmorphism utility classes */
+.glass-effect {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-popup {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+/* Hover animations for interactive elements */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elegant);
+  }

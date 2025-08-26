@@ -18,6 +18,7 @@ import {
   generateTerrainContextLayers,
   getAddressClusterConfig
 } from '@/utils/buildingExtrusions';
+import { mapboxConfig } from '@/utils/mapboxConfig';
 
 // Mapbox token
 mapboxgl.accessToken = 'pk.eyJ1Ijoic2tvZ3N0YWRpc2FrIiwiYSI6ImNtY3BhaXRpMjA0ZGcycHBqNHM4dmlwOW0ifQ.KKHGGPnrZVjNjDdITF-_bw';
@@ -399,17 +400,21 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
           'circle-color': [
             'case',
             ['==', ['get', 'huvudman'], 'Kommunal'],
-            '#22c55e', // Green for municipal
-            '#3b82f6'  // Blue for private
+            mapboxConfig.swedenStyle.preschoolColors.municipal,
+            ['==', ['get', 'huvudman'], 'Privat'],
+            mapboxConfig.swedenStyle.preschoolColors.private,
+            ['==', ['get', 'huvudman'], 'Kooperativ'],
+            mapboxConfig.swedenStyle.preschoolColors.cooperative,
+            mapboxConfig.swedenStyle.preschoolColors.unknown
           ],
           'circle-radius': [
             'interpolate',
             ['linear'],
             ['get', 'antal_barn'],
-            0, 6,
-            50, 8,
-            100, 10,
-            200, 12
+            0, mapboxConfig.settings.markerSizes.small,
+            20, mapboxConfig.settings.markerSizes.small,
+            50, mapboxConfig.settings.markerSizes.medium,
+            100, mapboxConfig.settings.markerSizes.large
           ],
           'circle-stroke-width': 2,
           'circle-stroke-color': '#ffffff',

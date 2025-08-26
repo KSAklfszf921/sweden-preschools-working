@@ -1,49 +1,53 @@
 import { HeatmapType } from '@/stores/mapStore';
 
-// Swedish nature-inspired gradient colors
+// Modern minimalist gradient colors - light blue to red
 export const HEATMAP_GRADIENTS = {
   density: {
     name: 'Förskoltäthet',
     description: 'Antal förskolor per område',
     colors: [
-      { stop: 0, color: 'rgba(0, 0, 0, 0)' },           // Transparent
-      { stop: 0.2, color: 'rgba(0, 255, 0, 0.3)' },     // Light green - low concentration
-      { stop: 0.4, color: 'rgba(255, 255, 0, 0.5)' },   // Yellow - medium concentration  
-      { stop: 0.7, color: 'rgba(255, 165, 0, 0.7)' },   // Orange - high concentration
-      { stop: 1, color: 'rgba(139, 0, 0, 0.9)' }        // Dark red - highest concentration
+      { stop: 0, color: 'rgba(200, 225, 240, 0)' },     // Minimal start
+      { stop: 0.1, color: 'hsl(195, 65%, 85%)' },       // Light blue
+      { stop: 0.3, color: 'hsl(180, 70%, 70%)' },       // Cyan
+      { stop: 0.5, color: 'hsl(45, 90%, 65%)' },        // Warm yellow
+      { stop: 0.7, color: 'hsl(25, 85%, 60%)' },        // Orange
+      { stop: 1, color: 'hsl(5, 80%, 58%)' }            // Red
     ]
   },
   staff: {
     name: 'Personaltäthet',
-    description: 'Vuxen-barn ratio (bättre personal = grönare)',
+    description: 'Vuxen-barn ratio (bättre personal = blåare)',
     colors: [
-      { stop: 0, color: 'rgba(0, 0, 0, 0)' },           // Transparent
-      { stop: 0.2, color: 'rgba(0, 255, 0, 0.3)' },     // Green - good staff
-      { stop: 0.4, color: 'rgba(255, 255, 0, 0.5)' },   // Yellow - medium
-      { stop: 0.7, color: 'rgba(255, 165, 0, 0.7)' },   // Orange - concerning
-      { stop: 1, color: 'rgba(139, 0, 0, 0.9)' }        // Dark red - poor staff
+      { stop: 0, color: 'rgba(200, 225, 240, 0)' },
+      { stop: 0.2, color: 'hsl(195, 65%, 85%)' },
+      { stop: 0.4, color: 'hsl(180, 70%, 70%)' },
+      { stop: 0.6, color: 'hsl(45, 90%, 65%)' },
+      { stop: 0.8, color: 'hsl(25, 85%, 60%)' },
+      { stop: 1, color: 'hsl(5, 80%, 58%)' }
     ]
   },
   quality: {
     name: 'Lärarexamen %',
-    description: 'Andel med förskollärarexamen (blå→silver→guld)',
+    description: 'Andel med förskollärarexamen',
     colors: [
-      { stop: 0, color: 'rgba(0, 0, 0, 0)' },           // Transparent
-      { stop: 0.2, color: 'rgba(0, 255, 0, 0.3)' },     // Green - high quality
-      { stop: 0.4, color: 'rgba(255, 255, 0, 0.5)' },   // Yellow - medium
-      { stop: 0.7, color: 'rgba(255, 165, 0, 0.7)' },   // Orange - lower quality
-      { stop: 1, color: 'rgba(139, 0, 0, 0.9)' }        // Dark red - poor quality
+      { stop: 0, color: 'rgba(200, 225, 240, 0)' },
+      { stop: 0.2, color: 'hsl(195, 65%, 85%)' },
+      { stop: 0.4, color: 'hsl(180, 70%, 70%)' },
+      { stop: 0.6, color: 'hsl(45, 90%, 65%)' },
+      { stop: 0.8, color: 'hsl(25, 85%, 60%)' },
+      { stop: 1, color: 'hsl(5, 80%, 58%)' }
     ]
   },
   rating: {
     name: 'Google Betyg',
-    description: 'Höga betyg = guldfärgat',
+    description: 'Föräldrarnas betyg',
     colors: [
-      { stop: 0, color: 'rgba(0, 0, 0, 0)' },           // Transparent
-      { stop: 0.2, color: 'rgba(0, 255, 0, 0.3)' },     // Green - excellent rating
-      { stop: 0.4, color: 'rgba(255, 255, 0, 0.5)' },   // Yellow - good rating
-      { stop: 0.7, color: 'rgba(255, 165, 0, 0.7)' },   // Orange - poor rating
-      { stop: 1, color: 'rgba(139, 0, 0, 0.9)' }        // Dark red - very poor rating
+      { stop: 0, color: 'rgba(200, 225, 240, 0)' },
+      { stop: 0.2, color: 'hsl(195, 65%, 85%)' },
+      { stop: 0.4, color: 'hsl(180, 70%, 70%)' },
+      { stop: 0.6, color: 'hsl(45, 90%, 65%)' },
+      { stop: 0.8, color: 'hsl(25, 85%, 60%)' },
+      { stop: 1, color: 'hsl(5, 80%, 58%)' }
     ]
   }
 } as const;
