@@ -13,7 +13,7 @@ export const usePreschools = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch preschools with their Google data
+      // Fetch ALL preschools including those without coordinates
       const { data: preschoolsData, error: preschoolsError } = await supabase
         .from('Förskolor')
         .select(`
@@ -32,20 +32,18 @@ export const usePreschools = () => {
             google_rating,
             google_reviews_count
           )
-        `)
-        .not('Latitud', 'is', null)
-        .not('Longitud', 'is', null);
+        `);
 
       if (preschoolsError) throw preschoolsError;
 
-      // Transform data to match store interface
+      // Transform and separate preschools with/without coordinates
       const transformedPreschools: Preschool[] = (preschoolsData || []).map(preschool => ({
         id: preschool.id,
         namn: preschool.Namn,
         kommun: preschool.Kommun,
         adress: preschool.Adress || '',
-        latitud: preschool.Latitud,
-        longitud: preschool.Longitud,
+        latitud: preschool.Latitud || 0, // Will be handled in Map3D
+        longitud: preschool.Longitud || 0, // Will be handled in Map3D
         antal_barn: preschool["Antal barn"],
         huvudman: preschool.Huvudman,
         personaltäthet: preschool.Personaltäthet,
@@ -54,6 +52,16 @@ export const usePreschools = () => {
         google_rating: preschool.preschool_google_data?.[0]?.google_rating,
         google_reviews_count: preschool.preschool_google_data?.[0]?.google_reviews_count,
       }));
+
+      // Trigger geocoding for missing coordinates
+      const missingCoords = transformedPreschools.filter(p => !p.latitud || !p.longitud);
+      if (missingCoords.length > 0) {
+        console.log(`Found ${missingCoords.length} preschools without coordinates. Starting geocoding...`);
+        // Trigger geocoding in background
+        supabase.functions.invoke('geocoding-service', {
+          body: { preschools: missingCoords.slice(0, 50) } // Process in batches
+        }).catch(console.error);
+      }
 
       setPreschools(transformedPreschools);
       console.log(`Loaded ${transformedPreschools.length} preschools`);

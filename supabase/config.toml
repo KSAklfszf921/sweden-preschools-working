@@ -7,3 +7,9 @@ enabled = true
 
 [functions.google-places]
 verify_jwt = false
+
+[functions.geocoding-service]
+verify_jwt = false
+
+[functions.mapbox-proxy]
+verify_jwt = false

@@ -103,7 +103,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     };
   }, []);
 
-  // Update preschool markers when filtered data changes
+  // Update preschool markers when filtered data changes with performance optimization
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
@@ -121,20 +121,32 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       map.current.removeSource('preschools');
     }
 
-    // Create GeoJSON data from filtered preschools
+    // Filter out preschools without valid coordinates
+    const validPreschools = filteredPreschools.filter(p => 
+      p.latitud && p.longitud && 
+      p.latitud !== 0 && p.longitud !== 0 &&
+      p.latitud >= 55.0 && p.latitud <= 69.1 && 
+      p.longitud >= 10.9 && p.longitud <= 24.2
+    );
+
+    console.log(`Rendering ${validPreschools.length}/${filteredPreschools.length} preschools on map`);
+
+    if (validPreschools.length === 0) return;
+
+    // Create GeoJSON data from valid preschools
     const geojsonData = {
       type: 'FeatureCollection' as const,
-      features: filteredPreschools.map(preschool => ({
+      features: validPreschools.map(preschool => ({
         type: 'Feature' as const,
         properties: {
           id: preschool.id,
           namn: preschool.namn,
           kommun: preschool.kommun,
           adress: preschool.adress,
-          antal_barn: preschool.antal_barn,
+          antal_barn: preschool.antal_barn || 0,
           huvudman: preschool.huvudman,
-          personaltäthet: preschool.personaltäthet,
-          andel_med_förskollärarexamen: preschool.andel_med_förskollärarexamen,
+          personaltäthet: preschool.personaltäthet || 0,
+          andel_med_förskollärarexamen: preschool.andel_med_förskollärarexamen || 0,
           antal_barngrupper: preschool.antal_barngrupper,
           google_rating: preschool.google_rating || 0
         },
@@ -145,16 +157,22 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       }))
     };
 
-    // Add preschools source
+    // Add preschools source with optimized clustering for 8000+ points
     map.current.addSource('preschools', {
       type: 'geojson',
       data: geojsonData,
       cluster: showClusters,
-      clusterMaxZoom: 14,
-      clusterRadius: 50
+      clusterMaxZoom: 13, // Lower max zoom for better performance
+      clusterRadius: 120, // Larger radius for fewer clusters
+      clusterProperties: {
+        // Calculate aggregate properties for clusters
+        'avg_rating': [['/', ['+', ['get', 'google_rating']], ['get', 'point_count']], 0],
+        'avg_staff': [['/', ['+', ['get', 'personaltäthet']], ['get', 'point_count']], 0],
+        'total_children': ['+', ['get', 'antal_barn']]
+      }
     });
 
-    // Add cluster circles
+    // Add enhanced cluster circles with quality-based coloring
     if (showClusters) {
       map.current.addLayer({
         id: 'preschools-clusters',
@@ -163,25 +181,28 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         filter: ['has', 'point_count'],
         paint: {
           'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            '#51bbd6',
-            100,
-            '#f1f075',
-            750,
-            '#f28cb1'
+            'interpolate',
+            ['linear'],
+            ['get', 'avg_rating'],
+            0, '#ef4444', // Red for low/no rating
+            2.5, '#f59e0b', // Orange for medium
+            4, '#22c55e', // Green for high quality
+            5, '#059669' // Dark green for excellent
           ],
           'circle-radius': [
-            'step',
+            'interpolate',
+            ['linear'],
             ['get', 'point_count'],
-            20,
-            100,
-            30,
-            750,
-            40
+            1, 15,
+            10, 25,
+            50, 35,
+            100, 45,
+            500, 55,
+            1000, 65
           ],
           'circle-stroke-width': 2,
-          'circle-stroke-color': '#fff'
+          'circle-stroke-color': '#ffffff',
+          'circle-opacity': 0.8
         }
       });
 
@@ -347,11 +368,27 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         </button>
       </div>
 
-      {/* Preschool count */}
+      {/* Enhanced preschool count with context */}
       <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg px-4 py-2">
         <p className="text-sm font-medium text-foreground">
-          {filteredPreschools.length} förskolor visas
+          {filteredPreschools.filter(p => 
+            p.latitud && p.longitud && 
+            p.latitud !== 0 && p.longitud !== 0 &&
+            p.latitud >= 55.0 && p.latitud <= 69.1 && 
+            p.longitud >= 10.9 && p.longitud <= 24.2
+          ).length} av {filteredPreschools.length} förskolor på kartan
         </p>
+        {filteredPreschools.length > filteredPreschools.filter(p => 
+          p.latitud && p.longitud && 
+          p.latitud !== 0 && p.longitud !== 0
+        ).length && (
+          <p className="text-xs text-muted-foreground">
+            {filteredPreschools.length - filteredPreschools.filter(p => 
+              p.latitud && p.longitud && 
+              p.latitud !== 0 && p.longitud !== 0
+            ).length} saknar koordinater
+          </p>
+        )}
       </div>
     </div>
   );
