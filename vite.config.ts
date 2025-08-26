@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Optimize build for production deployment (removed terser for deployment compatibility)
-    target: 'es2015',
+    // Optimize build for production deployment - use modern target for Mapbox compatibility
+    target: 'es2020', // Changed from es2015 to support BigInt literals used by Mapbox
     minify: 'esbuild', // Use esbuild instead of terser for compatibility
     sourcemap: false,
     rollupOptions: {
