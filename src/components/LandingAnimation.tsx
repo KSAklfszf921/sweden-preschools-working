@@ -17,32 +17,35 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
       if (stage < 4) {
         setStage(stage + 1);
       } else {
-        setTimeout(onComplete, 300);
+        // Ensure final count is shown for at least 1 second before completing
+        setTimeout(onComplete, preschoolCount === totalPreschools ? 1000 : 300);
       }
     }, stage === 0 ? 600 : 500);
 
     return () => clearTimeout(timer);
-  }, [stage, onComplete]);
+  }, [stage, onComplete, preschoolCount, totalPreschools]);
 
   // Counting animation effect - starts after stage 2 (when loading preschools)
   useEffect(() => {
     if (stage >= 2) {
-      const duration = 1200; // 1.2 seconds to count up
-      const steps = 60; // Number of animation steps
-      const increment = totalPreschools / steps;
-      const stepDuration = duration / steps;
+      const duration = 1500; // 1.5 seconds to count up
+      const startTime = Date.now();
 
-      let currentStep = 0;
       const countTimer = setInterval(() => {
-        currentStep++;
-        const newCount = Math.min(Math.floor(currentStep * increment), totalPreschools);
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function: slow start, fast end (cubic ease-in)
+        const easedProgress = progress * progress * progress;
+        
+        const newCount = Math.floor(easedProgress * totalPreschools);
         setPreschoolCount(newCount);
         
-        if (currentStep >= steps) {
+        if (progress >= 1) {
           clearInterval(countTimer);
           setPreschoolCount(totalPreschools);
         }
-      }, stepDuration);
+      }, 16); // ~60fps for smooth animation
 
       return () => clearInterval(countTimer);
     }
