@@ -9,8 +9,8 @@ import { ChevronUp, ChevronDown, MapPin, Star, Users, GraduationCap, Building2, 
 interface PreschoolListPanelProps {
   className?: string;
 }
-const ITEMS_PER_PAGE = 6;
-const MIN_VISIBLE_ITEMS = 6;
+const ITEMS_PER_PAGE = 4;
+const MIN_VISIBLE_ITEMS = 4;
 export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
   className
 }) => {
@@ -47,7 +47,7 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
     }
   };
   const getContextTitle = () => {
-    return 'Alla förskolor';
+    return `Förskolor på kartan: ${visiblePreschools.length}`;
   };
   const getContextSubtitle = () => {
     if (mapZoom <= 6) return `${visiblePreschools.length} förskolor i området`;
@@ -167,13 +167,12 @@ export const PreschoolListPanel: React.FC<PreschoolListPanelProps> = ({
       <Card className="h-full glass-search border-0 shadow-lg card-hover transition-all duration-300 flex flex-col rounded-xl">
         {/* Header */}
         <div className="p-3 border-b border-border flex-shrink-0">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-foreground font-semibold text-xl text-center">{getContextTitle()}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-foreground font-semibold text-lg">{getContextTitle()}</h3>
             <Button onClick={() => setIsExpanded(false)} variant="ghost" size="sm" className="h-5 w-5 p-0">
               <ChevronUp className="h-3 w-3" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">{getContextSubtitle()}</p>
         </div>
 
         {/* Content */}
