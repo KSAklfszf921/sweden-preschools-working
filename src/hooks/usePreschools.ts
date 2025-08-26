@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMapStore, type Preschool } from '@/stores/mapStore';
 import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
+import { useGoogleDataEnrichment } from './useGoogleDataEnrichment';
 
 export const usePreschools = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setPreschools, setLoading } = useMapStore();
+  const { enrichMissingData } = useGoogleDataEnrichment();
   
   // Enable real-time updates
   useRealTimeUpdates();
@@ -96,6 +98,13 @@ export const usePreschools = () => {
 
       setPreschools(transformedPreschools);
       console.log(`Loaded ${transformedPreschools.length} preschools`);
+
+      // Automatically start Google data enrichment in background
+      setTimeout(() => {
+        enrichMissingData().catch(error => 
+          console.error('Background Google enrichment failed:', error)
+        );
+      }, 3000); // Start after 3 seconds to avoid overwhelming the system
 
     } catch (err) {
       console.error('Error fetching preschools:', err);
