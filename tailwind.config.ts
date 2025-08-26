@@ -76,6 +76,11 @@ export default {
 					high: 'hsl(var(--heatmap-high))',
 					intense: 'hsl(var(--heatmap-intense))'
 				},
+				bubble: {
+					kommunal: 'hsl(210, 85%, 60%)',
+					enskild: 'hsl(25, 85%, 60%)',
+					'high-rating': 'hsl(130, 70%, 60%)'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

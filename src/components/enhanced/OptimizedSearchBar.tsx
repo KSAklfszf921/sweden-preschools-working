@@ -435,9 +435,21 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
             </div>
 
             {/* Location button */}
-            <Button onClick={handleGetCurrentLocation} variant={userLocation ? "default" : "outline"} size="sm" className="w-full" disabled={isLocating}>
-              {isLocating ? <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" /> : userLocation ? <Target className="w-4 h-4 mr-2" /> : <Navigation className="w-4 h-4 mr-2" />}
-              {isLocating ? "Hämtar position..." : userLocation ? "Position aktiv" : "Hitta närliggande"}
+            <Button 
+              onClick={handleGetCurrentLocation} 
+              variant={userLocation ? "default" : "outline"} 
+              size="sm" 
+              className="w-full hover-scale transition-all duration-200 font-medium"
+              disabled={isLocating}
+            >
+              {isLocating ? (
+                <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+              ) : userLocation ? (
+                <Target className="w-4 h-4 mr-2" />
+              ) : (
+                <Navigation className="w-4 h-4 mr-2" />
+              )}
+              {isLocating ? "Hämtar position..." : userLocation ? "Position aktiv" : "🎯 Nära mig"}
             </Button>
 
             {/* Results count and clear all */}

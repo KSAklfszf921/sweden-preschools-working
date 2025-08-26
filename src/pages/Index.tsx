@@ -20,6 +20,9 @@ import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
 import { MobileNavigation } from '@/components/enhanced/MobileNavigation';
 import EnhancedStatisticsPanel from '@/components/enhanced/EnhancedStatisticsPanel';
+import { DynamicStatisticsPanel } from '@/components/enhanced/DynamicStatisticsPanel';
+import { EnhancedPreschoolList } from '@/components/enhanced/EnhancedPreschoolList';
+import { BubbleMapVisualization } from '@/components/enhanced/BubbleMapVisualization';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
 
 import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
@@ -151,13 +154,13 @@ const Index = () => {
           )}
 
 
-          {/* Preschool List Panel - right side */}
+          {/* Enhanced Preschool List Panel - right side */}
           <motion.div 
             initial={{ opacity: 0, x: 20, scale: 0.95 }} 
             animate={{ opacity: showLanding ? 0 : 1, x: 0, scale: 1 }} 
             transition={{ delay: showLanding ? 0 : 1.5, duration: 0.6 }}
           >
-            <PreschoolListPanel />
+            <EnhancedPreschoolList />
           </motion.div>
 
           {/* 3D Map with enhanced transitions */}
@@ -187,7 +190,8 @@ const Index = () => {
 
           {/* Enhanced features */}
           
-          <EnhancedStatisticsPanel />
+          <DynamicStatisticsPanel />
+          <BubbleMapVisualization />
           
           {/* Mobile Navigation */}
           {isMobile && <MobileNavigation />}
