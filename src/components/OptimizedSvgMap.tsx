@@ -276,6 +276,7 @@ const OptimizedSvgMap: React.FC<OptimizedSvgMapProps> = ({ className }) => {
       {/* STATUS - med render-info */}
       <div className="absolute bottom-4 right-4 bg-black/80 text-white px-3 py-2 rounded-full text-sm flex items-center gap-2">
         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+        🚀 OPTIMERAD HYBRID-KARTA • 
         {renderStrategy === 'heatmap' && `Heatmap • ${processedData.length} regioner`}
         {renderStrategy === 'clusters' && `Kluster • ${processedData.length} kommuner`}
         {renderStrategy === 'individual' && `Detalj • ${processedData.length} förskolor`}
