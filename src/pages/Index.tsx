@@ -3,8 +3,8 @@ import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
 
-// Återgår till ursprungliga kartan
-import { Map3D } from '@/components/Map3D';
+// Använder lätt Leaflet-karta istället för tung 3D Mapbox
+import { LeafletMap } from '@/components/LeafletMap';
 const OfflineHandler = lazy(() => import('@/components/enhanced/OfflineHandler').then(m => ({ default: m.OfflineHandler })));
 
 // Search och navigation - viktiga för UX
@@ -27,6 +27,7 @@ import preschoolIcon from '@/assets/preschool-icon.jpg';
 
 const Index = () => {
   const {
+    preschools,
     isLoading,
     error
   } = usePreschools();
@@ -170,7 +171,7 @@ const Index = () => {
           <div 
             className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'} transition-opacity duration-400 delay-200 ${showLanding ? 'opacity-0' : 'opacity-100'}`}
           >
-            <Map3D className="w-full h-full" />
+            <LeafletMap preschools={preschools || []} className="w-full h-full" />
           </div>
           
           {/* Toggle button for collapsed search box */}
@@ -257,8 +258,8 @@ const Index = () => {
             <div className="absolute inset-0 bg-background/80 backdrop-blur-lg flex items-center justify-center z-50 animate-fadeIn">
               <div className="text-center">
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4 animate-spin"></div>
-                <h2 className="text-xl font-semibold text-foreground mb-2">Laddar optimerad hybrid-karta...</h2>
-                <p className="text-muted-foreground">Tekniker från framgångsrika GitHub-projekt!</p>
+                <h2 className="text-xl font-semibold text-foreground mb-2">Laddar snabb Leaflet-karta...</h2>
+                <p className="text-muted-foreground">Lätt och snabb kartupplevelse!</p>
               </div>
             </div>
           )}
