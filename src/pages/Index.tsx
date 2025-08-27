@@ -18,7 +18,7 @@ import { MobileNavigation } from '@/components/enhanced/MobileNavigation';
 import { DynamicStatisticsPanel } from '@/components/enhanced/DynamicStatisticsPanel';
 import { PerformanceCriticalList } from '@/components/enhanced/PerformanceCriticalList';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
-import { SmartSearchAutocomplete } from '@/components/enhanced/SmartSearchAutocomplete';
+import { EnhancedHybridSearchBar } from '@/components/enhanced/EnhancedHybridSearchBar';
 import { MobileSwipeNavigation } from '@/components/enhanced/MobileSwipeNavigation';
 import { DistanceRoutingPanel } from '@/components/enhanced/DistanceRoutingPanel';
 import { PerformanceDashboard } from '@/components/enhanced/PerformanceDashboard';
@@ -196,7 +196,7 @@ const Index = () => {
             >
               <ErrorBoundary>
                 <LoadingBoundary>
-                  <SmartSearchAutocomplete />
+                  <EnhancedHybridSearchBar />
                 </LoadingBoundary>
               </ErrorBoundary>
             </motion.div>
