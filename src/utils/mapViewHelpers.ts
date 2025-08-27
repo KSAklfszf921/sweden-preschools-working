@@ -29,171 +29,85 @@ export interface MapViewOptions {
 /**
  * Calculate optimal map view for a set of preschools
  */
-export const calculateOptimalView = (
-  preschools: Preschool[],
-  scenario: 'single' | 'few' | 'many' | 'municipality' | 'multi-municipality' = 'many'
-): MapViewOptions => {
-  const validPreschools = preschools.filter(
-    p => p.latitud !== null && p.longitud !== null && 
-    p.latitud !== 0 && p.longitud !== 0 &&
-    typeof p.latitud === 'number' && typeof p.longitud === 'number'
-  );
+export const calculateOptimalView = (preschools: Preschool[], scenario: string): MapViewOptions => {
+  if (preschools.length === 0) {
+    return {
+      center: [15.5, 62.0], // Sweden center
+      zoom: 5.5,
+      duration: 1000,
+      essential: true,
+      pitch: 30
+    };
+  }
 
+  const validPreschools = preschools.filter(p => p.latitud && p.longitud);
+  
   if (validPreschools.length === 0) {
     return {
-      center: [15.0, 62.0],
-      zoom: 5,
+      center: [15.5, 62.0],
+      zoom: 5.5,
       duration: 1000,
-      essential: true
+      essential: true,
+      pitch: 30
     };
   }
 
-  // Single preschool - zoom in close with details
   if (validPreschools.length === 1) {
-    const preschool = validPreschools[0];
     return {
-      center: [preschool.longitud!, preschool.latitud!],
-      zoom: 15,
-      pitch: 45,
+      center: [validPreschools[0].longitud!, validPreschools[0].latitud!],
+      zoom: 14,
       duration: 1500,
       essential: true,
-      padding: { top: 50, bottom: 50, left: 50, right: 50 }
+      pitch: 45
     };
   }
 
-  // Calculate bounds for multiple preschools
-  const lats = validPreschools.map(p => p.latitud!);
+  // Calculate bounds
   const lngs = validPreschools.map(p => p.longitud!);
+  const lats = validPreschools.map(p => p.latitud!);
   
-  const bounds: LngLatBoundsLike = [
-    [Math.min(...lngs), Math.min(...lats)], // Southwest
-    [Math.max(...lngs), Math.max(...lats)]  // Northeast
-  ];
-
-  // Calculate geographic spread
-  const latSpread = Math.max(...lats) - Math.min(...lats);
-  const lngSpread = Math.max(...lngs) - Math.min(...lngs);
-  const maxSpread = Math.max(latSpread, lngSpread);
-
-  // Determine optimal settings based on scenario and spread
-  let zoom: number;
-  let duration: number;
-  let padding: { top: number; bottom: number; left: number; right: number };
-  let pitch = 30;
-
-  switch (scenario) {
-    case 'few': // 2-10 preschools
-      if (maxSpread < 0.005) {
-        zoom = 14;
-        padding = { top: 100, bottom: 100, left: 100, right: 100 };
-      } else if (maxSpread < 0.02) {
-        zoom = 13;
-        padding = { top: 80, bottom: 80, left: 80, right: 80 };
-      } else {
-        zoom = 12;
-        padding = { top: 60, bottom: 60, left: 60, right: 60 };
-      }
-      duration = 1200;
-      break;
-
-    case 'municipality':
-      if (maxSpread < 0.01) {
-        zoom = 13;
-        padding = { top: 80, bottom: 80, left: 80, right: 80 };
-      } else if (maxSpread < 0.05) {
-        zoom = 12;
-        padding = { top: 100, bottom: 100, left: 100, right: 100 };
-      } else {
-        zoom = 11;
-        padding = { top: 120, bottom: 120, left: 120, right: 120 };
-      }
-      duration = 1500;
-      pitch = 20;
-      break;
-
-    case 'multi-municipality':
-      if (maxSpread < 0.1) {
-        zoom = 10;
-        padding = { top: 100, bottom: 100, left: 100, right: 100 };
-      } else if (maxSpread < 0.5) {
-        zoom = 8;
-        padding = { top: 120, bottom: 120, left: 120, right: 120 };
-      } else {
-        zoom = 6;
-        padding = { top: 150, bottom: 150, left: 150, right: 150 };
-      }
-      duration = 2000;
-      pitch = 15;
-      break;
-
-    case 'many': // 10+ preschools
-    default:
-      if (maxSpread < 0.01) {
-        zoom = 13;
-        padding = { top: 80, bottom: 80, left: 80, right: 80 };
-      } else if (maxSpread < 0.05) {
-        zoom = 11;
-        padding = { top: 100, bottom: 100, left: 100, right: 100 };
-      } else if (maxSpread < 0.2) {
-        zoom = 9;
-        padding = { top: 120, bottom: 120, left: 120, right: 120 };
-      } else {
-        zoom = 7;
-        padding = { top: 150, bottom: 150, left: 150, right: 150 };
-      }
-      duration = 1800;
-      pitch = 20;
-      break;
-  }
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
 
   return {
-    bounds,
-    duration,
+    bounds: [[minLng, minLat], [maxLng, maxLat]] as LngLatBoundsLike,
+    padding: { top: 50, bottom: 50, left: 50, right: 50 },
+    duration: 1200,
     essential: true,
-    pitch,
-    padding
+    pitch: 30
   };
 };
 
 /**
- * Determine the appropriate scenario based on preschool count and context
+ * Determine view scenario based on data
  */
-export const determineViewScenario = (
-  preschoolCount: number,
-  municipalityCount: number
-): 'single' | 'few' | 'many' | 'municipality' | 'multi-municipality' => {
+export const determineViewScenario = (preschoolCount: number, municipalityCount: number): string => {
   if (preschoolCount === 1) return 'single';
-  if (municipalityCount > 1) return 'multi-municipality';
-  if (municipalityCount === 1) return 'municipality';
   if (preschoolCount <= 10) return 'few';
-  return 'many';
+  if (municipalityCount === 1) return 'municipality';
+  if (municipalityCount <= 3) return 'region';
+  return 'national';
 };
 
 /**
- * Create smooth easing function for map animations
+ * Create smooth easing function
  */
 export const createSmoothEasing = (scenario: string) => {
-  switch (scenario) {
-    case 'single':
-      return (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    case 'municipality':
-    case 'multi-municipality':
-      return (t: number) => t * t * (3 - 2 * t);
-    default:
-      return (t: number) => 1 - Math.pow(1 - t, 3);
-  }
+  return (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 };
 
 /**
- * Debounce function for map updates
+ * Debounce function
  */
-export const debounce = <T extends (...args: any[]) => void>(
+export const debounce = <T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  delay: number
 ): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout;
+  let timeoutId: NodeJS.Timeout;
   return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
   };
 };
