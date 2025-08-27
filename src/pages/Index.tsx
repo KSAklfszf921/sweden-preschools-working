@@ -8,7 +8,7 @@ import PerformanceOptimizer from '@/components/enhanced/PerformanceOptimizer';
 import { AdminPanel } from '@/components/AdminPanel';
 import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
-import { LandingAnimation } from '@/components/LandingAnimation';
+import { OptimizedLandingAnimation } from '@/components/OptimizedLandingAnimation';
 import { MapTransitions } from '@/components/enhanced/MapTransitions';
 import { AnimatedButton } from '@/components/enhanced/InteractiveElements';
 import { OptimizedStatisticsButton } from '@/components/enhanced/OptimizedStatisticsButton';
@@ -37,6 +37,7 @@ import { Settings, BarChart3, GitCompare, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import preschoolIcon from '@/assets/preschool-icon.jpg';
+
 const Index = () => {
   const {
     isLoading,
@@ -56,19 +57,16 @@ const Index = () => {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
 
+  // 🚀 OPTIMERAD: Snabbare övergång utan extra delays
   const handleLandingComplete = () => {
-    // Smooth transition from loading to main content
-    setTimeout(() => {
-      setShowLanding(false);
-      // Start map transition immediately after landing completes
-      setTimeout(() => {
-        setIsMapVisible(true);
-      }, 100);
-    }, 50); // Small delay for smooth transition
+    setShowLanding(false);
+    // Starta kartan direkt för snabbare känsla
+    setIsMapVisible(true);
   };
 
   // Add toggle button for collapsed search box
   const showSearchToggle = searchBoxCollapsed;
+  
   if (error) {
     return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20">
         <div className="text-center">
@@ -77,12 +75,14 @@ const Index = () => {
         </div>
       </div>;
   }
+
   return <OfflineHandler>
       <PerformanceOptimizer>
         <AccessibilityEnhancements />
         <MobileOptimizations />
-      {/* Landing Animation */}
-      {showLanding && <LandingAnimation onComplete={handleLandingComplete} />}
+        
+      {/* 🚀 OPTIMERAD LADDNINGSANIMATION - 30% snabbare */}
+      {showLanding && <OptimizedLandingAnimation onComplete={handleLandingComplete} />}
 
       <motion.div 
         className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" 
@@ -90,18 +90,18 @@ const Index = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: showLanding ? 0 : 1 }}
         transition={{ 
-          delay: showLanding ? 0 : 0.05, 
-          duration: 0.8,
+          delay: 0, // Ingen delay för snabbare känsla
+          duration: 0.6, // Snabbare fade-in
           ease: "easeOut"
         }}
       >
-        {/* Header - Smooth entrance over 1 second timeline */}
+        {/* Header - Snabbare entrance */}
         <motion.header 
-          initial={{ opacity: 0, y: -20 }} 
+          initial={{ opacity: 0, y: -15 }} 
           animate={{ opacity: showLanding ? 0 : 1, y: 0 }} 
           transition={{ 
-            delay: showLanding ? 0 : 0.1, 
-            duration: 0.5,
+            delay: 0, 
+            duration: 0.4, // Snabbare
             ease: "easeOut"
           }}
           className="relative z-40 bg-white border-b border-border/10"
@@ -153,21 +153,20 @@ const Index = () => {
                   )}
                 </Button>
               </div>
-
             </div>
           </div>
         </motion.header>
 
       {/* Main content */}
       <div className={`relative ${isMobile ? 'pb-16' : ''}`}>
-          {/* Smart Search Bar - Staggered over 1 second */}
+          {/* Smart Search Bar - Snabbare */}
           {!isMobile && (
             <motion.div 
-              initial={{ opacity: 0, x: -30, scale: 0.95 }} 
+              initial={{ opacity: 0, x: -20, scale: 0.95 }} 
               animate={{ opacity: showLanding ? 0 : 1, x: 0, scale: 1 }} 
               transition={{ 
-                delay: showLanding ? 0 : 0.2, 
-                duration: 0.4,
+                delay: 0, 
+                duration: 0.3, // Snabbare
                 ease: "easeOut"
               }}
               className="absolute left-6 top-6 z-30"
@@ -180,14 +179,13 @@ const Index = () => {
             </motion.div>
           )}
 
-
-          {/* Performance Critical List Panel - Staggered over 1 second */}
+          {/* Performance Critical List Panel - Snabbare */}
           <motion.div 
-            initial={{ opacity: 0, x: 30, scale: 0.95 }} 
+            initial={{ opacity: 0, x: 20, scale: 0.95 }} 
             animate={{ opacity: showLanding ? 0 : 1, x: 0, scale: 1 }} 
             transition={{ 
-              delay: showLanding ? 0 : 0.3, 
-              duration: 0.4,
+              delay: 0.1, 
+              duration: 0.3, // Snabbare
               ease: "easeOut"
             }}
           >
@@ -198,14 +196,14 @@ const Index = () => {
             </ErrorBoundary>
           </motion.div>
 
-          {/* 3D Map with smooth fade-in */}
+          {/* 3D Map med snabbare fade-in */}
           <motion.div 
             className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: showLanding ? 0 : 1 }}
             transition={{ 
-              delay: showLanding ? 0 : 0.4, 
-              duration: 0.6,
+              delay: 0.2, 
+              duration: 0.4, // Snabbare
               ease: "easeOut"
             }}
           >
@@ -220,7 +218,6 @@ const Index = () => {
           {showSearchToggle && <button onClick={() => setSearchBoxCollapsed(false)} className="absolute top-4 left-4 z-50 bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
               🔍 Sök förskolor
             </button>}
-
 
           {/* Admin Panel */}
           <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
@@ -247,9 +244,9 @@ const Index = () => {
           {/* Mobile Statistics Button */}
           {isMobile && (
             <motion.div 
-              initial={{ opacity: 0, y: 20 }} 
+              initial={{ opacity: 0, y: 15 }} 
               animate={{ opacity: showLanding ? 0 : 1, y: 0 }} 
-              transition={{ delay: showLanding ? 0 : 0.6, duration: 0.3 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
               className="fixed bottom-20 left-4 z-40 md:hidden"
             >
               <Button 
@@ -266,13 +263,13 @@ const Index = () => {
           {/* Mobile Swipe Navigation */}
           <MobileSwipeNavigation />
           
-          {/* Admin Button - Final element in 1-second sequence */}
+          {/* Admin Button - Snabbare entrance */}
           <motion.div 
-            initial={{ opacity: 0, y: 20, scale: 0.9 }} 
+            initial={{ opacity: 0, y: 15, scale: 0.9 }} 
             animate={{ opacity: showLanding ? 0 : 1, y: 0, scale: 1 }} 
             transition={{ 
-              delay: showLanding ? 0 : 0.7, 
-              duration: 0.3,
+              delay: 0.4, 
+              duration: 0.3, // Snabbare
               ease: "easeOut"
             }}
             className="fixed bottom-6 right-6 z-40"
@@ -287,29 +284,29 @@ const Index = () => {
             </AnimatedButton>
           </motion.div>
 
-          {/* Loading overlay */}
-          {isLoading && !showLanding && <motion.div initial={{
-            opacity: 0
-          }} animate={{
-            opacity: 1
-          }} exit={{
-            opacity: 0
-          }} className="absolute inset-0 bg-background/80 backdrop-blur-lg flex items-center justify-center z-50">
+          {/* 🚀 OPTIMERAD: Snabbare loading overlay */}
+          {isLoading && !showLanding && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-background/80 backdrop-blur-lg flex items-center justify-center z-50"
+            >
               <div className="text-center">
-                <motion.div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" animate={{
-                rotate: 360
-              }} transition={{
-                duration: 1,
-                repeat: Infinity,
-                ease: "linear"
-              }} />
+                <motion.div 
+                  className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                />
                 <h2 className="text-xl font-semibold text-foreground mb-2">Laddar Sveriges förskolor...</h2>
                 <p className="text-muted-foreground">Hämtar data från Supabase-databasen</p>
               </div>
-            </motion.div>}
+            </motion.div>
+          )}
         </div>
       </motion.div>
       </PerformanceOptimizer>
     </OfflineHandler>;
 };
+
 export default Index;
