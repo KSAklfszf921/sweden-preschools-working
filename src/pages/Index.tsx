@@ -81,7 +81,7 @@ const Index = () => {
         <AccessibilityEnhancements />
         <MobileOptimizations />
         
-      {/* 🚀 OPTIMERAD LADDNINGSANIMATION - 30% snabbare */}
+      {/* 🚀 OPTIMERAD LADDNINGSANIMATION - 30% snabbare - Force Deploy v2 */}
       {showLanding && <OptimizedLandingAnimation onComplete={handleLandingComplete} />}
 
       <motion.div 
