@@ -8,7 +8,7 @@ import PerformanceOptimizer from '@/components/enhanced/PerformanceOptimizer';
 import { AdminPanel } from '@/components/AdminPanel';
 import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
-import { OptimizedLandingAnimation } from '@/components/OptimizedLandingAnimation';
+import { EnhancedSwedenAnimation } from '@/components/EnhancedSwedenAnimation';
 import { MapTransitions } from '@/components/enhanced/MapTransitions';
 import { AnimatedButton } from '@/components/enhanced/InteractiveElements';
 import { OptimizedStatisticsButton } from '@/components/enhanced/OptimizedStatisticsButton';
@@ -81,8 +81,8 @@ const Index = () => {
         <AccessibilityEnhancements />
         <MobileOptimizations />
         
-      {/* 🚀 OPTIMERAD LADDNINGSANIMATION - 30% snabbare - Force Deploy v2 */}
-      {showLanding && <OptimizedLandingAnimation onComplete={handleLandingComplete} />}
+      {/* 🇸🇪 NY FÖRBÄTTRAD SVERIGE LADDNINGSANIMATION MED EXAKT TIMING */}
+      {showLanding && <EnhancedSwedenAnimation onComplete={handleLandingComplete} />}
 
       <motion.div 
         className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" 

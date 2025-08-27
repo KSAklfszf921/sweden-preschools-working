@@ -24,15 +24,6 @@ export default defineConfig(({ mode }) => ({
     target: 'es2020',
     minify: 'esbuild',
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          mapbox: ['mapbox-gl'],
-          supabase: ['@supabase/supabase-js'],
-        },
-      },
-    },
     chunkSizeWarningLimit: 1000,
   },
   // Optimize dependencies for faster loading
