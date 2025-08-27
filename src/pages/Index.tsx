@@ -5,6 +5,7 @@ import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
 import { OfflineHandler } from '@/components/enhanced/OfflineHandler';
 import PerformanceOptimizer from '@/components/enhanced/PerformanceOptimizer';
+import { SmartPerformanceManager } from '@/components/SmartPerformanceManager';
 import { AdminPanel } from '@/components/AdminPanel';
 import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
@@ -90,8 +91,9 @@ const Index = () => {
 
   return <OfflineHandler>
       <PerformanceOptimizer>
-        <AccessibilityEnhancements />
-        <MobileOptimizations />
+        <SmartPerformanceManager>
+          <AccessibilityEnhancements />
+          <MobileOptimizations />
         
       {/* 🇸🇪 NY FÖRBÄTTRAD SVERIGE LADDNINGSANIMATION MED EXAKT TIMING */}
       {showLanding && (
@@ -348,6 +350,7 @@ const Index = () => {
           )}
         </div>
       </motion.div>
+        </SmartPerformanceManager>
       </PerformanceOptimizer>
     </OfflineHandler>;
 };

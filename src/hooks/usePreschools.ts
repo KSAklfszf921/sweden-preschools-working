@@ -3,12 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMapStore, type Preschool } from '@/stores/mapStore';
 import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 import { useBackgroundGoogleEnrichment } from './useBackgroundGoogleEnrichment';
+import { useOptimizedPreschools } from './useOptimizedPreschools';
+import { dataCache, cacheKeys } from '@/utils/dataCache';
+import { performanceOptimizer } from '@/utils/performanceOptimizer';
 
 export const usePreschools = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setPreschools, setLoading } = useMapStore();
   const { startBackgroundEnrichment } = useBackgroundGoogleEnrichment();
+  
+  // Use optimized preschool loading with smart caching
+  const optimizedHook = useOptimizedPreschools({
+    enableCaching: true,
+    batchSize: 500,
+    maxRetries: 3,
+    prefetchNearby: true
+  });
   
   // Enable real-time updates
   useRealTimeUpdates();
@@ -119,9 +130,18 @@ export const usePreschools = () => {
     fetchPreschools();
   }, []);
 
+  // Combine legacy and optimized functionality
+  const combinedIsLoading = isLoading || optimizedHook.isLoading;
+  const combinedError = error || optimizedHook.error;
+
   return {
-    isLoading,
-    error,
-    refetch: fetchPreschools
+    isLoading: combinedIsLoading,
+    error: combinedError,
+    refetch: fetchPreschools,
+    // Optimized features
+    loadingStats: optimizedHook.loadingStats,
+    refreshData: optimizedHook.refreshData,
+    getStatsSummary: optimizedHook.getStatsSummary,
+    prefetchNearbyData: optimizedHook.prefetchNearbyData
   };
 };

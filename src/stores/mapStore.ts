@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import type { LngLatLike } from 'mapbox-gl';
+import { dataCache, cacheKeys, dataTransformers } from '@/utils/dataCache';
+import { performanceOptimizer } from '@/utils/performanceOptimizer';
 
 export interface Preschool {
   id: string;
@@ -516,7 +518,20 @@ export const useMapStore = create<MapState>((set, get) => ({
   applyFilters: () => {
     const { preschools, searchFilters } = get();
     
-    const filtered = preschools.filter(preschool => {
+    // Smart caching for filtered results
+    const cacheKey = cacheKeys.preschools(searchFilters);
+    const cachedResult = dataCache.get<Preschool[]>(cacheKey);
+    
+    if (cachedResult) {
+      console.log('🚀 Using cached filter results');
+      set({ filteredPreschools: cachedResult });
+      return;
+    }
+    
+    // Performance-optimized filtering
+    const filtered = performanceOptimizer.smartFilter(
+      preschools,
+      (preschool: Preschool) => {
       // Query filter (search in name and kommun)
       if (searchFilters.query) {
         const query = searchFilters.query.toLowerCase();
@@ -616,13 +631,18 @@ export const useMapStore = create<MapState>((set, get) => ({
       }
 
       return true;
-    });
+      },
+      2000 // Limit for performance
+    );
+
+    // Cache the filtered results
+    dataCache.set(cacheKey, filtered, 3 * 60 * 1000); // 3 minutes cache
 
     set({ filteredPreschools: filtered });
     
     // Also update visible preschools if in viewport-only mode
     // This ensures the list updates immediately when filters change
-    console.log(`🔍 Applied filters, ${filtered.length} preschools match criteria`);
+    console.log(`🔍 Applied filters, ${filtered.length} preschools match criteria (cached for reuse)`);
   },
 }));
 

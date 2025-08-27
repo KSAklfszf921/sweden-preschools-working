@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMapStore } from '@/stores/mapStore';
 import { Loader2, MapPin } from 'lucide-react';
+import { OptimizedMapClustering } from './OptimizedMapClustering';
+import { performanceOptimizer, createOptimizedHandler } from '@/utils/performanceOptimizer';
+import { dataTransformers } from '@/utils/dataCache';
 
 // MINIMAL MAP - ZERO EXTERNAL DEPENDENCIES INITIALLY
 // Only loads what's needed when needed
@@ -14,8 +17,10 @@ export const MinimalMap: React.FC<MinimalMapProps> = ({ className }) => {
   const [isMapboxLoaded, setIsMapboxLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [mapInstance, setMapInstance] = useState<any>(null);
+  const [mapBounds, setMapBounds] = useState<any>(null);
+  const [currentZoom, setCurrentZoom] = useState(5);
 
-  const { filteredPreschools } = useMapStore();
+  const { filteredPreschools, layerVisibility } = useMapStore();
 
   // Load Mapbox GL JS dynamically
   const loadMapbox = async () => {
@@ -64,7 +69,16 @@ export const MinimalMap: React.FC<MinimalMapProps> = ({ className }) => {
             setIsMapboxLoaded(true);
             setIsLoading(false);
             setMapInstance(map);
-            addMarkers(map);
+            
+            // Initialize map state tracking
+            updateMapState(map);
+            
+            // Add optimized markers/clusters
+            if (layerVisibility.optimizedClusters) {
+              // Let OptimizedMapClustering handle the markers
+            } else {
+              addMarkers(map);
+            }
           });
 
           map.on('error', () => {
@@ -87,7 +101,29 @@ export const MinimalMap: React.FC<MinimalMapProps> = ({ className }) => {
     }
   };
 
-  // Add simple markers
+  // Update map state tracking
+  const updateMapState = (map: any) => {
+    const updateBounds = createOptimizedHandler(() => {
+      const bounds = map.getBounds();
+      const zoom = map.getZoom();
+      
+      setMapBounds({
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest()
+      });
+      setCurrentZoom(zoom);
+    }, { throttle: 100, key: 'map-bounds-update' });
+
+    map.on('moveend', updateBounds);
+    map.on('zoomend', updateBounds);
+    
+    // Initial state
+    updateBounds();
+  };
+
+  // Add simple markers (optimized with performance patterns)
   const addMarkers = (map: any) => {
     // @ts-ignore
     const mapboxgl = window.mapboxgl;
@@ -95,35 +131,43 @@ export const MinimalMap: React.FC<MinimalMapProps> = ({ className }) => {
     // Clear existing markers
     document.querySelectorAll('.minimal-marker').forEach(m => m.remove());
 
-    // Add markers efficiently
-    const maxMarkers = 1000;
-    let count = 0;
+    // Use lightweight preschool data for better performance
+    const lightweightData = filteredPreschools.map(dataTransformers.toLightweight);
+    
+    // Performance-optimized marker addition
+    performanceOptimizer.batchProcess(
+      lightweightData.slice(0, 1000), // Limit markers for performance
+      (preschool) => {
+        if (!preschool.latitud || !preschool.longitud) return null;
 
-    filteredPreschools.slice(0, maxMarkers).forEach(preschool => {
-      if (!preschool.latitud || !preschool.longitud) return;
+        const el = document.createElement('div');
+        el.className = 'minimal-marker';
+        el.innerHTML = `
+          <div style="
+            width: 8px;
+            height: 8px;
+            background: ${preschool.google_rating ? '#10b981' : '#3b82f6'};
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: transform 0.15s ease;
+          " 
+          onmouseover="this.style.transform='scale(1.3)'" 
+          onmouseout="this.style.transform='scale(1)'"
+          title="${preschool.namn}${preschool.google_rating ? ` (⭐ ${preschool.google_rating})` : ''}"></div>
+        `;
 
-      const el = document.createElement('div');
-      el.className = 'minimal-marker';
-      el.innerHTML = `
-        <div style="
-          width: 8px;
-          height: 8px;
-          background: #3b82f6;
-          border: 2px solid white;
-          border-radius: 50%;
-          cursor: pointer;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        " title="${preschool.namn}"></div>
-      `;
-
-      new mapboxgl.Marker(el)
-        .setLngLat([preschool.longitud, preschool.latitud])
-        .addTo(map);
-
-      count++;
+        return new mapboxgl.Marker(el)
+          .setLngLat([preschool.longitud, preschool.latitud])
+          .addTo(map);
+      },
+      50, // Process 50 markers per batch
+      10  // 10ms delay between batches
+    ).then((markers) => {
+      const validMarkers = markers.filter(Boolean);
+      console.log(`🎯 Added ${validMarkers.length} optimized markers to minimal map`);
     });
-
-    console.log(`🎯 Added ${count} markers to minimal map`);
   };
 
   // Update markers when data changes
@@ -181,12 +225,21 @@ export const MinimalMap: React.FC<MinimalMapProps> = ({ className }) => {
         </div>
       )}
 
+      {/* Optimized Clustering Component */}
+      {isMapboxLoaded && mapInstance && mapBounds && layerVisibility.optimizedClusters && (
+        <OptimizedMapClustering 
+          map={mapInstance}
+          zoom={currentZoom}
+          bounds={mapBounds}
+        />
+      )}
+
       {/* Status */}
       {isMapboxLoaded && (
         <div className="absolute bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
           <span className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            Snabb karta • {filteredPreschools.length} förskolor
+            {layerVisibility.optimizedClusters ? 'Smart kluster' : 'Snabb karta'} • {filteredPreschools.length} förskolor
           </span>
         </div>
       )}
