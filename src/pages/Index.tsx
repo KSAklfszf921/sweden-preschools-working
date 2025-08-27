@@ -3,8 +3,8 @@ import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
 
-// OPTIMERAD HYBRID-KARTA - direkt import för att säkerställa att den används
-import OptimizedSvgMap from '@/components/OptimizedSvgMap';
+// ULTRA-ENKEL KARTA - direkt import för att säkerställa att den används
+import UltraSimpleMap from '@/components/UltraSimpleMap';
 const OfflineHandler = lazy(() => import('@/components/enhanced/OfflineHandler').then(m => ({ default: m.OfflineHandler })));
 
 // Search och navigation - viktiga för UX
@@ -170,7 +170,7 @@ const Index = () => {
           <div 
             className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'} transition-opacity duration-400 delay-200 ${showLanding ? 'opacity-0' : 'opacity-100'}`}
           >
-            <OptimizedSvgMap className="w-full h-full" />
+            <UltraSimpleMap className="w-full h-full" />
           </div>
           
           {/* Toggle button for collapsed search box */}
