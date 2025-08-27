@@ -78,14 +78,24 @@ const Index = () => {
       {/* Landing Animation */}
       {showLanding && <LandingAnimation onComplete={handleLandingComplete} />}
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" id="main-content">
-        {/* Header - Mobile optimized with smooth entrance */}
+      <motion.div 
+        className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" 
+        id="main-content"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showLanding ? 0 : 1 }}
+        transition={{ 
+          delay: showLanding ? 0 : 0.05, 
+          duration: 0.8,
+          ease: "easeOut"
+        }}
+      >
+        {/* Header - Smooth entrance over 1 second timeline */}
         <motion.header 
-          initial={{ opacity: 0, y: -30 }} 
+          initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: showLanding ? 0 : 1, y: 0 }} 
           transition={{ 
-            delay: showLanding ? 0 : 0.2, 
-            duration: 0.8,
+            delay: showLanding ? 0 : 0.1, 
+            duration: 0.5,
             ease: "easeOut"
           }}
           className="relative z-40 glass-nav border-b border-border/10"
@@ -139,14 +149,14 @@ const Index = () => {
 
       {/* Main content */}
       <div className={`relative ${isMobile ? 'pb-16' : ''}`}>
-          {/* Smart Search Bar - Desktop only with staggered animation */}
+          {/* Smart Search Bar - Staggered over 1 second */}
           {!isMobile && (
             <motion.div 
-              initial={{ opacity: 0, x: -40, scale: 0.9 }} 
+              initial={{ opacity: 0, x: -30, scale: 0.95 }} 
               animate={{ opacity: showLanding ? 0 : 1, x: 0, scale: 1 }} 
               transition={{ 
-                delay: showLanding ? 0 : 0.4, 
-                duration: 0.7,
+                delay: showLanding ? 0 : 0.2, 
+                duration: 0.4,
                 ease: "easeOut"
               }}
               className="absolute left-6 top-6 z-30"
@@ -160,13 +170,13 @@ const Index = () => {
           )}
 
 
-          {/* Performance Critical List Panel - right side with staggered animation */}
+          {/* Performance Critical List Panel - Staggered over 1 second */}
           <motion.div 
-            initial={{ opacity: 0, x: 40, scale: 0.9 }} 
+            initial={{ opacity: 0, x: 30, scale: 0.95 }} 
             animate={{ opacity: showLanding ? 0 : 1, x: 0, scale: 1 }} 
             transition={{ 
-              delay: showLanding ? 0 : 0.6, 
-              duration: 0.7,
+              delay: showLanding ? 0 : 0.3, 
+              duration: 0.4,
               ease: "easeOut"
             }}
           >
@@ -177,14 +187,23 @@ const Index = () => {
             </ErrorBoundary>
           </motion.div>
 
-          {/* 3D Map with enhanced transitions */}
-          <div className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'}`}>
+          {/* 3D Map with smooth fade-in */}
+          <motion.div 
+            className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: showLanding ? 0 : 1 }}
+            transition={{ 
+              delay: showLanding ? 0 : 0.4, 
+              duration: 0.6,
+              ease: "easeOut"
+            }}
+          >
             <MapTransitions isMapVisible={isMapVisible}>
               <Map3D className="w-full h-full" />
               <StatisticsPopup />
               <LayerControl />
             </MapTransitions>
-          </div>
+          </motion.div>
           
           {/* Toggle button for collapsed search box */}
           {showSearchToggle && <button onClick={() => setSearchBoxCollapsed(false)} className="absolute top-4 left-4 z-50 bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
@@ -205,13 +224,13 @@ const Index = () => {
           {/* Mobile Navigation */}
           {isMobile && <MobileNavigation />}
           
-          {/* Admin Button with delayed smooth entrance */}
+          {/* Admin Button - Final element in 1-second sequence */}
           <motion.div 
-            initial={{ opacity: 0, y: 30, scale: 0.8 }} 
+            initial={{ opacity: 0, y: 20, scale: 0.9 }} 
             animate={{ opacity: showLanding ? 0 : 1, y: 0, scale: 1 }} 
             transition={{ 
-              delay: showLanding ? 0 : 0.8, 
-              duration: 0.6,
+              delay: showLanding ? 0 : 0.7, 
+              duration: 0.3,
               ease: "easeOut"
             }}
             className="fixed bottom-6 right-6 z-40"
@@ -247,7 +266,7 @@ const Index = () => {
               </div>
             </motion.div>}
         </div>
-      </div>
+      </motion.div>
       </PerformanceOptimizer>
     </OfflineHandler>;
 };

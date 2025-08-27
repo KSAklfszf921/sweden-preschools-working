@@ -67,9 +67,9 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
 
   const [activeStep, setActiveStep] = useState(0);
 
-  // Continuous counter animation over exactly 2.5 seconds
+  // Continuous counter animation over exactly 2 seconds
   useEffect(() => {
-    const duration = 2500; // Exactly 2.5 seconds total
+    const duration = 2000; // Exactly 2 seconds total
     const increment = totalPreschools / (duration / 16); // Update every 16ms (60fps)
     
     let currentCount = 0;
@@ -88,9 +88,9 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
     return () => clearInterval(timer);
   }, [totalPreschools, onComplete]);
 
-  // Progress step animation - adjusted for 2.5 seconds total
+  // Progress step animation - adjusted for 2 seconds total
   useEffect(() => {
-    const stepDuration = 800; // 0.8 seconds per step (2.4s total for 3 steps)
+    const stepDuration = 650; // 0.65 seconds per step (1.95s total for 3 steps)
     
     const stepTimer = setInterval(() => {
       setActiveStep(prev => {
