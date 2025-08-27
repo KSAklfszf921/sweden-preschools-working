@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Minimal Bundle</title>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        // TEST - Bara React utan något annat
+        import { createElement as h, useState } from 'https://esm.sh/react@18';
+        import { createRoot } from 'https://esm.sh/react-dom@18/client';
+        
+        function MinimalApp() {
+            const [count, setCount] = useState(0);
+            
+            return h('div', {
+                style: {
+                    padding: '20px',
+                    fontFamily: 'system-ui'
+                }
+            }, 
+                h('h1', null, 'Ultra Minimal Test'),
+                h('p', null, 'Count: ' + count),
+                h('button', {
+                    onClick: () => setCount(c => c + 1),
+                    style: {
+                        padding: '8px 16px',
+                        background: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }
+                }, 'Increment')
+            );
+        }
+        
+        createRoot(document.getElementById('root')).render(h(MinimalApp));
+    </script>
+</body>
+</html>

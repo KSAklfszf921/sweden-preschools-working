@@ -3,8 +3,8 @@ import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
 
-// BARA VIKTIGA komponenter lazy-loadade - resten laddas bara på demand
-const LeafletMap = lazy(() => import('@/components/LeafletMap'));
+// OPTIMERAD HYBRID-KARTA - kombinerar bästa teknikerna från framgångsrika GitHub-projekten
+const OptimizedSvgMap = lazy(() => import('@/components/OptimizedSvgMap'));
 const OfflineHandler = lazy(() => import('@/components/enhanced/OfflineHandler').then(m => ({ default: m.OfflineHandler })));
 
 // Search och navigation - viktiga för UX
@@ -173,7 +173,7 @@ const Index = () => {
             <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
               <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
             </div>}>
-              <LeafletMap className="w-full h-full" />
+              <OptimizedSvgMap className="w-full h-full" />
             </Suspense>
           </div>
           
@@ -261,8 +261,8 @@ const Index = () => {
             <div className="absolute inset-0 bg-background/80 backdrop-blur-lg flex items-center justify-center z-50 animate-fadeIn">
               <div className="text-center">
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4 animate-spin"></div>
-                <h2 className="text-xl font-semibold text-foreground mb-2">Laddar Sveriges förskolor...</h2>
-                <p className="text-muted-foreground">Hämtar data från Supabase-databasen</p>
+                <h2 className="text-xl font-semibold text-foreground mb-2">Laddar optimerad hybrid-karta...</h2>
+                <p className="text-muted-foreground">Tekniker från framgångsrika GitHub-projekt!</p>
               </div>
             </div>
           )}
