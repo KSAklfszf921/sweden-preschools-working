@@ -63,8 +63,7 @@ const Index = () => {
   }
 
   return (
-          {/* MINIMAL initial load - inga tunga komponenter */}
-        
+    <>
       {/* FÖRENKLAD SNABB LOADING - ingen tung animation */}
       {showLanding && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600">
@@ -193,6 +192,7 @@ const Index = () => {
           )}
         </div>
       </div>
+    </>
   );
 };
 

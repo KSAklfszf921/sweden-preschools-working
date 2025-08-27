@@ -39,7 +39,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminRealTimeMonitor } from '@/hooks/useAdminRealTimeMonitor';
 import { useAdminCoordinateStats } from '@/hooks/useAdminCoordinateStats';
 import { CoordinateBatchProcessor } from '@/components/CoordinateBatchProcessor';
-import { ClusteringControlPanel } from '@/components/enhanced/ClusteringControlPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
@@ -926,11 +925,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
         </motion.div>
       </motion.div>
 
-      {/* Clustering Control Panel */}
-      <ClusteringControlPanel 
-        isOpen={showClusteringPanel}
-        onClose={() => setShowClusteringPanel(false)}
-      />
+      {/* Clustering Control Panel removed - lightweight implementation */}
     </AnimatePresence>
   );
 };
