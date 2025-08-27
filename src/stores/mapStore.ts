@@ -161,20 +161,20 @@ export const useMapStore = create<MapState>((set, get) => ({
   selectedPreschool: null,
   searchFilters: {},
   isLoading: false,
-  mapCenter: [15.0, 62.0], // Center of Sweden
-  mapZoom: 5, // Start with heatmap view
-  showClusters: false, // Start with heatmap, not clusters
+  mapCenter: [15.5, 62.0], // Center of Sweden
+  mapZoom: 6, // Start with cluster view
+  showClusters: true, // Start with clusters visible
   
-  // Heatmap defaults - start with heatmap visible
+  // Heatmap defaults
   heatmapType: 'density',
   heatmapIntensity: 1,
-  showHeatmap: true,
+  showHeatmap: false,
   
-  // Layer visibility defaults - start with heatmap
+  // Layer visibility defaults - start with clusters
   layerVisibility: {
-    heatmap: true,
-    clusters: false,
-    markers: false,
+    heatmap: false,
+    clusters: true,
+    markers: true,
     communeBorders: false,
   },
   

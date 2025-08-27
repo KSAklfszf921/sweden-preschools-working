@@ -38,7 +38,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [15.5, 62.0],
-      zoom: 5.5,
+      zoom: 6,
       pitch: 0, // Reduced pitch for better performance
       bearing: 0
     });
