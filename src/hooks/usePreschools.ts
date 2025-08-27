@@ -96,8 +96,10 @@ export const usePreschools = () => {
         });
       }
 
+      // Set preschools in store - this will trigger map updates immediately
+      console.log(`🗺️ Setting ${transformedPreschools.length} preschools in store for map display`);
       setPreschools(transformedPreschools);
-      console.log(`Loaded ${transformedPreschools.length} preschools`);
+      console.log(`✅ Successfully loaded and displayed ${transformedPreschools.length} preschools on map`);
 
       // Start discrete background Google data enrichment
       startBackgroundEnrichment();

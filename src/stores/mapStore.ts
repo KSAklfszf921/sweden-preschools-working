@@ -85,6 +85,7 @@ interface MapState {
   mapCenter: LngLatLike;
   mapZoom: number;
   showClusters: boolean;
+  lastUpdated?: number;
   updatePreschool: (updatedPreschool: Preschool) => void;
   
   // Heatmap states
@@ -202,8 +203,11 @@ export const useMapStore = create<MapState>((set, get) => ({
   })),
 
   setPreschools: (preschools) => {
+    console.log(`Setting ${preschools.length} preschools in store`);
     set({ preschools });
     get().applyFilters();
+    // Force re-render of map components by updating a timestamp
+    set({ lastUpdated: Date.now() });
   },
 
   setFilteredPreschools: (filteredPreschools) => set({ filteredPreschools }),

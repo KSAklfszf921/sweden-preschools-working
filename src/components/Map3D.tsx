@@ -29,7 +29,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     mapZoom,
     setMapCenter,
     setMapZoom,
-    preschools
+    preschools,
+    lastUpdated
   } = useMapStore();
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -51,6 +52,18 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     map.current.on('style.load', () => {
       if (!map.current) return;
       setIsLoading(false);
+      
+      // Immediately add preschools when map is ready
+      if (validPreschools.length > 0) {
+        console.log('Map loaded, immediately adding preschools...');
+        // Small delay to ensure map is fully ready
+        setTimeout(() => {
+          if (map.current?.isStyleLoaded()) {
+            // Trigger the useEffect by updating a dependency
+            setIsLoading(false);
+          }
+        }, 100);
+      }
     });
 
     // Add navigation controls
@@ -124,9 +137,27 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     }))
   }), [validPreschools]);
 
-  // Update map data when preschools change
+  // Update map data when preschools change - ensure it runs immediately
   useEffect(() => {
-    if (!map.current || !map.current.isStyleLoaded()) return;
+    if (!map.current) return;
+    
+    // If style is not loaded yet, wait for it
+    if (!map.current.isStyleLoaded()) {
+      const waitForStyle = () => {
+        if (map.current?.isStyleLoaded()) {
+          addPreschoolsToMap();
+        } else {
+          setTimeout(waitForStyle, 100);
+        }
+      };
+      waitForStyle();
+      return;
+    }
+    
+    addPreschoolsToMap();
+    
+    function addPreschoolsToMap() {
+      if (!map.current) return;
     
     // Remove existing layers
     const layersToRemove = ['preschools-clusters', 'preschools-cluster-count', 'preschools-unclustered'];
@@ -275,7 +306,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         });
       });
     });
-  }, [filteredPreschools]);
+    }
+  }, [filteredPreschools, geojsonData, lastUpdated]);
 
   // Handle map center and zoom changes from store
   useEffect(() => {
