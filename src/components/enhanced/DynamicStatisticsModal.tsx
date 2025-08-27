@@ -41,39 +41,52 @@ export const DynamicStatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen,
   const currentStats = useMemo(() => {
     if (filteredPreschools.length === 0) return null;
 
-    const validPreschools = filteredPreschools.filter(p => p.antal_barn && p.antal_barn > 0);
+    // All preschools for basic counts
+    const totalPreschools = filteredPreschools.length;
     
+    // Valid preschools with child data
+    const validPreschools = filteredPreschools.filter(p => p.antal_barn && p.antal_barn > 0);
     const totalChildren = validPreschools.reduce((sum, p) => sum + (p.antal_barn || 0), 0);
-    const validGroupCounts = validPreschools.filter(p => p.antal_barngrupper && p.antal_barngrupper > 0);
+    
+    // Group calculations
+    const validGroupCounts = filteredPreschools.filter(p => p.antal_barngrupper && p.antal_barngrupper > 0);
     const totalGroups = validGroupCounts.reduce((sum, p) => sum + (p.antal_barngrupper || 0), 0);
     
+    // Averages
     const avgChildrenPerPreschool = validPreschools.length > 0 ? totalChildren / validPreschools.length : 0;
-    const avgChildrenPerGroup = validGroupCounts.length > 0 && totalGroups > 0 ? totalChildren / totalGroups : 0;
+    const avgChildrenPerGroup = totalGroups > 0 ? totalChildren / totalGroups : 0;
     
-    const validStaffDensity = validPreschools.filter(p => p.personaltäthet && p.personaltäthet > 0);
+    // Staff density (lower is better)
+    const validStaffDensity = filteredPreschools.filter(p => p.personaltäthet && p.personaltäthet > 0);
     const avgStaffDensity = validStaffDensity.length > 0 
       ? validStaffDensity.reduce((sum, p) => sum + (p.personaltäthet || 0), 0) / validStaffDensity.length 
       : 0;
     
-    const validTeacherRatio = validPreschools.filter(p => p.andel_med_förskollärarexamen && p.andel_med_förskollärarexamen > 0);
+    // Teacher qualifications
+    const validTeacherRatio = filteredPreschools.filter(p => p.andel_med_förskollärarexamen != null && p.andel_med_förskollärarexamen >= 0);
     const avgTeacherRatio = validTeacherRatio.length > 0 
       ? validTeacherRatio.reduce((sum, p) => sum + (p.andel_med_förskollärarexamen || 0), 0) / validTeacherRatio.length 
       : 0;
     
-    const validRatings = validPreschools.filter(p => p.google_rating && p.google_rating > 0);
+    // Google ratings
+    const validRatings = filteredPreschools.filter(p => p.google_rating && p.google_rating > 0);
     const avgRating = validRatings.length > 0 
       ? validRatings.reduce((sum, p) => sum + (p.google_rating || 0), 0) / validRatings.length 
       : 0;
 
     return {
-      totalPreschools: filteredPreschools.length,
+      totalPreschools,
       totalChildren,
-      avgChildrenPerPreschool,
-      avgChildrenPerGroup,
-      avgStaffDensity,
-      avgTeacherRatio,
-      avgRating,
-      validRatings: validRatings.length
+      avgChildrenPerPreschool: Math.round(avgChildrenPerPreschool * 10) / 10,
+      avgChildrenPerGroup: Math.round(avgChildrenPerGroup * 10) / 10,
+      avgStaffDensity: Math.round(avgStaffDensity * 10) / 10,
+      avgTeacherRatio: Math.round(avgTeacherRatio * 10) / 10,
+      avgRating: Math.round(avgRating * 10) / 10,
+      validRatings: validRatings.length,
+      validChildren: validPreschools.length,
+      validGroups: validGroupCounts.length,
+      validStaff: validStaffDensity.length,
+      validTeachers: validTeacherRatio.length
     };
   }, [filteredPreschools]);
 
@@ -173,24 +186,30 @@ export const DynamicStatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen,
     };
 
     filteredPreschools.forEach(p => {
-      if (!p.huvudman) {
+      if (!p.huvudman || p.huvudman.trim() === '') {
         ownership['Övrigt']++;
         return;
       }
 
-      const huvudman = p.huvudman.toLowerCase();
-      if (huvudman.includes('kommun')) {
+      const huvudman = p.huvudman.toLowerCase().trim();
+      if (huvudman.includes('kommun') || huvudman.includes('kommun')) {
         ownership['Kommunal']++;
-      } else if (huvudman.includes('privat') || huvudman.includes('aktiebolag') || huvudman.includes('ab')) {
+      } else if (huvudman.includes('privat') || huvudman.includes('aktiebolag') || 
+                 huvudman.includes('ab') || huvudman.includes('enskild') ||
+                 huvudman.includes('stiftelse') || huvudman.includes('företag')) {
         ownership['Privat']++;
-      } else if (huvudman.includes('kooperativ') || huvudman.includes('ekonomisk förening')) {
+      } else if (huvudman.includes('kooperativ') || huvudman.includes('ekonomisk förening') ||
+                 huvudman.includes('föräldra') || huvudman.includes('kooperativ')) {
         ownership['Kooperativ']++;
       } else {
         ownership['Övrigt']++;
       }
     });
 
-    return Object.entries(ownership).map(([name, value]) => ({ name, value }));
+    // Only return entries with values > 0
+    return Object.entries(ownership)
+      .filter(([_, value]) => value > 0)
+      .map(([name, value]) => ({ name, value }));
   }, [filteredPreschools]);
 
   const getTrendIcon = (trend?: 'up' | 'down' | 'stable') => {
@@ -202,6 +221,8 @@ export const DynamicStatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen,
   };
 
   const getDifferenceText = (current: number, national: number, unit: string) => {
+    if (!current || !national || current === 0 || national === 0) return "Ingen data";
+    
     const diff = Math.abs(current - national);
     const percentage = national > 0 ? ((diff / national) * 100) : 0;
     const isHigher = current > national;
@@ -229,7 +250,7 @@ export const DynamicStatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen,
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden"
+          className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-6xl max-h-[95vh] overflow-hidden md:w-[90vw] md:max-h-[90vh]"
           onClick={e => e.stopPropagation()}
         >
           <Card className="h-full bg-white/95 backdrop-blur-sm border border-border/50 shadow-xl">

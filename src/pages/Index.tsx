@@ -244,6 +244,25 @@ const Index = () => {
           {/* Mobile Navigation */}
           {isMobile && <MobileNavigation />}
           
+          {/* Mobile Statistics Button */}
+          {isMobile && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: showLanding ? 0 : 1, y: 0 }} 
+              transition={{ delay: showLanding ? 0 : 0.6, duration: 0.3 }}
+              className="fixed bottom-20 left-4 z-40 md:hidden"
+            >
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="glass-effect hover-glow-subtle border-0 p-3 rounded-full shadow-lg"
+                onClick={() => setShowStatistics(true)}
+              >
+                <BarChart3 className="w-5 h-5" />
+              </Button>
+            </motion.div>
+          )}
+          
           {/* Mobile Swipe Navigation */}
           <MobileSwipeNavigation />
           
