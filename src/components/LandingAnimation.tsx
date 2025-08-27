@@ -67,9 +67,9 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
 
   const [activeStep, setActiveStep] = useState(0);
 
-  // Continuous counter animation over 3 seconds
+  // Continuous counter animation over exactly 2.5 seconds
   useEffect(() => {
-    const duration = 3000; // 3 seconds total
+    const duration = 2500; // Exactly 2.5 seconds total
     const increment = totalPreschools / (duration / 16); // Update every 16ms (60fps)
     
     let currentCount = 0;
@@ -78,8 +78,8 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
       if (currentCount >= totalPreschools) {
         setCount(totalPreschools);
         clearInterval(timer);
-        // Complete animation after reaching full count
-        setTimeout(onComplete, 200);
+        // Complete animation immediately when reaching full count
+        setTimeout(onComplete, 100);
       } else {
         setCount(currentCount);
       }
@@ -88,9 +88,9 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
     return () => clearInterval(timer);
   }, [totalPreschools, onComplete]);
 
-  // Progress step animation
+  // Progress step animation - adjusted for 2.5 seconds total
   useEffect(() => {
-    const stepDuration = 1000; // 1 second per step
+    const stepDuration = 800; // 0.8 seconds per step (2.4s total for 3 steps)
     
     const stepTimer = setInterval(() => {
       setActiveStep(prev => {
@@ -110,33 +110,48 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 1 }}
+        initial={{ opacity: 1, backgroundColor: '#ffffff' }}
+        animate={{ 
+          opacity: 1,
+          backgroundColor: 'hsl(85, 15%, 95%)'
+        }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ 
+          backgroundColor: { duration: 0.8, ease: "easeOut" },
+          opacity: { duration: 0.5 }
+        }}
         className="fixed inset-0 z-50 flex items-center justify-center"
         style={{
           background: `linear-gradient(135deg, 
-            hsl(0, 0%, 98%) 0%, 
-            hsl(85, 20%, 92%) 30%, 
-            hsl(75, 15%, 88%) 70%, 
-            hsl(65, 10%, 85%) 100%)`
+            hsl(0, 0%, 100%) 0%, 
+            hsl(85, 20%, 96%) 30%, 
+            hsl(75, 15%, 94%) 70%, 
+            hsl(65, 10%, 92%) 100%)`
         }}
       >
-        {/* Main content */}
+        {/* Main content with smooth entrance */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ 
+            duration: 0.8,
+            ease: "easeOut",
+            delay: 0.3
+          }}
           className="text-center"
         >
           {/* Animated Sweden map */}
           <AnimatedSwedenMap progress={progress} />
 
-          {/* Title */}
+          {/* Title with delayed entrance */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              delay: 0.5,
+              duration: 0.6,
+              ease: "easeOut"
+            }}
             className="mb-8"
           >
             <h1 
@@ -214,11 +229,15 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
             />
           </div>
 
-          {/* Only preschool counter */}
+          {/* Preschool counter with smooth entrance */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              delay: 0.7,
+              duration: 0.5,
+              ease: "easeOut"
+            }}
             className="text-center"
           >
             <motion.div 

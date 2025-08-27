@@ -266,8 +266,14 @@ export const PerformanceCriticalList: React.FC<PreschoolListProps> = ({ classNam
 
   const debouncedListSearch = useDebounce(listSearch, 300);
 
-  // Choose data source based on viewport toggle
+  // Force re-render when visibility changes
+  useEffect(() => {
+    console.log(`👁️ Viewport visibility changed - viewportOnly: ${viewportOnly}, visible count: ${visiblePreschools.length}`);
+  }, [viewportOnly, visiblePreschools.length]);
+
+  // Choose data source based on viewport toggle with real-time updates
   const sourcePreschools = useMemo(() => {
+    console.log(`📊 List data source update - viewportOnly: ${viewportOnly}, visible: ${visiblePreschools.length}, filtered: ${filteredPreschools.length}`);
     return viewportOnly ? visiblePreschools : filteredPreschools;
   }, [viewportOnly, visiblePreschools, filteredPreschools]);
 
@@ -304,8 +310,10 @@ export const PerformanceCriticalList: React.FC<PreschoolListProps> = ({ classNam
     });
 
     const end = performance.now();
+    console.log(`🔄 List processed: ${result.length} items (from ${sourcePreschools.length} source) - viewport: ${viewportOnly} - search: "${debouncedListSearch}" - sort: ${sortBy}`);
+    
     if (end - start > 10) {
-      console.log(`List processing took ${end - start}ms for ${result.length} items`);
+      console.log(`⚠️ List processing took ${end - start}ms for ${result.length} items`);
     }
 
     return result;
@@ -361,6 +369,26 @@ export const PerformanceCriticalList: React.FC<PreschoolListProps> = ({ classNam
     return 'Alla förskolor';
   };
 
+  const getCountDescription = () => {
+    const totalCount = processedPreschools.length;
+    const sourceCount = sourcePreschools.length;
+    const allCount = filteredPreschools.length;
+    
+    if (listSearch) {
+      if (viewportOnly) {
+        return `${totalCount} träffar på kartan (av ${sourceCount} synliga)`;
+      } else {
+        return `${totalCount} sökträffar (av ${allCount} filtrerade)`;
+      }
+    }
+    
+    if (viewportOnly) {
+      return `${totalCount} synliga på kartan (av ${allCount} totalt)`;
+    }
+    
+    return `${totalCount} förskolor`;
+  };
+
   // Calculate national averages for comparisons (memoized)
   const nationalAverage = useMemo(() => {
     if (preschools.length === 0) return undefined;
@@ -402,9 +430,7 @@ export const PerformanceCriticalList: React.FC<PreschoolListProps> = ({ classNam
                 {getContextTitle()}
               </h3>
               <p className="text-xs text-muted-foreground">
-                {processedPreschools.length} förskolor
-                {viewportOnly && ` av ${filteredPreschools.length} filtrerade`}
-                {listSearch && ` (sökfiltrerade)`}
+                {getCountDescription()}
               </p>
             </div>
             <Button

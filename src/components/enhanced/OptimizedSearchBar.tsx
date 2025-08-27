@@ -452,10 +452,14 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
               {isLocating ? "Hämtar position..." : userLocation ? "Position aktiv" : "🎯 Nära mig"}
             </Button>
 
-            {/* Results count and clear all */}
+            {/* Dynamic results count and clear all */}
             <div className="flex items-center justify-between">
               <div className="text-xs text-muted-foreground">
-                {filteredPreschools.length.toLocaleString()} förskolor hittades
+                {hasActiveFilters ? (
+                  `${filteredPreschools.length.toLocaleString()} av ${preschools.length.toLocaleString()} förskolor`
+                ) : (
+                  `${preschools.length.toLocaleString()} förskolor totalt`
+                )}
               </div>
               {hasActiveFilters && (
                 <Button
