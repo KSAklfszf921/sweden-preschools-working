@@ -25,33 +25,68 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
-    // WORKING bundle optimization
+    // AGGRESSIVE bundle optimization for better performance
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Mapbox gets its own chunk
-          if (id.includes('mapbox-gl')) {
-            return 'mapbox';
-          }
-          // Supabase chunk
+          // Critical performance optimization: split heavy libraries
+          // REMOVED MAPBOX - using lightweight Google Maps instead
+          
+          // Supabase - database client
           if (id.includes('@supabase')) {
             return 'supabase';
           }
-          // React vendor chunk
-          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-            return 'react-vendor';
+          
+          // React core - essential but can be cached
+          if (id.includes('react/') || id.includes('react-dom/')) {
+            return 'react-core';
           }
-          // UI libraries
-          if (id.includes('@radix-ui') || id.includes('lucide-react') || id.includes('framer-motion')) {
-            return 'ui-vendor';
+          
+          // React ecosystem
+          if (id.includes('react-') || id.includes('framer-motion')) {
+            return 'react-ecosystem';
           }
-          // Query vendor
-          if (id.includes('@tanstack')) {
-            return 'query-vendor';
+          
+          // UI components - split into smaller chunks
+          if (id.includes('@radix-ui')) {
+            return 'radix-ui';
           }
-          // Node modules default
-          if (id.includes('node_modules')) {
-            return 'vendor';
+          
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
+          
+          // Animation libraries
+          if (id.includes('motion') || id.includes('animation')) {
+            return 'animations';
+          }
+          
+          // Query/state management
+          if (id.includes('@tanstack') || id.includes('zustand')) {
+            return 'state-mgmt';
+          }
+          
+          // Charts and data visualization
+          if (id.includes('chart') || id.includes('d3')) {
+            return 'charts';
+          }
+          
+          // Performance utilities (our custom code)
+          if (id.includes('/utils/') || id.includes('/hooks/')) {
+            return 'app-utils';
+          }
+          
+          // Large vendor libraries
+          if (id.includes('node_modules') && id.includes('.js')) {
+            const chunkName = id.split('node_modules/')[1].split('/')[0];
+            
+            // Group small libraries together
+            const smallLibs = ['clsx', 'tailwind-merge', 'class-variance-authority', 'cmdk'];
+            if (smallLibs.some(lib => chunkName.includes(lib))) {
+              return 'utils-vendor';
+            }
+            
+            return `vendor-${chunkName}`;
           }
         }
       }
@@ -59,8 +94,8 @@ export default defineConfig(({ mode }) => ({
     cssCodeSplit: true,
     assetsInlineLimit: 4096
   },
-  // Optimize dependencies for faster loading
+  // Optimize dependencies for faster loading - REMOVED MAPBOX
   optimizeDeps: {
-    include: ['mapbox-gl', '@supabase/supabase-js', 'react', 'react-dom'],
+    include: ['@supabase/supabase-js', 'react', 'react-dom'],
   },
 }));

@@ -1,13 +1,14 @@
 import React, { useState, Suspense, lazy, useEffect } from 'react';
-import { MinimalMap } from '@/components/MinimalMap';
+import { SimpleGoogleMap } from '@/components/SimpleGoogleMap';
 import { OptimizedSearchBar } from '@/components/enhanced/OptimizedSearchBar';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
 import { OfflineHandler } from '@/components/enhanced/OfflineHandler';
 import PerformanceOptimizer from '@/components/enhanced/PerformanceOptimizer';
 import { SmartPerformanceManager } from '@/components/SmartPerformanceManager';
-import { AdminPanel } from '@/components/AdminPanel';
-import { StatisticsPopup } from '@/components/StatisticsPopup';
+// Remove direct imports - now lazy loaded
+// import { AdminPanel } from '@/components/AdminPanel';
+// import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
 import { EnhancedSwedenAnimation } from '@/components/EnhancedSwedenAnimation';
 import { MapTransitions } from '@/components/enhanced/MapTransitions';
@@ -25,8 +26,13 @@ import { DistanceRoutingPanel } from '@/components/enhanced/DistanceRoutingPanel
 import { PerformanceDashboard } from '@/components/enhanced/PerformanceDashboard';
 import { DynamicStatisticsModal } from '@/components/enhanced/DynamicStatisticsModal';
 
-// Lazy load heavy components for better performance
+// Aggressive lazy loading for optimal performance
 const PreschoolDetailsPanel = lazy(() => import('@/components/enhanced/PreschoolDetailsPanel').then(module => ({ default: module.PreschoolDetailsPanel })));
+const AdminPanel = lazy(() => import('@/components/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const StatisticsPopup = lazy(() => import('@/components/StatisticsPopup').then(m => ({ default: m.StatisticsPopup })));
+const DynamicStatisticsModal = lazy(() => import('@/components/enhanced/DynamicStatisticsModal').then(m => ({ default: m.DynamicStatisticsModal })));
+const ComparisonModal = lazy(() => import('@/components/ComparisonModal').then(m => ({ default: m.ComparisonModal })));
+const PerformanceDashboard = lazy(() => import('@/components/enhanced/PerformanceDashboard').then(m => ({ default: m.PerformanceDashboard })));
 
 import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
 import { usePreschools } from '@/hooks/usePreschools';
@@ -233,11 +239,7 @@ const Index = () => {
               ease: "easeOut"
             }}
           >
-            <MapTransitions isMapVisible={isMapVisible}>
-              <MinimalMap className="w-full h-full" />
-              <StatisticsPopup />
-              <LayerControl />
-            </MapTransitions>
+            <SimpleGoogleMap className="w-full h-full" />
           </motion.div>
           
           {/* Toggle button for collapsed search box */}
@@ -245,24 +247,34 @@ const Index = () => {
               🔍 Sök förskolor
             </button>}
 
-          {/* Admin Panel */}
-          <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
+          {/* Lazy-loaded heavy components with Suspense */}
+          <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
+            <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
+          </Suspense>
 
           {/* Comparison Panel and Modal */}
           <ComparisonPanel />
-          <ComparisonModal />
+          <Suspense fallback={null}>
+            <ComparisonModal />
+          </Suspense>
 
           {/* Dynamic Statistics Modal */}
-          <DynamicStatisticsModal 
-            isOpen={showStatistics} 
-            onClose={() => setShowStatistics(false)} 
-          />
+          <Suspense fallback={null}>
+            <DynamicStatisticsModal 
+              isOpen={showStatistics} 
+              onClose={() => setShowStatistics(false)} 
+            />
+          </Suspense>
 
           {/* Enhanced features */}
           <DynamicStatisticsPanel />
           
-          {/* Performance Dashboard */}
-          <PerformanceDashboard />
+          {/* Performance Dashboard - only load when needed */}
+          {process.env.NODE_ENV === 'development' && (
+            <Suspense fallback={null}>
+              <PerformanceDashboard />
+            </Suspense>
+          )}
           
           {/* Mobile Navigation */}
           {isMobile && <MobileNavigation />}
