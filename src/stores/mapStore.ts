@@ -112,6 +112,7 @@ interface MapState {
   // UI state
   searchBoxCollapsed: boolean;
   listPanelCollapsed: boolean;
+  searchTerm: string;
   
   // Actions
   setPreschools: (preschools: Preschool[]) => void;
@@ -127,6 +128,7 @@ interface MapState {
   // UI actions
   setSearchBoxCollapsed: (collapsed: boolean) => void;
   setListPanelCollapsed: (collapsed: boolean) => void;
+  setSearchTerm: (term: string) => void;
   setMapCenter: (center: LngLatLike) => void;
   setMapZoom: (zoom: number) => void;
   setShowClusters: (show: boolean) => void;
@@ -195,6 +197,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   // UI state defaults
   searchBoxCollapsed: false,
   listPanelCollapsed: false,
+  searchTerm: '',
 
   updatePreschool: (updatedPreschool) => set((state) => ({
     preschools: state.preschools.map(p => 
@@ -489,6 +492,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   // UI actions
   setSearchBoxCollapsed: (searchBoxCollapsed) => set({ searchBoxCollapsed }),
   setListPanelCollapsed: (listPanelCollapsed) => set({ listPanelCollapsed }),
+  setSearchTerm: (searchTerm) => set({ searchTerm }),
 
   applyFilters: () => {
     const { preschools, searchFilters } = get();

@@ -22,6 +22,7 @@ import { SmartSearchAutocomplete } from '@/components/enhanced/SmartSearchAutoco
 import { MobileSwipeNavigation } from '@/components/enhanced/MobileSwipeNavigation';
 import { DistanceRoutingPanel } from '@/components/enhanced/DistanceRoutingPanel';
 import { PerformanceDashboard } from '@/components/enhanced/PerformanceDashboard';
+import { DynamicStatisticsModal } from '@/components/enhanced/DynamicStatisticsModal';
 
 // Lazy load heavy components for better performance
 const PreschoolDetailsPanel = lazy(() => import('@/components/enhanced/PreschoolDetailsPanel').then(module => ({ default: module.PreschoolDetailsPanel })));
@@ -53,6 +54,7 @@ const Index = () => {
   const [showLanding, setShowLanding] = useState(true);
   const [isMapVisible, setIsMapVisible] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(false);
 
   const handleLandingComplete = () => {
     // Smooth transition from loading to main content
@@ -127,7 +129,15 @@ const Index = () => {
 
               {/* Action Buttons - Desktop only */}
               <div className="hidden md:flex items-center gap-4">
-                <OptimizedStatisticsButton />
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="items-center gap-3 glass-effect hover-glow-subtle relative border-0 font-semibold" 
+                  onClick={() => setShowStatistics(true)}
+                >
+                  <BarChart3 className="w-5 h-5" />
+                  Statistik
+                </Button>
                 <Button 
                   variant="outline" 
                   size="lg" 
@@ -218,6 +228,12 @@ const Index = () => {
           {/* Comparison Panel and Modal */}
           <ComparisonPanel />
           <ComparisonModal />
+
+          {/* Dynamic Statistics Modal */}
+          <DynamicStatisticsModal 
+            isOpen={showStatistics} 
+            onClose={() => setShowStatistics(false)} 
+          />
 
           {/* Enhanced features */}
           <DynamicStatisticsPanel />
