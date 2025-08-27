@@ -119,8 +119,16 @@ const OptimizedSvgMap: React.FC<OptimizedSvgMapProps> = ({ className }) => {
 
   const renderStrategy = getRenderingStrategy();
 
+  // CONSOLE LOG FÖR ATT VERIFIERA ATT RÄTT KOMPONENT LADDAS
+  console.log('🚀 OptimizedSvgMap laddad - HYBRID-KARTA AKTIV!');
+
   return (
     <div className={`relative ${className}`} style={{ background: 'linear-gradient(180deg, #e0f2fe 0%, #f8fafc 100%)' }}>
+      {/* TYDLIG HEADER för att visa att rätt karta laddas */}
+      <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-bold z-50 shadow-lg">
+        ✅ OPTIMERAD HYBRID SVG-KARTA AKTIV
+      </div>
+      
       {/* ZOOM CONTROLS - inspirerad av Mapbox-projektet */}
       <div className="absolute top-4 right-4 z-30 flex flex-col gap-2">
         <button 
