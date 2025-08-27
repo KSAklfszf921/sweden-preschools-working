@@ -1,29 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { Map3D } from '@/components/Map3D';
 import { OptimizedSearchBar } from '@/components/enhanced/OptimizedSearchBar';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
 import { OfflineHandler } from '@/components/enhanced/OfflineHandler';
 import PerformanceOptimizer from '@/components/enhanced/PerformanceOptimizer';
-import { PreschoolDetails } from '@/components/PreschoolDetails';
-import { PreschoolListPanel } from '@/components/PreschoolListPanel';
 import { AdminPanel } from '@/components/AdminPanel';
 import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LandingAnimation } from '@/components/LandingAnimation';
 import { MapTransitions } from '@/components/enhanced/MapTransitions';
-import { EnhancedPanel } from '@/components/enhanced/EnhancedLayout';
 import { AnimatedButton } from '@/components/enhanced/InteractiveElements';
-import { StatisticsButton } from '@/components/StatisticsButton';
+import { OptimizedStatisticsButton } from '@/components/enhanced/OptimizedStatisticsButton';
 import { ComparisonPanel } from '@/components/ComparisonPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
 import { MobileNavigation } from '@/components/enhanced/MobileNavigation';
-import EnhancedStatisticsPanel from '@/components/enhanced/EnhancedStatisticsPanel';
 import { DynamicStatisticsPanel } from '@/components/enhanced/DynamicStatisticsPanel';
-import { EnhancedPreschoolList } from '@/components/enhanced/EnhancedPreschoolList';
+import { PerformanceCriticalList } from '@/components/enhanced/PerformanceCriticalList';
 import { BubbleMapVisualization } from '@/components/enhanced/BubbleMapVisualization';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
+
+// Lazy load heavy components for better performance
+const PreschoolDetailsPanel = lazy(() => import('@/components/enhanced/PreschoolDetailsPanel').then(module => ({ default: module.PreschoolDetailsPanel })));
 
 import { MobileOptimizations } from '@/components/enhanced/MobileOptimizations';
 import { usePreschools } from '@/hooks/usePreschools';
@@ -109,7 +108,7 @@ const Index = () => {
 
               {/* Action Buttons - Desktop only */}
               <div className="hidden md:flex items-center gap-4">
-                <StatisticsButton />
+                <OptimizedStatisticsButton />
                 <Button 
                   variant="outline" 
                   size="lg" 
@@ -154,13 +153,17 @@ const Index = () => {
           )}
 
 
-          {/* Enhanced Preschool List Panel - right side */}
+          {/* Performance Critical List Panel - right side */}
           <motion.div 
             initial={{ opacity: 0, x: 20, scale: 0.95 }} 
             animate={{ opacity: showLanding ? 0 : 1, x: 0, scale: 1 }} 
             transition={{ delay: showLanding ? 0 : 1.5, duration: 0.6 }}
           >
-            <EnhancedPreschoolList />
+            <ErrorBoundary>
+              <LoadingBoundary>
+                <PerformanceCriticalList />
+              </LoadingBoundary>
+            </ErrorBoundary>
           </motion.div>
 
           {/* 3D Map with enhanced transitions */}
@@ -178,9 +181,6 @@ const Index = () => {
             </button>}
 
 
-          {/* Preschool details panel */}
-          <PreschoolDetails />
-
           {/* Admin Panel */}
           <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
 
@@ -189,7 +189,6 @@ const Index = () => {
           <ComparisonModal />
 
           {/* Enhanced features */}
-          
           <DynamicStatisticsPanel />
           <BubbleMapVisualization />
           

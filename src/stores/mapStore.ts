@@ -445,28 +445,35 @@ export const useMapStore = create<MapState>((set, get) => ({
   updateVisiblePreschoolsFromViewport: (bounds) => {
     const { filteredPreschools, listSortOrder } = get();
     
-    // Filter preschools within viewport bounds
-    const visibleInViewport = filteredPreschools.filter(preschool => 
-      preschool.latitud && preschool.longitud &&
-      preschool.latitud >= bounds.south && preschool.latitud <= bounds.north &&
-      preschool.longitud >= bounds.west && preschool.longitud <= bounds.east
-    );
+    // Filter preschools within viewport bounds with performance optimization
+    const visibleInViewport = filteredPreschools.filter(preschool => {
+      if (!preschool.latitud || !preschool.longitud) return false;
+      
+      // Fast bounds check
+      const lat = preschool.latitud;
+      const lng = preschool.longitud;
+      
+      return lat >= bounds.south && lat <= bounds.north &&
+             lng >= bounds.west && lng <= bounds.east;
+    });
     
-    // Sort based on current sort order
-    switch (listSortOrder) {
-      case 'rating':
-        visibleInViewport.sort((a, b) => (b.google_rating || 0) - (a.google_rating || 0));
-        break;
-      case 'name':
-        visibleInViewport.sort((a, b) => a.namn.localeCompare(b.namn));
-        break;
-      case 'quality':
-        visibleInViewport.sort((a, b) => (b.andel_med_förskollärarexamen || 0) - (a.andel_med_förskollärarexamen || 0));
-        break;
-      case 'distance':
-      default:
-        // Distance sorting requires user position, for now keep default order
-        break;
+    // Sort based on current sort order with performance optimization
+    if (visibleInViewport.length < 1000) {
+      switch (listSortOrder) {
+        case 'rating':
+          visibleInViewport.sort((a, b) => (b.google_rating || 0) - (a.google_rating || 0));
+          break;
+        case 'name':
+          visibleInViewport.sort((a, b) => a.namn.localeCompare(b.namn));
+          break;
+        case 'quality':
+          visibleInViewport.sort((a, b) => (b.andel_med_förskollärarexamen || 0) - (a.andel_med_förskollärarexamen || 0));
+          break;
+        case 'distance':
+        default:
+          // Distance sorting requires user position, for now keep default order
+          break;
+      }
     }
     
     set({ visiblePreschools: visibleInViewport });
