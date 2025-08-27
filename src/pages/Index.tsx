@@ -18,6 +18,10 @@ import { MobileNavigation } from '@/components/enhanced/MobileNavigation';
 import { DynamicStatisticsPanel } from '@/components/enhanced/DynamicStatisticsPanel';
 import { PerformanceCriticalList } from '@/components/enhanced/PerformanceCriticalList';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
+import { SmartSearchAutocomplete } from '@/components/enhanced/SmartSearchAutocomplete';
+import { MobileSwipeNavigation } from '@/components/enhanced/MobileSwipeNavigation';
+import { DistanceRoutingPanel } from '@/components/enhanced/DistanceRoutingPanel';
+import { PerformanceDashboard } from '@/components/enhanced/PerformanceDashboard';
 
 // Lazy load heavy components for better performance
 const PreschoolDetailsPanel = lazy(() => import('@/components/enhanced/PreschoolDetailsPanel').then(module => ({ default: module.PreschoolDetailsPanel })));
@@ -160,7 +164,7 @@ const Index = () => {
             >
               <ErrorBoundary>
                 <LoadingBoundary>
-                  <OptimizedSearchBar />
+                  <SmartSearchAutocomplete />
                 </LoadingBoundary>
               </ErrorBoundary>
             </motion.div>
@@ -218,8 +222,14 @@ const Index = () => {
           {/* Enhanced features */}
           <DynamicStatisticsPanel />
           
+          {/* Performance Dashboard */}
+          <PerformanceDashboard />
+          
           {/* Mobile Navigation */}
           {isMobile && <MobileNavigation />}
+          
+          {/* Mobile Swipe Navigation */}
+          <MobileSwipeNavigation />
           
           {/* Admin Button - Final element in 1-second sequence */}
           <motion.div 

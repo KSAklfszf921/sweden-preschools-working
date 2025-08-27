@@ -13,6 +13,7 @@ import { StarRating } from '@/components/ui/star-rating';
 import { DirectionsPanel } from '@/components/directions/DirectionsPanel';
 import { StreetViewPanel } from '@/components/streetview/StreetViewPanel';
 import { ClickOutside } from '@/components/ui/click-outside';
+import { DetailedRatingsDisplay } from '@/components/enhanced/DetailedRatingsDisplay';
 interface GoogleData {
   google_rating?: number;
   google_reviews_count?: number;
@@ -347,65 +348,12 @@ export const PreschoolDetails: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="reviews" className="p-6">
-                {isLoadingGoogle ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Laddar recensioner...</p>
-                  </div>
-                ) : googleData?.reviews && (Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).length > 0 ? (
-                  <div className="space-y-4">
-                    {/* Average rating summary */}
-                    {googleData.google_rating && (
-                      <Card className="p-4 bg-yellow-50">
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-1 mb-2">
-                            {renderStarRating(googleData.google_rating, googleData.google_reviews_count)}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Baserat på {googleData.google_reviews_count || 0} recensioner
-                          </p>
-                        </div>
-                      </Card>
-                    )}
-                    
-                    {/* Individual reviews */}
-                    {(Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).map((review: any, index: number) => (
-                      <Card key={index} className="p-4">
-                        <div className="flex items-start gap-3">
-                          <User className="h-8 w-8 text-muted-foreground" />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-medium">{review.author_name}</span>
-                              <div className="flex items-center gap-1">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star 
-                                    key={i} 
-                                    className={`h-3 w-3 ${
-                                      i < review.rating 
-                                        ? 'text-yellow-400 fill-yellow-400' 
-                                        : 'text-muted-foreground'
-                                    }`} 
-                                  />
-                                ))}
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(review.time * 1000).toLocaleDateString('sv-SE')}
-                              </span>
-                            </div>
-                            <p className="text-sm text-foreground">{review.text}</p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Inga recensioner tillgängliga</p>
-                  </div>
-                )}
+                <DetailedRatingsDisplay preschool={selectedPreschool} />
               </TabsContent>
 
-              <TabsContent value="contact" className="p-6">
+              <TabsContent value="contact" className="p-6 space-y-4">
+                <DistanceRoutingPanel preschool={selectedPreschool} />
+                
                 <div className="space-y-4">
                   {googleData?.contact_phone && <Card className="p-4">
                       <div className="flex items-center gap-3">
