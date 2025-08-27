@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SimpleGoogleMap } from '@/components/SimpleGoogleMap';
+import { SimpleMapbox } from '@/components/SimpleMapbox';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -142,7 +142,7 @@ const SimplifiedIndex = () => {
             animate={{ opacity: showLanding ? 0 : 1 }}
             transition={{ delay: 0.5, duration: 0.4 }}
           >
-            <SimpleGoogleMap className="w-full h-full" />
+            <SimpleMapbox className="w-full h-full" />
           </motion.div>
 
           {/* Mobile sök-knapp */}

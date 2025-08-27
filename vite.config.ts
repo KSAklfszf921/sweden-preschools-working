@@ -30,7 +30,10 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks(id) {
           // Critical performance optimization: split heavy libraries
-          // REMOVED MAPBOX - using lightweight Google Maps instead
+          // Mapbox GL JS v2.15 - lightweight version from successful projects
+          if (id.includes('mapbox-gl')) {
+            return 'mapbox-simple';
+          }
           
           // Supabase - database client
           if (id.includes('@supabase')) {
