@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ApiRequest {
-  type: 'google_places' | 'google_maps' | 'mapbox' | 'street_view';
+  type: 'google_places' | 'google_maps' | 'street_view';
   endpoint: string;
   params: Record<string, any>;
   cache_duration?: number;
@@ -80,17 +80,6 @@ export class ApiManager {
     });
   }
 
-  /**
-   * Mapbox API requests
-   */
-  static async mapbox(endpoint: string, params: Record<string, any>, cacheDuration = 1800) {
-    return this.request({
-      type: 'mapbox',
-      endpoint,
-      params,
-      cache_duration: cacheDuration
-    });
-  }
 
   /**
    * Street View API requests
