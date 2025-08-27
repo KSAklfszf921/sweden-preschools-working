@@ -98,7 +98,7 @@ const Index = () => {
             duration: 0.5,
             ease: "easeOut"
           }}
-          className="relative z-40 glass-nav border-b border-border/10"
+          className="relative z-40 bg-white border-b border-border/10"
         >
           <div className="container mx-auto px-6 md:px-8 py-4 md:py-6">
             <div className="flex items-center justify-between">
