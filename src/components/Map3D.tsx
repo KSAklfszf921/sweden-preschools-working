@@ -35,12 +35,12 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map focused on all of Sweden
+    // Initialize map focused on all of Sweden with better cluster visibility
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [15.0, 62.0], // Centered on Sweden
-      zoom: 4.8, // Show all of Sweden
+      zoom: 5.2, // Increased zoom to better show clusters
       pitch: 0,
       bearing: 0,
       maxBounds: [
@@ -114,28 +114,35 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       p.latitud >= 55.0 && p.latitud <= 69.1 && 
       p.longitud >= 10.9 && p.longitud <= 24.2
     );
-    console.log(`Valid preschools for map: ${valid.length}/${filteredPreschools.length}`);
+    console.log(`📍 Valid preschools for map: ${valid.length}/${filteredPreschools.length}`);
+    if (valid.length > 0) {
+      console.log(`✅ First preschool: ${valid[0].namn} at [${valid[0].longitud}, ${valid[0].latitud}]`);
+    }
     return valid;
   }, [filteredPreschools]);
 
   // Memoize GeoJSON data
-  const geojsonData = useMemo(() => ({
-    type: 'FeatureCollection' as const,
-    features: validPreschools.map(preschool => ({
-      type: 'Feature' as const,
-      properties: {
-        id: preschool.id,
-        namn: preschool.namn,
-        kommun: preschool.kommun,
-        huvudman: preschool.huvudman,
-        google_rating: preschool.google_rating || 0
-      },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [preschool.longitud, preschool.latitud]
-      }
-    }))
-  }), [validPreschools]);
+  const geojsonData = useMemo(() => {
+    const geoData = {
+      type: 'FeatureCollection' as const,
+      features: validPreschools.map(preschool => ({
+        type: 'Feature' as const,
+        properties: {
+          id: preschool.id,
+          namn: preschool.namn,
+          kommun: preschool.kommun,
+          huvudman: preschool.huvudman,
+          google_rating: preschool.google_rating || 0
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [preschool.longitud, preschool.latitud]
+        }
+      }))
+    };
+    console.log(`🌍 Generated GeoJSON with ${geoData.features.length} features`);
+    return geoData;
+  }, [validPreschools]);
 
   // Update map data when preschools change - ensure it runs immediately
   useEffect(() => {
@@ -170,16 +177,19 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       map.current.removeSource('preschools');
     }
 
-    if (validPreschools.length === 0) return;
-    console.log(`Adding ${validPreschools.length} preschools to map`);
+    if (validPreschools.length === 0) {
+      console.log('No valid preschools to display on map');
+      return;
+    }
+    console.log(`🗺️ Adding ${validPreschools.length} preschools to map with clustering`);
 
-    // Add source with dynamic clustering that adapts to zoom levels
+    // Add source with optimized clustering for Sweden view
     map.current.addSource('preschools', {
       type: 'geojson',
       data: geojsonData,
       cluster: true,
-      clusterMaxZoom: 14, // Increased for more detailed clustering
-      clusterRadius: 40,  // Reduced for tighter clusters
+      clusterMaxZoom: 12, // Better clustering for country view
+      clusterRadius: 35,  // Optimized radius for Sweden scale
       clusterProperties: {
         // Add cluster properties for better visibility
         'avg_rating': ['+', ['get', 'google_rating']],
@@ -206,9 +216,9 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         'circle-radius': [
           'step',
           ['get', 'point_count'],
-          15,  // Small clusters
-          10, 18,  // Medium clusters
-          50, 25   // Large clusters
+          18,  // Small clusters - made bigger for visibility
+          10, 22,  // Medium clusters 
+          50, 28   // Large clusters
         ],
         'circle-stroke-width': 2,
         'circle-stroke-color': '#ffffff',
