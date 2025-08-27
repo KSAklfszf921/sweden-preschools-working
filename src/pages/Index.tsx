@@ -1,5 +1,5 @@
 import React, { useState, Suspense, lazy, useEffect } from 'react';
-import { Map3D } from '@/components/Map3D';
+import { MinimalMap } from '@/components/MinimalMap';
 import { OptimizedSearchBar } from '@/components/enhanced/OptimizedSearchBar';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
@@ -232,7 +232,7 @@ const Index = () => {
             }}
           >
             <MapTransitions isMapVisible={isMapVisible}>
-              <Map3D className="w-full h-full" />
+              <MinimalMap className="w-full h-full" />
               <StatisticsPopup />
               <LayerControl />
             </MapTransitions>

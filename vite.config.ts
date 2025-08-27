@@ -25,33 +25,35 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
-    // CRITICAL: Split bundle for performance
+    // WORKING bundle optimization
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Large dependencies separated
-          'mapbox': ['mapbox-gl', '@mapbox/mapbox-gl-language'],
-          'supabase': ['@supabase/supabase-js'],
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['lucide-react', 'framer-motion'],
-          'query-vendor': ['@tanstack/react-query'],
-          // Separate heavy UI components
-          'heavy-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-select', 
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast'
-          ]
-        },
-        // Smaller chunk names for faster loading
-        chunkFileNames: '[name]-[hash:6].js',
-        entryFileNames: '[name]-[hash:6].js',
-        assetFileNames: '[name]-[hash:6].[ext]'
-      },
-      // Reduce bundle size
-      external: id => {
-        // Don't bundle Node.js polyfills
-        return id === 'buffer' || id === 'process'
+        manualChunks(id) {
+          // Mapbox gets its own chunk
+          if (id.includes('mapbox-gl')) {
+            return 'mapbox';
+          }
+          // Supabase chunk
+          if (id.includes('@supabase')) {
+            return 'supabase';
+          }
+          // React vendor chunk
+          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            return 'react-vendor';
+          }
+          // UI libraries
+          if (id.includes('@radix-ui') || id.includes('lucide-react') || id.includes('framer-motion')) {
+            return 'ui-vendor';
+          }
+          // Query vendor
+          if (id.includes('@tanstack')) {
+            return 'query-vendor';
+          }
+          // Node modules default
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
       }
     },
     cssCodeSplit: true,
