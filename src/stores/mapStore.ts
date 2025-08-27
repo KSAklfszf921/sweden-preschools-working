@@ -19,6 +19,7 @@ export interface Preschool {
   contact_phone?: string;
   website_url?: string;
   opening_hours?: any;
+  updated_at?: string; // For cache invalidation
 }
 
 export interface SearchFilters {
@@ -60,6 +61,7 @@ export interface LayerVisibility {
   clusters: boolean;
   markers: boolean;
   communeBorders: boolean;
+  optimizedClusters: boolean; // New optimized clustering
 }
 
 export interface CommuneStats {
@@ -109,6 +111,10 @@ interface MapState {
   // Performance
   performanceMode: 'high' | 'medium' | 'low';
   
+  // Clustering optimization
+  clusteringEnabled: boolean;
+  clusteringPerformanceMode: 'optimized' | 'legacy';
+  
   // UI state
   searchBoxCollapsed: boolean;
   listPanelCollapsed: boolean;
@@ -155,6 +161,10 @@ interface MapState {
   // Performance actions
   setPerformanceMode: (mode: 'high' | 'medium' | 'low') => void;
   
+  // Clustering actions
+  setClusteringEnabled: (enabled: boolean) => void;
+  setClusteringPerformanceMode: (mode: 'optimized' | 'legacy') => void;
+  
   applyFilters: () => void;
 }
 
@@ -173,12 +183,13 @@ export const useMapStore = create<MapState>((set, get) => ({
   heatmapIntensity: 1,
   showHeatmap: false,
   
-  // Layer visibility defaults - start with clusters
+  // Layer visibility defaults - start with optimized clusters
   layerVisibility: {
     heatmap: false,
-    clusters: true,
+    clusters: false, // Disable legacy clustering
     markers: true,
     communeBorders: false,
+    optimizedClusters: true, // Enable optimized clustering by default
   },
   
   // List module defaults
@@ -193,6 +204,10 @@ export const useMapStore = create<MapState>((set, get) => ({
   
   // Performance defaults
   performanceMode: 'high',
+  
+  // Clustering defaults
+  clusteringEnabled: true,
+  clusteringPerformanceMode: 'optimized',
   
   // UI state defaults
   searchBoxCollapsed: false,
@@ -488,6 +503,10 @@ export const useMapStore = create<MapState>((set, get) => ({
   
   // Performance actions
   setPerformanceMode: (performanceMode) => set({ performanceMode }),
+  
+  // Clustering actions
+  setClusteringEnabled: (clusteringEnabled) => set({ clusteringEnabled }),
+  setClusteringPerformanceMode: (clusteringPerformanceMode) => set({ clusteringPerformanceMode }),
   
   // UI actions
   setSearchBoxCollapsed: (searchBoxCollapsed) => set({ searchBoxCollapsed }),
