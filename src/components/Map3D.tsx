@@ -5,6 +5,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapStore, Preschool } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
+import { ApiManager } from '@/services/apiManager';
 
 // Mapbox token - will be set via proxy in production
 // For development, we'll use a fallback but prefer proxy
@@ -33,14 +34,18 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map with simpler style for better performance
+    // Initialize map focused on all of Sweden
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [15.5, 62.0],
-      zoom: 6,
-      pitch: 0, // Reduced pitch for better performance
-      bearing: 0
+      center: [15.0, 62.0], // Centered on Sweden
+      zoom: 4.8, // Show all of Sweden
+      pitch: 0,
+      bearing: 0,
+      maxBounds: [
+        [8.0, 55.0], // Southwest coordinates
+        [25.0, 70.0]  // Northeast coordinates  
+      ] // Restrict to Sweden and nearby areas
     });
 
     map.current.on('style.load', () => {
@@ -137,27 +142,46 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     if (validPreschools.length === 0) return;
     console.log(`Adding ${validPreschools.length} preschools to map`);
 
-    // Add source with clustering
+    // Add source with dynamic clustering that adapts to zoom levels
     map.current.addSource('preschools', {
       type: 'geojson',
       data: geojsonData,
       cluster: true,
-      clusterMaxZoom: 12,
-      clusterRadius: 50
+      clusterMaxZoom: 14, // Increased for more detailed clustering
+      clusterRadius: 40,  // Reduced for tighter clusters
+      clusterProperties: {
+        // Add cluster properties for better visibility
+        'avg_rating': ['+', ['get', 'google_rating']],
+        'preschool_count': ['+', ['case', ['!=', ['get', 'google_rating'], null], 1, 0]]
+      }
     });
 
-    // Add cluster circles
+    // Add dynamic cluster circles that scale with zoom and data
     map.current.addLayer({
       id: 'preschools-clusters',
       type: 'circle',
       source: 'preschools',
       filter: ['has', 'point_count'],
       paint: {
-        'circle-color': '#2563eb',
-        'circle-radius': 20,
+        'circle-color': [
+          'step',
+          ['get', 'point_count'],
+          '#10b981', // Green for small clusters (1-10)
+          10,
+          '#f59e0b', // Amber for medium clusters (10-50)
+          50,
+          '#ef4444'  // Red for large clusters (50+)
+        ],
+        'circle-radius': [
+          'step',
+          ['get', 'point_count'],
+          15,  // Small clusters
+          10, 18,  // Medium clusters
+          50, 25   // Large clusters
+        ],
         'circle-stroke-width': 2,
         'circle-stroke-color': '#ffffff',
-        'circle-opacity': 0.8
+        'circle-opacity': 0.85
       }
     });
 
@@ -177,23 +201,41 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       }
     });
 
-    // Add individual markers
+    // Add dynamic individual markers that adapt to zoom level
     map.current.addLayer({
       id: 'preschools-unclustered',
       type: 'circle',
       source: 'preschools',
       filter: ['!', ['has', 'point_count']],
       paint: {
-        'circle-color': '#10b981',
-        'circle-radius': 8,
-        'circle-stroke-width': 2,
+        'circle-color': [
+          'case',
+          ['>', ['get', 'google_rating'], 4.0], '#10b981', // High rating - green
+          ['>', ['get', 'google_rating'], 3.0], '#f59e0b', // Medium rating - amber
+          ['==', ['get', 'google_rating'], 0], '#6b7280',  // No rating - gray
+          '#ef4444'  // Low rating - red
+        ],
+        'circle-radius': [
+          'interpolate',
+          ['exponential', 1.5],
+          ['zoom'],
+          10, 6,   // At zoom 10, radius 6
+          15, 10   // At zoom 15, radius 10
+        ],
+        'circle-stroke-width': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 1,   // At zoom 10, stroke 1
+          15, 2    // At zoom 15, stroke 2
+        ],
         'circle-stroke-color': '#ffffff',
-        'circle-opacity': 0.8
+        'circle-opacity': 0.9
       }
     });
 
-    // Simple click handler for markers
-    map.current.on('click', 'preschools-unclustered', (e) => {
+    // Enhanced click handler for markers with automatic enrichment
+    map.current.on('click', 'preschools-unclustered', async (e) => {
       if (e.features && e.features[0]) {
         const feature = e.features[0];
         const preschoolId = feature.properties?.id;
@@ -201,6 +243,19 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         if (preschool) {
           setPopupPreschool(preschool);
           setShowPopup(true);
+          
+          // Enrich preschool data in background if not already done
+          if (preschool.latitud && preschool.longitud && !preschool.google_rating) {
+            console.log(`🔄 Auto-enriching preschool: ${preschool.namn}`);
+            ApiManager.enrichPreschool(
+              preschool.id,
+              preschool.latitud,
+              preschool.longitud,
+              preschool.adress || '',
+              preschool.namn,
+              1 // High priority for user-clicked items
+            );
+          }
         }
       }
     });
