@@ -13,13 +13,13 @@ export const usePreschools = () => {
   const { setPreschools, setLoading } = useMapStore();
   const { startBackgroundEnrichment } = useBackgroundGoogleEnrichment();
   
-  // Use optimized preschool loading with smart caching
-  const optimizedHook = useOptimizedPreschools({
-    enableCaching: true,
-    batchSize: 500,
-    maxRetries: 3,
-    prefetchNearby: true
-  });
+  // Use optimized preschool loading with smart caching - but don't double-load
+  // const optimizedHook = useOptimizedPreschools({
+  //   enableCaching: true,
+  //   batchSize: 500,
+  //   maxRetries: 3,
+  //   prefetchNearby: true
+  // });
   
   // Enable real-time updates
   useRealTimeUpdates();
@@ -29,6 +29,18 @@ export const usePreschools = () => {
       setIsLoading(true);
       setLoading(true);
       setError(null);
+
+      // 🚀 Smart caching check first
+      const cacheKey = cacheKeys.preschools();
+      const cachedData = dataCache.get<Preschool[]>(cacheKey);
+      
+      if (cachedData) {
+        console.log('🚀 Loading preschools from cache - performance optimized!');
+        setPreschools(cachedData);
+        setIsLoading(false);
+        setLoading(false);
+        return;
+      }
 
       // Fetch ALL preschools with correct column casing
       const { data: preschoolsData, error: preschoolsError } = await supabase
@@ -57,8 +69,10 @@ export const usePreschools = () => {
 
       if (preschoolsError) throw preschoolsError;
 
-      // Transform preschools - keep NULL coordinates as null, don't convert to 0
-      const transformedPreschools: Preschool[] = (preschoolsData || []).map(preschool => ({
+      // 🚀 Transform preschools with batch processing for better performance
+      const transformedPreschools: Preschool[] = await performanceOptimizer.batchProcess(
+        preschoolsData || [],
+        (preschool: any) => ({
         id: preschool.id,
         namn: preschool.Namn,
         kommun: preschool.Kommun,
@@ -77,7 +91,10 @@ export const usePreschools = () => {
         contact_phone: preschool.preschool_google_data?.[0]?.contact_phone,
         website_url: preschool.preschool_google_data?.[0]?.website_url,
         opening_hours: preschool.preschool_google_data?.[0]?.opening_hours,
-      }));
+        }),
+        500, // Process 500 at a time
+        10   // 10ms delay between batches
+      );
 
       // Find preschools that actually need geocoding (NULL or 0 coordinates)
       const missingCoords = transformedPreschools.filter(p => 
@@ -107,10 +124,13 @@ export const usePreschools = () => {
         });
       }
 
+      // 🚀 Cache the processed data for next time
+      dataCache.set(cacheKey, transformedPreschools, 10 * 60 * 1000); // 10 minutes cache
+
       // Set preschools in store - this will trigger map updates immediately
       console.log(`🗺️ Setting ${transformedPreschools.length} preschools in store for map display`);
       setPreschools(transformedPreschools);
-      console.log(`✅ Successfully loaded and displayed ${transformedPreschools.length} preschools on map`);
+      console.log(`✅ Successfully loaded and displayed ${transformedPreschools.length} preschools on map with smart caching!`);
 
       // Start discrete background Google data enrichment
       startBackgroundEnrichment();
@@ -130,18 +150,9 @@ export const usePreschools = () => {
     fetchPreschools();
   }, []);
 
-  // Combine legacy and optimized functionality
-  const combinedIsLoading = isLoading || optimizedHook.isLoading;
-  const combinedError = error || optimizedHook.error;
-
   return {
-    isLoading: combinedIsLoading,
-    error: combinedError,
-    refetch: fetchPreschools,
-    // Optimized features
-    loadingStats: optimizedHook.loadingStats,
-    refreshData: optimizedHook.refreshData,
-    getStatsSummary: optimizedHook.getStatsSummary,
-    prefetchNearbyData: optimizedHook.prefetchNearbyData
+    isLoading,
+    error,
+    refetch: fetchPreschools
   };
 };

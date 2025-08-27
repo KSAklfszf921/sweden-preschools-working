@@ -54,34 +54,33 @@ export const useOptimizedPreschools = (options: UseOptimizedPreschoolsOptions = 
       const data = await performanceOptimizer.dedupedRequest(
         'load-preschools',
         async () => {
-          const { createClient } = await import('@supabase/supabase-js');
-          
-          const supabase = createClient(
-            'https://zfeqsdtddvelapbrwlol.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZXFzZHRkZHZlbGFwYnJ3bG9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI2MzYyNzksImV4cCI6MjA0ODIxMjI3OX0.vSyRvPaAeKqJBRp3wJ5fgNWYFVOXtZ6hhmH1c5ihZBY'
-          );
+          const { supabase } = await import('@/integrations/supabase/client');
 
-          // Optimized query - select only essential fields initially
+          // Optimized query - use the correct table and column names
           const { data, error, count } = await supabase
-            .from('forskoleregister')
+            .from('Förskolor')
             .select(`
               id,
-              namn,
-              kommun,
-              adress,
-              latitud,
-              longitud,
-              antal_barn,
-              huvudman,
-              personaltäthet,
-              andel_med_förskollärarexamen,
-              antal_barngrupper,
-              google_rating,
-              google_reviews_count,
-              contact_phone,
-              website_url
+              "Namn",
+              "Kommun", 
+              "Adress",
+              "Latitud",
+              "Longitud",
+              "Antal barn",
+              "Huvudman",
+              "Personaltäthet",
+              "Andel med förskollärarexamen",
+              "Antal barngrupper",
+              preschool_google_data (
+                google_rating,
+                google_reviews_count,
+                reviews,
+                contact_phone,
+                website_url,
+                opening_hours
+              )
             `, { count: 'exact' })
-            .order('namn');
+            .order('"Namn"');
 
           if (error) throw error;
 
@@ -95,18 +94,28 @@ export const useOptimizedPreschools = (options: UseOptimizedPreschoolsOptions = 
         }
       );
 
-      // Process data in batches for better performance
+      // Process data in batches for better performance - transform to correct format
       const processedData = await performanceOptimizer.batchProcess(
         data,
         (preschool: any) => ({
-          ...preschool,
-          // Ensure consistent data types
-          latitud: preschool.latitud ? parseFloat(preschool.latitud) : null,
-          longitud: preschool.longitud ? parseFloat(preschool.longitud) : null,
-          antal_barn: preschool.antal_barn ? parseInt(preschool.antal_barn) : null,
-          personaltäthet: preschool.personaltäthet ? parseFloat(preschool.personaltäthet) : null,
-          andel_med_förskollärarexamen: preschool.andel_med_förskollärarexamen ? parseFloat(preschool.andel_med_förskollärarexamen) : null,
-          google_rating: preschool.google_rating ? parseFloat(preschool.google_rating) : null
+          id: preschool.id,
+          namn: preschool.Namn,
+          kommun: preschool.Kommun,
+          adress: preschool.Adress || '',
+          // Keep NULL coordinates as null instead of converting to 0
+          latitud: preschool.Latitud !== null ? preschool.Latitud : null,
+          longitud: preschool.Longitud !== null ? preschool.Longitud : null,
+          antal_barn: preschool["Antal barn"],
+          huvudman: preschool.Huvudman,
+          personaltäthet: preschool.Personaltäthet,
+          andel_med_förskollärarexamen: preschool["Andel med förskollärarexamen"],
+          antal_barngrupper: preschool["Antal barngrupper"],
+          google_rating: preschool.preschool_google_data?.[0]?.google_rating,
+          google_reviews_count: preschool.preschool_google_data?.[0]?.google_reviews_count,
+          google_reviews: preschool.preschool_google_data?.[0]?.reviews,
+          contact_phone: preschool.preschool_google_data?.[0]?.contact_phone,
+          website_url: preschool.preschool_google_data?.[0]?.website_url,
+          opening_hours: preschool.preschool_google_data?.[0]?.opening_hours,
         }),
         batchSize,
         5 // Small delay to prevent UI blocking
@@ -162,24 +171,26 @@ export const useOptimizedPreschools = (options: UseOptimizedPreschoolsOptions = 
       if (!cached) {
         // Preload nearby preschools in background
         performanceOptimizer.preloadCriticalData(async () => {
-          const { createClient } = await import('@supabase/supabase-js');
-          
-          const supabase = createClient(
-            'https://zfeqsdtddvelapbrwlol.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZXFzZHRkZHZlbGFwYnJ3bG9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI2MzYyNzksImV4cCI6MjA0ODIxMjI3OX0.vSyRvPaAeKqJBRp3wJ5fgNWYFVOXtZ6hhmH1c5ihZBY'
-          );
+          const { supabase } = await import('@/integrations/supabase/client');
 
           // Simple bounding box for nearby search
           const radius = 0.1; // ~10km
           const { data } = await supabase
-            .from('forskoleregister')
-            .select('id, namn, kommun, latitud, longitud, google_rating')
-            .gte('latitud', userLocation.lat - radius)
-            .lte('latitud', userLocation.lat + radius)
-            .gte('longitud', userLocation.lng - radius)
-            .lte('longitud', userLocation.lng + radius)
-            .not('latitud', 'is', null)
-            .not('longitud', 'is', null);
+            .from('Förskolor')
+            .select(`
+              id, 
+              "Namn", 
+              "Kommun", 
+              "Latitud", 
+              "Longitud",
+              preschool_google_data (google_rating)
+            `)
+            .gte('"Latitud"', userLocation.lat - radius)
+            .lte('"Latitud"', userLocation.lat + radius)
+            .gte('"Longitud"', userLocation.lng - radius)
+            .lte('"Longitud"', userLocation.lng + radius)
+            .not('"Latitud"', 'is', null)
+            .not('"Longitud"', 'is', null);
 
           if (data) {
             dataCache.set(nearbyKey, data, 5 * 60 * 1000); // 5 minutes
