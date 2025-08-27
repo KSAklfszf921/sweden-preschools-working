@@ -341,7 +341,7 @@ export const EnhancedHybridSearchBar: React.FC<EnhancedHybridSearchBarProps> = (
       <motion.div 
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className={`absolute left-4 top-4 z-30 ${className}`}
+        className={`absolute left-4 top-4 z-25 ${className}`}
       >
         <Card className="glass-search border-0 shadow-lg card-hover backdrop-blur-lg bg-white/80">
           <div className="p-3">
@@ -393,7 +393,7 @@ export const EnhancedHybridSearchBar: React.FC<EnhancedHybridSearchBarProps> = (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`absolute left-4 top-4 z-30 w-96 ${className}`}
+      className={`absolute left-4 top-4 z-25 w-96 max-w-[calc(100vw-400px)] ${className}`}
       layout
       transition={{ layout: { duration: 0.3, ease: "easeInOut" } }}
     >

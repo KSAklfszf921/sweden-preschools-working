@@ -192,7 +192,7 @@ const Index = () => {
                 duration: 0.3, // Snabbare
                 ease: "easeOut"
               }}
-              className="absolute left-6 top-6 z-30"
+              className="absolute left-4 top-4 z-25"
             >
               <ErrorBoundary>
                 <LoadingBoundary>
@@ -202,7 +202,7 @@ const Index = () => {
             </motion.div>
           )}
 
-          {/* Performance Critical List Panel - Snabbare */}
+          {/* Performance Critical List Panel - Responsiv placering */}
           <motion.div 
             initial={{ opacity: 0, x: 20, scale: 0.95 }} 
             animate={{ opacity: showLanding ? 0 : 1, x: 0, scale: 1 }} 
@@ -211,6 +211,7 @@ const Index = () => {
               duration: 0.3, // Snabbare
               ease: "easeOut"
             }}
+            className="hidden lg:block"
           >
             <ErrorBoundary>
               <LoadingBoundary>
@@ -264,6 +265,25 @@ const Index = () => {
           {/* Mobile Navigation */}
           {isMobile && <MobileNavigation />}
           
+          {/* Mobile List Button */}
+          {isMobile && (
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: showLanding ? 0 : 1, y: 0 }} 
+              transition={{ delay: 0.3, duration: 0.3 }}
+              className="fixed bottom-20 right-4 z-40 md:hidden"
+            >
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="glass-effect hover-glow-subtle border-0 p-3 rounded-full shadow-lg"
+                onClick={() => {/* Toggle mobile list */}}
+              >
+                <MapPin className="w-5 h-5" />
+              </Button>
+            </motion.div>
+          )}
+
           {/* Mobile Statistics Button */}
           {isMobile && (
             <motion.div 

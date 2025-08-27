@@ -419,7 +419,7 @@ export const PerformanceCriticalList: React.FC<PreschoolListProps> = ({ classNam
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`absolute right-4 top-4 z-30 w-80 max-h-[calc(100vh-2rem)] ${className}`}
+      className={`absolute right-4 top-4 z-20 w-80 max-h-[calc(100vh-2rem)] ${className}`}
     >
       <Card className="glass-card border-0 shadow-lg h-full flex flex-col">
         {/* Enhanced Header */}
