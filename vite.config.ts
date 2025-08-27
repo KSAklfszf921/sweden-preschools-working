@@ -25,15 +25,33 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
-    // Optimize for faster deployments
+    // CRITICAL: Split bundle for performance
     rollupOptions: {
       output: {
         manualChunks: {
-          'mapbox': ['mapbox-gl'],
+          // Large dependencies separated
+          'mapbox': ['mapbox-gl', '@mapbox/mapbox-gl-language'],
           'supabase': ['@supabase/supabase-js'],
-          'react-vendor': ['react', 'react-dom'],
-          'ui-vendor': ['lucide-react', 'framer-motion']
-        }
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['lucide-react', 'framer-motion'],
+          'query-vendor': ['@tanstack/react-query'],
+          // Separate heavy UI components
+          'heavy-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-select', 
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast'
+          ]
+        },
+        // Smaller chunk names for faster loading
+        chunkFileNames: '[name]-[hash:6].js',
+        entryFileNames: '[name]-[hash:6].js',
+        assetFileNames: '[name]-[hash:6].[ext]'
+      },
+      // Reduce bundle size
+      external: id => {
+        // Don't bundle Node.js polyfills
+        return id === 'buffer' || id === 'process'
       }
     },
     cssCodeSplit: true,

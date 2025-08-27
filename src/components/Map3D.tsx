@@ -1,14 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapStore, Preschool } from '@/stores/mapStore';
-import { motion, AnimatePresence } from 'framer-motion';
-import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
-import { useMapViewportSync } from '@/hooks/useMapViewportSync';
 import { useOptimizedClustering } from '@/hooks/useOptimizedClustering';
-import { initClusteringCache } from '@/utils/clusteringCacheManager';
-import { Loader2, TrendingUp, Database, Clock, MapPin } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
 
 // Mapbox token
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoic2tvZ3N0YWRpc2FrIiwiYSI6ImNtY3BhaXRpMjA0ZGcycHBqNHM4dmlwOW0ifQ.KKHGGPnrZVjNjDdITF-_bw';
