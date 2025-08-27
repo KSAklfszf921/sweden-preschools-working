@@ -178,4 +178,4 @@ Detta projekt är licensierat under MIT License - se [LICENSE](LICENSE) filen f�
 
 Utvecklat med ❤️ för svenska föräldrar och förskolor.
 
-*Deployment test - GitHub Actions fix*
+*Enhanced landing animation deployed - Aug 2025*
