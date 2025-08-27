@@ -162,8 +162,8 @@ export const useMapStore = create<MapState>((set, get) => ({
   selectedPreschool: null,
   searchFilters: {},
   isLoading: false,
-  mapCenter: [15.0, 62.0], // Center of Sweden  
-  mapZoom: 5.2, // Start with better cluster view
+  mapCenter: [15.2, 62.4], // Optimized center over all of Sweden  
+  mapZoom: 4.9, // Perfect zoom to show all of Sweden with visible clusters
   showClusters: true, // Start with clusters visible
   
   // Heatmap defaults

@@ -6,6 +6,7 @@ import { useMapStore, Preschool } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
 import { ApiManager } from '@/services/apiManager';
+import { clusterCache, type ClusterCacheItem } from '@/utils/clusterCache';
 
 // Mapbox token - will be set via proxy in production
 // For development, we'll use a fallback but prefer proxy
@@ -36,16 +37,16 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map focused on all of Sweden with better cluster visibility
+    // Initialize map perfectly centered over all of Sweden
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [15.0, 62.0], // Centered on Sweden
-      zoom: 5.2, // Increased zoom to better show clusters
+      center: [15.2, 62.4], // Optimized center for Sweden's geographic center
+      zoom: 4.9, // Perfect zoom to show all of Sweden with clusters visible
       pitch: 0,
       bearing: 0,
       maxBounds: [
-        [8.0, 55.0], // Southwest coordinates
+        [7.0, 55.0], // Southwest coordinates (expanded)
         [25.0, 70.0]  // Northeast coordinates  
       ] // Restrict to Sweden and nearby areas
     });
@@ -54,6 +55,20 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       if (!map.current) return;
       console.log('🗺️ Mapbox style loaded, map is ready');
       setIsLoading(false);
+      
+      // Show cached clusters immediately for instant display
+      const currentZoom = map.current.getZoom();
+      let cachedClusters = clusterCache.getClusterState(currentZoom);
+      
+      if (!cachedClusters) {
+        // Use pre-calculated Swedish cluster approximation
+        console.log('🏃‍♂️ No cache found, using Swedish cluster approximation for instant display');
+        const approximation = clusterCache.generateSwedishClusterApproximation();
+        addCachedClustersToMap(approximation);
+      } else {
+        console.log('⚡ Using cached clusters for instant display');
+        addCachedClustersToMap(cachedClusters.clusters);
+      }
       
       // Initial viewport update after map loads
       setTimeout(() => {
@@ -111,12 +126,126 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
           west: bounds.getWest()
         });
         
+        // Save clusters at new zoom level to cache for instant future display
+        setTimeout(() => {
+          if (map.current && map.current.getLayer('preschools-clusters')) {
+            const features = map.current.queryRenderedFeatures({ layers: ['preschools-clusters'] });
+            if (features.length > 0) {
+              const clusters: ClusterCacheItem[] = features.map(feature => ({
+                center: (feature.geometry as any).coordinates as [number, number],
+                count: feature.properties!.point_count,
+                bounds: {
+                  north: (feature.geometry as any).coordinates[1] + 0.5,
+                  south: (feature.geometry as any).coordinates[1] - 0.5,
+                  east: (feature.geometry as any).coordinates[0] + 0.5,
+                  west: (feature.geometry as any).coordinates[0] - 0.5
+                },
+                averageRating: feature.properties!.avg_rating || 4.0,
+                totalChildren: feature.properties!.total_children || 0,
+                timestamp: Date.now()
+              }));
+              
+              clusterCache.saveClusterState(zoom, clusters);
+              console.log(`💾 Cached ${clusters.length} clusters for zoom ${zoom.toFixed(1)}`);
+            }
+          }
+        }, 500); // Small delay to ensure clusters are rendered
+        
         console.log(`🗺️ Map moved - updated visible preschools for viewport`);
       }, 300); // Increased debounce for better performance
     });
     return () => {
       map.current?.remove();
     };
+  }, []);
+
+  // Function to add cached clusters for immediate display
+  const addCachedClustersToMap = useCallback((clusters: ClusterCacheItem[]) => {
+    if (!map.current || !map.current.isStyleLoaded()) return;
+
+    // Remove existing cached layers
+    if (map.current.getLayer('cached-clusters')) {
+      map.current.removeLayer('cached-clusters');
+    }
+    if (map.current.getLayer('cached-cluster-count')) {
+      map.current.removeLayer('cached-cluster-count');
+    }
+    if (map.current.getSource('cached-clusters')) {
+      map.current.removeSource('cached-clusters');
+    }
+
+    // Convert cluster cache to GeoJSON
+    const cachedGeoJSON = {
+      type: 'FeatureCollection' as const,
+      features: clusters.map((cluster, index) => ({
+        type: 'Feature' as const,
+        id: index,
+        properties: {
+          cluster_id: index,
+          point_count: cluster.count,
+          point_count_abbreviated: cluster.count > 1000 ? `${(cluster.count/1000).toFixed(1)}k` : cluster.count.toString()
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: cluster.center
+        }
+      }))
+    };
+
+    // Add cached cluster source
+    map.current.addSource('cached-clusters', {
+      type: 'geojson',
+      data: cachedGeoJSON
+    });
+
+    // Add cached cluster circles
+    map.current.addLayer({
+      id: 'cached-clusters',
+      type: 'circle',
+      source: 'cached-clusters',
+      paint: {
+        'circle-color': [
+          'interpolate',
+          ['linear'],
+          ['get', 'point_count'],
+          1, '#34d399',
+          25, '#10b981',
+          100, '#f59e0b',
+          500, '#f97316',
+          1000, '#dc2626'
+        ],
+        'circle-radius': [
+          'interpolate',
+          ['exponential', 1.2],
+          ['get', 'point_count'],
+          1, 20,
+          25, 28,
+          100, 36,
+          500, 44,
+          1000, 52
+        ],
+        'circle-stroke-width': 3,
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.8
+      }
+    });
+
+    // Add cached cluster labels
+    map.current.addLayer({
+      id: 'cached-cluster-count',
+      type: 'symbol',
+      source: 'cached-clusters',
+      layout: {
+        'text-field': '{point_count_abbreviated}',
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+        'text-size': 16
+      },
+      paint: {
+        'text-color': '#ffffff'
+      }
+    });
+
+    console.log(`⚡ Added ${clusters.length} cached clusters for immediate display`);
   }, []);
 
   // Memoize valid preschools to avoid recalculation
@@ -189,7 +318,20 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     function addPreschoolsToMap() {
       if (!map.current) return;
     
-    // Remove existing layers
+    // Remove existing cached cluster layers when real data loads
+    const cachedLayersToRemove = ['cached-clusters', 'cached-cluster-count'];
+    cachedLayersToRemove.forEach(layerId => {
+      if (map.current?.getLayer(layerId)) {
+        map.current.removeLayer(layerId);
+        console.log(`🗑️ Removed cached layer: ${layerId}`);
+      }
+    });
+    if (map.current?.getSource('cached-clusters')) {
+      map.current.removeSource('cached-clusters');
+      console.log('🗑️ Removed cached clusters source');
+    }
+    
+    // Remove existing preschool layers
     const layersToRemove = ['preschools-clusters', 'preschools-cluster-count', 'preschools-unclustered'];
     layersToRemove.forEach(layerId => {
       if (map.current?.getLayer(layerId)) {
@@ -204,19 +346,20 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       console.log('No valid preschools to display on map');
       return;
     }
-    console.log(`🗺️ Adding ${validPreschools.length} preschools to map with clustering`);
+    console.log(`🗺️ Replacing cached clusters with ${validPreschools.length} real preschools`);
 
-    // Add source with optimized clustering for Sweden view
+    // Add source with optimized clustering for full Sweden display
     map.current.addSource('preschools', {
       type: 'geojson',
       data: geojsonData,
       cluster: true,
-      clusterMaxZoom: 12, // Better clustering for country view
-      clusterRadius: 35,  // Optimized radius for Sweden scale
+      clusterMaxZoom: 13, // Allow clustering up to detailed zoom levels
+      clusterRadius: 45,  // Larger radius for better country-scale clustering
       clusterProperties: {
-        // Add cluster properties for better visibility
-        'avg_rating': ['+', ['get', 'google_rating']],
-        'preschool_count': ['+', ['case', ['!=', ['get', 'google_rating'], null], 1, 0]]
+        // Add cluster properties for enhanced display
+        'avg_rating': ['/', ['+', ['get', 'google_rating']], ['get', 'point_count']],
+        'total_children': ['+', ['get', 'antal_barn']],
+        'preschool_count': ['get', 'point_count']
       }
     });
 
@@ -228,20 +371,24 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       filter: ['has', 'point_count'],
       paint: {
         'circle-color': [
-          'step',
+          'interpolate',
+          ['linear'],
           ['get', 'point_count'],
-          '#10b981', // Green for small clusters (1-10)
-          10,
-          '#f59e0b', // Amber for medium clusters (10-50)
-          50,
-          '#ef4444'  // Red for large clusters (50+)
+          1, '#34d399',   // Light green for small clusters
+          25, '#10b981',  // Green for small-medium clusters  
+          100, '#f59e0b', // Amber for medium clusters
+          500, '#f97316', // Orange for large clusters
+          1000, '#dc2626' // Red for very large clusters
         ],
         'circle-radius': [
-          'step',
+          'interpolate',
+          ['exponential', 1.2],
           ['get', 'point_count'],
-          18,  // Small clusters - made bigger for visibility
-          10, 22,  // Medium clusters 
-          50, 28   // Large clusters
+          1, 20,    // Small clusters - very visible at country scale
+          25, 28,   // Small-medium clusters
+          100, 36,  // Medium clusters
+          500, 44,  // Large clusters  
+          1000, 52 // Very large clusters
         ],
         'circle-stroke-width': 2,
         'circle-stroke-color': '#ffffff',
@@ -339,6 +486,38 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         });
       });
     });
+
+    // Save current cluster state to cache for future instant display
+    setTimeout(() => {
+      saveCurrentClustersToCache();
+    }, 1000);
+    }
+    
+    // Function to save current visible clusters to cache
+    function saveCurrentClustersToCache() {
+      if (!map.current) return;
+      
+      const currentZoom = map.current.getZoom();
+      const features = map.current.queryRenderedFeatures({ layers: ['preschools-clusters'] });
+      
+      if (features.length > 0) {
+        const clusters: ClusterCacheItem[] = features.map(feature => ({
+          center: (feature.geometry as any).coordinates as [number, number],
+          count: feature.properties!.point_count,
+          bounds: {
+            north: (feature.geometry as any).coordinates[1] + 0.5,
+            south: (feature.geometry as any).coordinates[1] - 0.5,
+            east: (feature.geometry as any).coordinates[0] + 0.5,
+            west: (feature.geometry as any).coordinates[0] - 0.5
+          },
+          averageRating: feature.properties!.avg_rating || 4.0,
+          totalChildren: feature.properties!.total_children || 0,
+          timestamp: Date.now()
+        }));
+        
+        clusterCache.saveClusterState(currentZoom, clusters);
+        console.log(`💾 Saved ${clusters.length} real clusters to cache for zoom ${currentZoom.toFixed(1)}`);
+      }
     }
   }, [filteredPreschools, geojsonData, lastUpdated]);
 
