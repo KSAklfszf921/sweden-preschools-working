@@ -1,5 +1,5 @@
 import React, { useState, Suspense, lazy, useEffect } from 'react';
-import { SimpleGoogleMap } from '@/components/SimpleGoogleMap';
+import { LeafletMap } from '@/components/LeafletMap';
 import { OptimizedSearchBar } from '@/components/enhanced/OptimizedSearchBar';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
@@ -239,7 +239,11 @@ const Index = () => {
               ease: "easeOut"
             }}
           >
-            <SimpleGoogleMap className="w-full h-full" />
+            <MapTransitions isMapVisible={isMapVisible}>
+              <LeafletMap className="w-full h-full" />
+              <StatisticsPopup />
+              <LayerControl />
+            </MapTransitions>
           </motion.div>
           
           {/* Toggle button for collapsed search box */}
