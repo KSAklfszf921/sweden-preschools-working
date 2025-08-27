@@ -17,7 +17,7 @@ const AnimatedSwedenMap: React.FC<{ progress: number }> = ({ progress }) => {
       className="mb-8"
     >
       <svg viewBox="0 0 120 160" className="w-16 h-24 mx-auto">
-        {/* Sweden outline */}
+        {/* Sweden outline with exponential drawing animation */}
         <motion.path
           d="M60,15 L75,25 L85,40 L90,55 L95,75 L90,95 L85,110 L80,125 L70,140 L60,145 L50,140 L40,125 L35,110 L30,95 L25,75 L30,55 L35,40 L45,25 Z"
           fill="none"
@@ -26,7 +26,10 @@ const AnimatedSwedenMap: React.FC<{ progress: number }> = ({ progress }) => {
           strokeDasharray="300"
           initial={{ strokeDashoffset: 300 }}
           animate={{ strokeDashoffset: 300 - (progress * 3) }}
-          transition={{ duration: 0.8 }}
+          transition={{ 
+            duration: 0.1,
+            ease: [0.0, 0.0, 0.2, 1] // Exponential easing to match counter
+          }}
         />
         
         {/* Fill animation */}
@@ -74,15 +77,23 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
 
   const [activeStep, setActiveStep] = useState(0);
 
-  // Continuous counter animation over exactly 2 seconds
+  // Exponential acceleration counter animation over exactly 2 seconds
   useEffect(() => {
     const duration = 2000; // Exactly 2 seconds total
-    const increment = totalPreschools / (duration / 16); // Update every 16ms (60fps)
-    
+    const startTime = Date.now();
     let currentCount = 0;
+    
     const timer = setInterval(() => {
-      currentCount += increment;
-      if (currentCount >= totalPreschools) {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Exponential easing function: starts slow, accelerates exponentially
+      // Using ease-out exponential curve: 1 - 2^(-10 * progress)
+      const exponentialProgress = progress < 1 ? 1 - Math.pow(2, -10 * progress) : 1;
+      
+      currentCount = Math.floor(totalPreschools * exponentialProgress);
+      
+      if (progress >= 1) {
         setCount(totalPreschools);
         clearInterval(timer);
         // Complete animation immediately when reaching full count
@@ -220,7 +231,7 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
             })}
           </div>
 
-          {/* Loading bar */}
+          {/* Loading bar with exponential progress */}
           <div className="w-64 h-2 bg-gray-200 rounded-full mx-auto overflow-hidden mb-6">
             <motion.div
               className="h-full rounded-full"
@@ -232,7 +243,10 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
               }}
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.1, ease: "easeOut" }}
+              transition={{ 
+                duration: 0.1, 
+                ease: [0.0, 0.0, 0.2, 1] // Custom cubic-bezier for exponential feel
+              }}
             />
           </div>
 
