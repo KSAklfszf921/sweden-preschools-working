@@ -25,6 +25,19 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
+    // Optimize for faster deployments
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'mapbox': ['mapbox-gl'],
+          'supabase': ['@supabase/supabase-js'],
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['lucide-react', 'framer-motion']
+        }
+      }
+    },
+    cssCodeSplit: true,
+    assetsInlineLimit: 4096
   },
   // Optimize dependencies for faster loading
   optimizeDeps: {
