@@ -25,6 +25,20 @@ export const PerformanceDashboard: React.FC = () => {
     cacheHitRate: 0
   });
   const [isVisible, setIsVisible] = useState(false);
+  const [showInProduction, setShowInProduction] = useState(false);
+
+  // Enable in production with keyboard shortcut (Ctrl+Shift+P)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+        setShowInProduction(!showInProduction);
+        console.log('🔧 Performance Dashboard toggled:', !showInProduction);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [showInProduction]);
 
   useEffect(() => {
     const updateMetrics = () => {
@@ -76,8 +90,8 @@ export const PerformanceDashboard: React.FC = () => {
 
   const performanceGrade = getPerformanceGrade();
 
-  // Only show in development mode
-  if (process.env.NODE_ENV !== 'development') {
+  // Show in development mode OR when enabled in production
+  if (process.env.NODE_ENV !== 'development' && !showInProduction) {
     return null;
   }
 
@@ -88,6 +102,7 @@ export const PerformanceDashboard: React.FC = () => {
         className="bg-black/80 text-white p-2 rounded-lg hover:bg-black/90 transition-colors"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
+        title="Performance Dashboard (Ctrl+Shift+P to toggle in production)"
       >
         <Activity className="w-4 h-4" />
       </motion.button>
@@ -107,6 +122,11 @@ export const PerformanceDashboard: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <Activity className="w-5 h-5 text-primary" />
                     <h3 className="font-semibold">Prestanda</h3>
+                    {process.env.NODE_ENV !== 'development' && (
+                      <Badge variant="outline" className="text-xs">
+                        PROD
+                      </Badge>
+                    )}
                   </div>
                   <Badge className={performanceGrade.color}>
                     {performanceGrade.grade}
@@ -233,6 +253,15 @@ export const PerformanceDashboard: React.FC = () => {
                     <span>{visiblePreschools.length.toLocaleString()}</span>
                   </div>
                 </div>
+
+                {/* Production mode instructions */}
+                {process.env.NODE_ENV !== 'development' && (
+                  <div className="bg-blue-50 border border-blue-200 p-2 rounded text-xs">
+                    <p className="text-blue-600">
+                      💡 Tryck <kbd className="bg-blue-100 px-1 rounded">Ctrl+Shift+P</kbd> för att togglela denna dashboard
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
           </motion.div>
