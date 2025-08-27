@@ -7,113 +7,153 @@ interface LandingAnimationProps {
   onComplete: () => void;
 }
 
-// 🎯 FÖRBÄTTRING 1: Mer realistisk och detaljerad Sverige-karta med städer
-const AnimatedSwedenMap: React.FC<{ progress: number }> = ({ progress }) => {
-  const majorCities = [
-    { name: 'Stockholm', x: 70, y: 60, delay: 0.5 },
-    { name: 'Göteborg', x: 45, y: 80, delay: 0.7 },
-    { name: 'Malmö', x: 50, y: 135, delay: 0.9 },
-    { name: 'Uppsala', x: 68, y: 50, delay: 1.1 },
-    { name: 'Linköping', x: 62, y: 85, delay: 1.3 }
-  ];
+// 🎯 NYTT: Animerad Sverige-karta med progressiv gräns-ritning och förskole-markörer
+const AnimatedSwedenMap: React.FC<{ progress: number; loadingPhase: 'border' | 'markers' | 'complete' }> = ({ progress, loadingPhase }) => {
+  
+  // Mer realistisk Sverige-kontur med fler detaljer
+  const swedenPath = "M60,8 C65,6 70,8 75,12 L82,18 C88,25 92,35 95,45 C98,55 102,65 105,75 C108,85 106,95 102,105 C98,115 94,125 88,135 C82,142 75,148 65,152 C58,155 52,154 45,150 C38,145 32,137 28,125 C24,115 22,105 21,95 C20,85 22,75 26,65 C30,55 36,45 42,35 C48,25 55,15 60,8 Z";
+  
+  // Generera slumpmässiga förskole-positioner över Sverige
+  const generatePreschoolMarkers = (count: number) => {
+    const markers = [];
+    for (let i = 0; i < count; i++) {
+      // Generera positioner inom Sveriges gränser (approximation)
+      const x = 25 + Math.random() * 80; // Bredd på Sverige i SVG
+      const y = 8 + Math.random() * 144; // Höjd på Sverige i SVG
+      
+      // Justera för att hålla markers inom landsgränserna
+      let adjustedX = x;
+      let adjustedY = y;
+      
+      // Enkel logik för att hålla markers inom ungefärliga Sveriges gränser
+      if (y < 40) adjustedX = 50 + Math.random() * 30; // Norr - smalare
+      if (y > 120) adjustedX = 35 + Math.random() * 40; // Söder - bredare
+      
+      markers.push({
+        id: i,
+        x: adjustedX,
+        y: adjustedY,
+        delay: Math.random() * 2, // Slumpmässig delay
+        size: 1.5 + Math.random() * 1 // Varierande storlek
+      });
+    }
+    return markers;
+  };
+
+  const [preschoolMarkers] = useState(() => generatePreschoolMarkers(150)); // 150 visuella markörer
+  
+  // Beräkna hur många markörer som ska visas baserat på progress
+  const markersToShow = Math.floor((progress / 100) * preschoolMarkers.length);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8, rotateY: -15 }}
-      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8, ease: "easeOutCubic" }}
       className="mb-8 relative"
-      style={{ perspective: '1000px' }}
     >
-      <svg viewBox="0 0 120 160" className="w-20 h-28 mx-auto drop-shadow-lg">
-        {/* 🎯 FÖRBÄTTRING 2: Mer realistisk Sverige-outline */}
+      <svg viewBox="0 0 130 160" className="w-24 h-32 mx-auto drop-shadow-lg">
+        {/* STEG 1: Animerad gräns-ritning */}
         <motion.path
-          d="M45,20 C50,15 55,12 60,15 L65,18 C75,22 82,35 85,45 C88,55 92,65 95,75 C97,85 94,95 90,105 C87,115 84,125 80,132 C75,138 70,142 60,145 C55,147 50,145 45,140 C40,135 35,125 32,115 C28,105 26,95 25,85 C24,75 26,65 30,55 C33,45 38,35 42,25 C43,22 44,21 45,20 Z"
+          d={swedenPath}
           fill="none"
-          stroke="url(#swedenStroke)"
-          strokeWidth="2.5"
+          stroke="url(#swedenBorderStroke)"
+          strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray="400"
-          initial={{ strokeDashoffset: 400 }}
-          animate={{ strokeDashoffset: 400 - (progress * 4) }}
-          transition={{ 
-            duration: 0.1,
-            ease: [0.0, 0.0, 0.2, 1]
+          strokeDasharray="500"
+          initial={{ strokeDashoffset: 500 }}
+          animate={{ 
+            strokeDashoffset: loadingPhase === 'border' ? 500 - (progress * 5) : 0
           }}
-          filter="url(#glow)"
+          transition={{ 
+            duration: 0.05,
+            ease: "linear"
+          }}
+          filter="url(#borderGlow)"
         />
         
-        {/* 🎯 FÖRBÄTTRING 3: Gradient med mer djup och liv */}
+        {/* STEG 2: Fyll Sverige med subtil bakgrund när gränsen är klar */}
         <motion.path
-          d="M45,20 C50,15 55,12 60,15 L65,18 C75,22 82,35 85,45 C88,55 92,65 95,75 C97,85 94,95 90,105 C87,115 84,125 80,132 C75,138 70,142 60,145 C55,147 50,145 45,140 C40,135 35,125 32,115 C28,105 26,95 25,85 C24,75 26,65 30,55 C33,45 38,35 42,25 C43,22 44,21 45,20 Z"
-          fill="url(#swedenGradient)"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: progress > 30 ? 0.4 : 0, scale: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          filter="url(#innerShadow)"
+          d={swedenPath}
+          fill="url(#swedenFillGradient)"
+          initial={{ opacity: 0 }}
+          animate={{ 
+            opacity: loadingPhase !== 'border' ? 0.15 : 0
+          }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          filter="url(#innerGlow)"
         />
 
-        {/* 🎯 FÖRBÄTTRING 4: Animerade städer som prickar */}
-        {majorCities.map((city, index) => (
-          <motion.g key={city.name}>
+        {/* STEG 3: Förskole-markörer som "ploppar" upp */}
+        {loadingPhase === 'markers' && preschoolMarkers.slice(0, markersToShow).map((marker, index) => (
+          <motion.g key={marker.id}>
+            {/* Huvudmarkör (röd kartnål) */}
             <motion.circle
-              cx={city.x}
-              cy={city.y}
-              r="2.5"
-              fill="hsl(45, 85%, 55%)"
-              initial={{ scale: 0, opacity: 0 }}
+              cx={marker.x}
+              cy={marker.y}
+              r={marker.size}
+              fill="hsl(0, 75%, 55%)"
+              initial={{ 
+                scale: 0, 
+                opacity: 0,
+                y: marker.y + 10 
+              }}
               animate={{ 
-                scale: progress > 50 ? 1 : 0, 
-                opacity: progress > 50 ? 1 : 0 
+                scale: 1, 
+                opacity: 0.8,
+                y: marker.y
               }}
               transition={{ 
-                delay: city.delay,
-                duration: 0.4,
-                ease: "easeOutBack"
+                delay: marker.delay * 0.05,
+                duration: 0.3,
+                ease: "easeOutBack",
+                type: "spring",
+                stiffness: 400
               }}
-              filter="url(#cityGlow)"
+              filter="url(#markerGlow)"
             />
-            {/* Pulserande effekt */}
+            
+            {/* Liten "bounce" ring-effekt när marker visas */}
             <motion.circle
-              cx={city.x}
-              cy={city.y}
+              cx={marker.x}
+              cy={marker.y}
               r="0"
               fill="none"
-              stroke="hsl(45, 75%, 65%)"
-              strokeWidth="1"
+              stroke="hsl(0, 70%, 50%)"
+              strokeWidth="0.5"
               initial={{ r: 0, opacity: 0 }}
               animate={{ 
-                r: progress > 70 ? [0, 6, 0] : 0,
-                opacity: progress > 70 ? [0, 0.6, 0] : 0
+                r: [0, marker.size * 3, 0],
+                opacity: [0, 0.6, 0]
               }}
               transition={{
-                delay: city.delay + 0.5,
-                duration: 2,
-                repeat: Infinity,
+                delay: marker.delay * 0.05 + 0.1,
+                duration: 0.8,
                 ease: "easeOut"
               }}
             />
           </motion.g>
         ))}
-        
+
+        {/* SVG Filters och Gradienter */}
         <defs>
-          {/* 🎯 FÖRBÄTTRING 5: Mer sofistikerade gradienter och effekter */}
-          <linearGradient id="swedenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(85, 60%, 62%)" />
-            <stop offset="25%" stopColor="hsl(80, 55%, 58%)" />
-            <stop offset="50%" stopColor="hsl(75, 50%, 54%)" />
-            <stop offset="75%" stopColor="hsl(70, 45%, 50%)" />
-            <stop offset="100%" stopColor="hsl(65, 40%, 46%)" />
+          {/* Gräns-stroke gradient */}
+          <linearGradient id="swedenBorderStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(200, 70%, 45%)" />
+            <stop offset="50%" stopColor="hsl(220, 75%, 50%)" />
+            <stop offset="100%" stopColor="hsl(240, 80%, 55%)" />
           </linearGradient>
           
-          <linearGradient id="swedenStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(85, 70%, 45%)" />
-            <stop offset="50%" stopColor="hsl(75, 65%, 40%)" />
-            <stop offset="100%" stopColor="hsl(65, 60%, 35%)" />
+          {/* Fyll-gradient för Sverige */}
+          <linearGradient id="swedenFillGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(200, 40%, 70%)" />
+            <stop offset="50%" stopColor="hsl(220, 35%, 75%)" />
+            <stop offset="100%" stopColor="hsl(240, 30%, 80%)" />
           </linearGradient>
 
-          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          {/* Glow-effekt för gränsen */}
+          <filter id="borderGlow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
             <feMerge> 
               <feMergeNode in="coloredBlur"/>
@@ -121,21 +161,52 @@ const AnimatedSwedenMap: React.FC<{ progress: number }> = ({ progress }) => {
             </feMerge>
           </filter>
 
-          <filter id="cityGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+          {/* Glow för markörer */}
+          <filter id="markerGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
             <feMerge> 
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
 
-          <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feOffset dx="1" dy="2"/>
-            <feGaussianBlur stdDeviation="2"/>
-            <feComposite operator="over"/>
+          {/* Inner glow för fyllning */}
+          <filter id="innerGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge> 
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
           </filter>
         </defs>
       </svg>
+      
+      {/* Visuell räknare för markörer med förbättrade animationer */}
+      {loadingPhase === 'markers' && (
+        <motion.div
+          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2"
+          initial={{ opacity: 0, y: 10, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+        >
+          <motion.div 
+            className="text-xs font-semibold text-red-600 bg-white/90 px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm border border-red-100"
+            animate={{ 
+              boxShadow: markersToShow > 75 ? ["0 4px 15px rgba(220,38,38,0.2)", "0 6px 20px rgba(220,38,38,0.3)", "0 4px 15px rgba(220,38,38,0.2)"] : "0 4px 15px rgba(220,38,38,0.2)"
+            }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <motion.span
+              key={markersToShow} // Force re-render när count ändras för smooth counter animation
+              initial={{ opacity: 0.7, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              {Math.floor((markersToShow / 150) * 8739).toLocaleString('sv-SE')} förskolor
+            </motion.span>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };
@@ -260,70 +331,92 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
   const [count, setCount] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
   const [showSparkles, setShowSparkles] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState<'border' | 'markers' | 'complete'>('border');
+  const [borderProgress, setBorderProgress] = useState(0);
+  const [markerProgress, setMarkerProgress] = useState(0);
   const { preschools } = useMapStore();
   
   const totalPreschools = preschools.length > 0 ? preschools.length : 8739;
 
-  // 🎯 FÖRBÄTTRING 9: Mer informativa och engagerande steg
+  // 🎯 UPPDATERAT: Progresssteg för den nya animationen
   const progressSteps = [
     { 
-      label: 'Ansluter', 
-      detail: 'Kopplar upp till databas',
-      icon: Database, 
-      color: 'hsl(85, 55%, 45%)' 
+      label: 'Ritar Sverige', 
+      detail: 'Animerar landsgränser',
+      icon: MapPin, 
+      color: 'hsl(200, 70%, 45%)' 
     },
     { 
-      label: 'Laddar förskolor', 
+      label: 'Hämtar förskolor', 
       detail: `${totalPreschools.toLocaleString('sv-SE')} enheter`,
       icon: Building, 
-      color: 'hsl(75, 50%, 40%)' 
+      color: 'hsl(0, 70%, 55%)' 
     },
     { 
       label: 'Förbereder karta', 
       detail: 'Mapbox 3D-rendering',
-      icon: MapPin, 
-      color: 'hsl(200, 55%, 45%)' 
+      icon: Database, 
+      color: 'hsl(85, 55%, 45%)' 
     },
     { 
-      label: 'Hämtar betyg', 
-      detail: 'Google Places data',
+      label: 'Slutför', 
+      detail: 'Redo att använda',
       icon: Star, 
       color: 'hsl(45, 75%, 50%)' 
     }
   ];
 
-  // 🎯 FÖRBÄTTRING 10: Mer naturlig och engagerande räknare-animation
+  // 🎯 NYTT: Tvåfas-animation - först gränser, sedan markörer
   useEffect(() => {
-    const duration = 2200; // Lite längre för mer dramatisk effekt
+    const borderDuration = 1500; // 1.5s för att rita gränser
+    const markerDuration = 2000; // 2s för marker-animation
     const startTime = Date.now();
     let animationFrame: number;
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
       
-      // 🎯 Förbättrad easing med bounce-effekt
-      let easedProgress;
-      if (progress < 0.7) {
-        // Exponentiell acceleration
-        easedProgress = 1 - Math.pow(2, -10 * (progress / 0.7));
+      if (elapsed < borderDuration) {
+        // FAS 1: Rita gränser
+        const progress = Math.min(elapsed / borderDuration, 1);
+        const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+        setBorderProgress(easedProgress * 100);
+        
+        if (progress >= 1) {
+          setLoadingPhase('markers');
+          setActiveStep(1); // Gå till nästa steg
+        }
       } else {
-        // Bounce-effekt på slutet
-        const bounceProgress = (progress - 0.7) / 0.3;
-        easedProgress = 1 + (Math.sin(bounceProgress * Math.PI * 4) * (1 - bounceProgress) * 0.1);
+        // FAS 2: Visa markörer och räkna upp förskolor
+        const markerElapsed = elapsed - borderDuration;
+        const markerProgressRatio = Math.min(markerElapsed / markerDuration, 1);
+        
+        // Exponentiell easing för marker-uppräkning
+        let easedMarkerProgress;
+        if (markerProgressRatio < 0.8) {
+          easedMarkerProgress = 1 - Math.pow(2, -10 * (markerProgressRatio / 0.8));
+        } else {
+          // Bounce-effekt på slutet
+          const bounceProgress = (markerProgressRatio - 0.8) / 0.2;
+          easedMarkerProgress = 1 + (Math.sin(bounceProgress * Math.PI * 4) * (1 - bounceProgress) * 0.05);
+        }
+        
+        setMarkerProgress(easedMarkerProgress * 100);
+        const newCount = Math.floor(totalPreschools * Math.min(easedMarkerProgress, 1));
+        setCount(newCount);
+        
+        // Sparkles vid 90%
+        if (markerProgressRatio > 0.9 && !showSparkles) {
+          setShowSparkles(true);
+        }
+        
+        if (markerProgressRatio >= 1) {
+          setLoadingPhase('complete');
+          setTimeout(onComplete, 500);
+        }
       }
       
-      const newCount = Math.floor(totalPreschools * Math.min(easedProgress, 1));
-      setCount(newCount);
-      
-      // Sparkles vid 90%
-      if (progress > 0.9 && !showSparkles) {
-        setShowSparkles(true);
-      }
-      
-      if (progress >= 1) {
-        setTimeout(onComplete, 300);
-      } else {
+      if (elapsed < borderDuration + markerDuration) {
         animationFrame = requestAnimationFrame(animate);
       }
     };
@@ -332,23 +425,27 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
     return () => cancelAnimationFrame(animationFrame);
   }, [totalPreschools, onComplete, showSparkles]);
 
-  // 🎯 FÖRBÄTTRING 11: Mer sofistikerad step-progression
+  // 🎯 UPPDATERAT: Step-progression baserat på laddningsfaser
   useEffect(() => {
-    const stepDuration = 550;
-    const stepTimer = setInterval(() => {
-      setActiveStep(prev => {
-        if (prev < progressSteps.length - 1) {
-          return prev + 1;
-        }
-        clearInterval(stepTimer);
-        return prev;
-      });
-    }, stepDuration);
+    const stepTimers: NodeJS.Timeout[] = [];
+    
+    // Steg 0: Ritar Sverige (startar direkt)
+    // Steg 1: Hämtar förskolor (efter 1.5s när border är klar)
+    stepTimers.push(setTimeout(() => setActiveStep(1), 1500));
+    
+    // Steg 2: Förbereder karta (när markörer är halvvägs)
+    stepTimers.push(setTimeout(() => setActiveStep(2), 2500));
+    
+    // Steg 3: Slutför (nära slutet)
+    stepTimers.push(setTimeout(() => setActiveStep(3), 3200));
 
-    return () => clearInterval(stepTimer);
+    return () => stepTimers.forEach(timer => clearTimeout(timer));
   }, []);
 
-  const progress = Math.min((count / totalPreschools) * 100, 100);
+  // Beräkna övergripande progress för progress bar
+  const overallProgress = loadingPhase === 'border' 
+    ? borderProgress * 0.3 // Border-fasen = 30% av total progress
+    : 30 + (markerProgress * 0.7); // Marker-fasen = 70% av total progress
 
   // 🎯 FÖRBÄTTRING 12: Sparkle-partiklar för extra visuell feedback
   const Sparkles: React.FC = () => (
@@ -414,7 +511,10 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
           }}
           className="text-center max-w-lg mx-auto px-6 relative"
         >
-          <AnimatedSwedenMap progress={progress} />
+          <AnimatedSwedenMap 
+            progress={loadingPhase === 'border' ? borderProgress : markerProgress} 
+            loadingPhase={loadingPhase} 
+          />
 
           {/* 🎯 FÖRBÄTTRING 14: Mer expressiv och dynamisk titel */}
           <motion.div
@@ -485,14 +585,14 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
                     hsl(45, 75%, 55%) 100%)`
                 }}
                 initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
+                animate={{ width: `${overallProgress}%` }}
                 transition={{ duration: 0.1, ease: "linear" }}
               >
                 {/* Glowing effect */}
                 <motion.div
                   className="absolute inset-0 bg-white opacity-30"
                   animate={{
-                    x: progress > 10 ? [-100, 400] : -100
+                    x: overallProgress > 10 ? [-100, 400] : -100
                   }}
                   transition={{
                     duration: 1.5,
@@ -510,9 +610,9 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
               <motion.div
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs font-semibold text-gray-700"
                 initial={{ opacity: 0 }}
-                animate={{ opacity: progress > 20 ? 1 : 0 }}
+                animate={{ opacity: overallProgress > 20 ? 1 : 0 }}
               >
-                {Math.round(progress)}%
+                {Math.round(overallProgress)}%
               </motion.div>
             </div>
           </div>
@@ -545,12 +645,13 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
             </motion.div>
             
             <motion.p 
-              className="text-base text-gray-600 font-medium"
+              className="text-base font-medium"
               animate={{
-                color: showSparkles ? 'hsl(85, 60%, 35%)' : 'hsl(0, 0%, 40%)'
+                color: loadingPhase === 'markers' ? 'hsl(0, 70%, 55%)' : 'hsl(0, 0%, 40%)'
               }}
+              transition={{ duration: 0.8 }}
             >
-              registrerade förskolor
+              {loadingPhase === 'markers' ? 'förskolor hämtas' : 'registrerade förskolor'}
             </motion.p>
           </motion.div>
         </motion.div>
