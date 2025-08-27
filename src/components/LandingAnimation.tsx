@@ -123,7 +123,10 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
     return () => clearInterval(stepTimer);
   }, []);
 
-  const progress = Math.min((count / totalPreschools) * 100, 100);
+  // Calculate exponential progress that matches the counter animation
+  const linearProgress = Math.min(count / totalPreschools, 1);
+  const exponentialProgress = linearProgress < 1 ? 1 - Math.pow(2, -10 * linearProgress) : 1;
+  const progress = Math.min(exponentialProgress * 100, 100);
 
   return (
     <AnimatePresence>
@@ -244,8 +247,8 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ 
-                duration: 0.1, 
-                ease: [0.0, 0.0, 0.2, 1] // Custom cubic-bezier for exponential feel
+                duration: 0.02, 
+                ease: "linear" // Direct exponential progress calculation
               }}
             />
           </div>
