@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { Map3D } from '@/components/Map3D';
 import { OptimizedSearchBar } from '@/components/enhanced/OptimizedSearchBar';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
@@ -64,6 +64,18 @@ const Index = () => {
     setIsMapVisible(true);
   };
 
+  // 🛡️ SÄKERHETSÅTGÄRD: Om animationen inte fungerar, visa huvudinnehållet efter 5 sekunder
+  useEffect(() => {
+    const fallbackTimer = setTimeout(() => {
+      if (showLanding) {
+        console.warn('Loading animation timeout - showing main content as fallback');
+        handleLandingComplete();
+      }
+    }, 5000);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [showLanding]);
+
   // Add toggle button for collapsed search box
   const showSearchToggle = searchBoxCollapsed;
   
@@ -82,7 +94,18 @@ const Index = () => {
         <MobileOptimizations />
         
       {/* 🇸🇪 NY FÖRBÄTTRAD SVERIGE LADDNINGSANIMATION MED EXAKT TIMING */}
-      {showLanding && <EnhancedSwedenAnimation onComplete={handleLandingComplete} />}
+      {showLanding && (
+        <ErrorBoundary fallback={
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-2">Laddar Sveriges Förskolor...</h2>
+              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+            </div>
+          </div>
+        }>
+          <EnhancedSwedenAnimation onComplete={handleLandingComplete} />
+        </ErrorBoundary>
+      )}
 
       <motion.div 
         className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10" 
