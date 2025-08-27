@@ -1,3 +1,14 @@
+#!/bin/bash
+
+# 🚀 Automatisk Netlify Deployment Script
+echo "🚀 Setting up Netlify deployment..."
+
+# Build projektet lokalt först
+echo "📦 Building project..."
+npm run build
+
+# Skapa en netlify.toml med korrekta settings
+cat > netlify.toml << 'EOF'
 # 🚀 Netlify deployment configuration - Sverige Förskolor
 [build]
   publish = "dist"
@@ -29,3 +40,18 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+EOF
+
+echo "✅ Netlify config created with environment variables!"
+echo ""
+echo "🎯 NEXT STEPS:"
+echo "1. Go to https://app.netlify.com/start"
+echo "2. Click 'Import an existing project'"
+echo "3. Connect GitHub and select: KSAklfszf921/sweden-preschool-spotlight"
+echo "4. Settings will auto-populate from netlify.toml"
+echo "5. Click 'Deploy site'"
+echo ""
+echo "⚡ Your site will be live in 30-60 seconds!"
+echo "🌐 You'll get a URL like: https://amazing-name-123456.netlify.app"
+echo ""
+echo "✨ All environment variables are already configured in netlify.toml!"
