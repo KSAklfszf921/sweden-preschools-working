@@ -52,7 +52,7 @@ const Index = () => {
     setIsOpen
   } = useComparisonStore();
   const isMobile = useIsMobile();
-  const [showLanding, setShowLanding] = useState(false); // Temporärt avstängd för debugging
+  const [showLanding, setShowLanding] = useState(true);
   const [isMapVisible, setIsMapVisible] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);

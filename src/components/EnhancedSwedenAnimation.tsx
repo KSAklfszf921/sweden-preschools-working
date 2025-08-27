@@ -331,9 +331,32 @@ export const EnhancedSwedenAnimation: React.FC<EnhancedSwedenAnimationProps> = (
   const [markerCount, setMarkerCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0); // Huvudräknare som visas hela tiden
   const [isVisible, setIsVisible] = useState(false);
+  const [hasError, setHasError] = useState(false);
   
   const { preschools } = useMapStore();
   const totalPreschools = preschools.length > 0 ? preschools.length : 8739;
+  
+  // 🛡️ ERROR HANDLER: Om något går fel, visa huvudinnehållet direkt
+  useEffect(() => {
+    const errorHandler = (error: ErrorEvent) => {
+      console.error('Animation error:', error);
+      setHasError(true);
+      setTimeout(onComplete, 100);
+    };
+    
+    window.addEventListener('error', errorHandler);
+    return () => window.removeEventListener('error', errorHandler);
+  }, [onComplete]);
+
+  // 🛡️ FALLBACK: Säkerställ att animationen alltid avslutas
+  useEffect(() => {
+    const maxTimer = setTimeout(() => {
+      console.warn('Animation taking too long, forcing completion');
+      onComplete();
+    }, 8000);
+
+    return () => clearTimeout(maxTimer);
+  }, [onComplete]);
 
   // 🎯 Progress-steg med exakt svenska texter
   const progressSteps = [
@@ -359,37 +382,51 @@ export const EnhancedSwedenAnimation: React.FC<EnhancedSwedenAnimationProps> = (
 
   // 🎯 PERFEKT 2.5 SEKUNDER TIMING MED 3 STEG
   useEffect(() => {
-    console.log('🚀 Starting loading animation - background data fetching is now active');
-    
-    const timeline = [
-      // Fade in (0.2s)
-      { time: 0, action: () => setIsVisible(true) },
+    try {
+      console.log('🚀 Starting loading animation - background data fetching is now active');
       
-      // Steg 1: "Hämtar förskolor" - Rita Sverige (0.2s - 0.9s = 0.7s)
-      { time: 200, action: () => { setPhase('drawing'); setActiveStep(0); }},
-      
-      // Steg 2: "Öppnar data" - Fyll Sverige (0.9s - 1.3s = 0.4s)
-      { time: 900, action: () => { setPhase('filling'); setActiveStep(1); }},
-      
-      // Steg 3: "Skapar karta" - Visa markörer (1.3s - 2.1s = 0.8s)
-      { time: 1300, action: () => { setPhase('markers'); setActiveStep(2); }},
-      
-      // Slutför (2.1s - 2.2s = 0.1s)
-      { time: 2100, action: () => setPhase('complete') },
-      
-      // Fade out och complete (2.2s - 2.5s = 0.3s)
-      { time: 2200, action: () => setIsVisible(false) },
-      { time: 2500, action: () => {
-        console.log('✅ Loading animation complete - map should display with preloaded data');
-        onComplete();
-      }}
-    ];
+      const timeline = [
+        // Fade in (0.2s)
+        { time: 0, action: () => setIsVisible(true) },
+        
+        // Steg 1: "Hämtar förskolor" - Rita Sverige (0.2s - 0.9s = 0.7s)
+        { time: 200, action: () => { setPhase('drawing'); setActiveStep(0); }},
+        
+        // Steg 2: "Öppnar data" - Fyll Sverige (0.9s - 1.3s = 0.4s)
+        { time: 900, action: () => { setPhase('filling'); setActiveStep(1); }},
+        
+        // Steg 3: "Skapar karta" - Visa markörer (1.3s - 2.1s = 0.8s)
+        { time: 1300, action: () => { setPhase('markers'); setActiveStep(2); }},
+        
+        // Slutför (2.1s - 2.2s = 0.1s)
+        { time: 2100, action: () => setPhase('complete') },
+        
+        // Fade out och complete (2.2s - 2.5s = 0.3s)
+        { time: 2200, action: () => setIsVisible(false) },
+        { time: 2500, action: () => {
+          console.log('✅ Loading animation complete - map should display with preloaded data');
+          onComplete();
+        }}
+      ];
 
-    const timers = timeline.map(({ time, action }) => 
-      setTimeout(action, time)
-    );
+      const timers = timeline.map(({ time, action }) => 
+        setTimeout(() => {
+          try {
+            action();
+          } catch (error) {
+            console.error('Timeline action error:', error);
+            setHasError(true);
+            onComplete();
+          }
+        }, time)
+      );
 
-    return () => timers.forEach(clearTimeout);
+      return () => timers.forEach(clearTimeout);
+    } catch (error) {
+      console.error('Animation setup error:', error);
+      setHasError(true);
+      setTimeout(onComplete, 100);
+    }
   }, [onComplete]);
 
   // 🎯 KONTINUERLIG EXPONENTIELL RÄKNARE (0 - 8739) genom hela animationen
