@@ -556,15 +556,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                                 <div className="text-2xl font-bold">{coordinateStats.total}</div>
                                 <p className="text-xs text-muted-foreground">Totalt förskolor</p>
                               </div>
-                              <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                              <div className="text-center p-4 bg-green-50 rounded-lg">
                                 <div className="text-2xl font-bold text-green-600">{coordinateStats.withCoordinates}</div>
                                 <p className="text-xs text-muted-foreground">Med koordinater</p>
                               </div>
-                              <div className="text-center p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                              <div className="text-center p-4 bg-red-50 rounded-lg">
                                 <div className="text-2xl font-bold text-red-600">{coordinateStats.missingCoordinates}</div>
                                 <p className="text-xs text-muted-foreground">Saknar koordinater</p>
                               </div>
-                              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                              <div className="text-center p-4 bg-blue-50 rounded-lg">
                                 <div className="text-2xl font-bold text-blue-600">
                                   {Math.round((coordinateStats.withCoordinates / coordinateStats.total) * 100)}%
                                 </div>

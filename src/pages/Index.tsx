@@ -140,9 +140,6 @@ const Index = () => {
                 </Button>
               </div>
 
-              {/* Mobile only theme toggle */}
-              <div className="md:hidden">
-              </div>
             </div>
           </div>
         </motion.header>

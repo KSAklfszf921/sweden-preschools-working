@@ -194,53 +194,53 @@ const EnhancedStatisticsPanel: React.FC<EnhancedStatisticsPanelProps> = ({ class
                 <TabsContent value="overview" className="px-4 space-y-4 mt-0">
                   {/* Key Metrics */}
                   <div className="grid grid-cols-2 gap-3">
-                    <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+                    <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 dark:border-blue-800">
                       <div className="text-center">
                         <Building className="h-6 w-6 text-blue-600 mx-auto mb-2" />
                         <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                           {stats.current.total.toLocaleString()}
                         </p>
-                        <p className="text-sm text-blue-600 dark:text-blue-400">Förskolor totalt</p>
+                        <p className="text-sm text-blue-600 totalt</p>
                       </div>
                     </Card>
 
-                    <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+                    <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200 dark:border-green-800">
                       <div className="text-center">
                         <Users className="h-6 w-6 text-green-600 mx-auto mb-2" />
                         <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                           {stats.current.totalChildren.toLocaleString()}
                         </p>
-                        <p className="text-sm text-green-600 dark:text-green-400">Barn totalt</p>
+                        <p className="text-sm text-green-600 totalt</p>
                       </div>
                     </Card>
 
-                    <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+                    <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 dark:border-purple-800">
                       <div className="text-center">
                         <Target className="h-6 w-6 text-purple-600 mx-auto mb-2" />
                         <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                           {stats.current.avgChildren.toFixed(0)}
                         </p>
-                        <p className="text-sm text-purple-600 dark:text-purple-400">Snitt barn/förskola</p>
+                        <p className="text-sm text-purple-600 barn/förskola</p>
                       </div>
                     </Card>
 
-                    <Card className="p-4 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 border-amber-200 dark:border-amber-800">
+                    <Card className="p-4 bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 dark:border-amber-800">
                       <div className="text-center">
                         <Award className="h-6 w-6 text-amber-600 mx-auto mb-2" />
                         <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
                           {stats.current.avgExam.toFixed(1)}%
                         </p>
-                        <p className="text-sm text-amber-600 dark:text-amber-400">Snitt förskollärarexamen</p>
+                        <p className="text-sm text-amber-600 förskollärarexamen</p>
                       </div>
                     </Card>
 
-                    <Card className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900 border-indigo-200 dark:border-indigo-800">
+                    <Card className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 dark:border-indigo-800">
                       <div className="text-center">
                         <Zap className="h-6 w-6 text-indigo-600 mx-auto mb-2" />
                         <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
                           {stats.current.avgStaff.toFixed(1)}
                         </p>
-                        <p className="text-sm text-indigo-600 dark:text-indigo-400">Snitt personaltäthet</p>
+                        <p className="text-sm text-indigo-600 personaltäthet</p>
                       </div>
                     </Card>
                   </div>

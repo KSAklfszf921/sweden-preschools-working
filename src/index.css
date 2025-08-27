@@ -93,66 +93,6 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-    
-    --popover: 224 71% 4%;
-    --popover-foreground: 213 31% 91%;
-    
-    --primary: 142 76% 40%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 142 76% 50%;
-    
-    --secondary: 223 47% 11%;
-    --secondary-foreground: 213 31% 91%;
-    
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 16% 57%;
-    
-    --accent: 216 34% 17%;
-    --accent-foreground: 213 31% 91%;
-    
-    /* Dark theme nature colors */
-    --forest: 142 76% 42%;
-    --lake: 200 85% 55%;
-    --sky: 210 100% 95%;
-    --mountain: 220 15% 75%;
-    --meadow: 84 65% 65%;
-    --nordic-blue: 214 100% 60%;
-    --nordic-light: 216 34% 17%;
-    --swedish-flag: 214 100% 60%;
-    
-    --destructive: 0 63% 50%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 142 76% 40%;
-    
-    /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--forest)) 0%, hsl(var(--lake)) 100%);
-    --gradient-nordic: linear-gradient(180deg, hsl(216 34% 17%) 0%, hsl(223 47% 11%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(var(--forest)) 0%, hsl(var(--lake)) 50%, hsl(216 34% 17%) 100%);
-    --gradient-subtle: linear-gradient(145deg, hsl(var(--background)) 0%, hsl(var(--accent)) 100%);
-    
-    /* Dark mode shadows */
-    --shadow-nordic: 0 10px 40px -12px hsla(0, 0%, 0%, 0.5);
-    --shadow-glow: 0 0 32px hsla(var(--primary), 0.4);
-    --shadow-soft: 0 2px 12px -4px hsla(0, 0%, 0%, 0.4);
-    --shadow-elegant: 0 8px 32px -8px hsla(0, 0%, 0%, 0.3);
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
 }
 
 @layer base {
@@ -243,21 +183,6 @@ All colors MUST be HSL.
   border-radius: var(--radius-lg);
 }
 
-/* Dark mode glass adjustments */
-.dark .glass-search {
-  background: hsla(var(--background), 0.8);
-  border: 1px solid hsla(var(--border), 0.4);
-}
-
-.dark .glass-panel {
-  background: hsla(var(--card), 0.85);
-  border: 1px solid hsla(var(--border), 0.3);
-}
-
-.dark .glass-overlay {
-  background: hsla(var(--background), 0.9);
-  border: 1px solid hsla(var(--border), 0.5);
-}
 
 /* Enhanced hover effects with semantic colors */
 .hover-lift {
