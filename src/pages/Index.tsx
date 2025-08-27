@@ -1,25 +1,12 @@
-import React, { useState, Suspense, lazy, useEffect } from 'react';
-// ULTRA-AGGRESSIV LAZY LOADING - minimera initial bundle
-import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
-import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
-
-// Använder lätt Leaflet-karta istället för tung 3D Mapbox
+import React, { useState, useEffect } from 'react';
+// ENKEL IMPLEMENTATION - bara Leaflet och grundläggande komponenter
 import { LeafletMap } from '@/components/LeafletMap';
-const OfflineHandler = lazy(() => import('@/components/enhanced/OfflineHandler').then(m => ({ default: m.OfflineHandler })));
-
-// Search och navigation - viktiga för UX
-const EnhancedHybridSearchBar = lazy(() => import('@/components/enhanced/EnhancedHybridSearchBar').then(m => ({ default: m.EnhancedHybridSearchBar })));
-const MobileNavigation = lazy(() => import('@/components/enhanced/MobileNavigation').then(m => ({ default: m.MobileNavigation })));
-
-// Heavy components - bara laddas när användaren behöver dem
-const AdminPanel = lazy(() => import('@/components/AdminPanel').then(m => ({ default: m.AdminPanel })));
-const DynamicStatisticsModal = lazy(() => import('@/components/enhanced/DynamicStatisticsModal').then(m => ({ default: m.DynamicStatisticsModal })));
-const ComparisonModal = lazy(() => import('@/components/ComparisonModal').then(m => ({ default: m.ComparisonModal })));
+import { AdminPanel } from '@/components/AdminPanel';
+import { ComparisonModal } from '@/components/ComparisonModal';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
 import { useComparisonStore } from '@/stores/comparisonStore';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { motion } from 'framer-motion';
 import { Settings, BarChart3, GitCompare, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +30,6 @@ const Index = () => {
   const [showLanding, setShowLanding] = useState(true);
   const [isMapVisible, setIsMapVisible] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [showStatistics, setShowStatistics] = useState(false);
 
   // 🚀 OPTIMERAD: Snabbare övergång utan extra delays
   const handleLandingComplete = () => {
@@ -76,10 +62,7 @@ const Index = () => {
       </div>;
   }
 
-  return <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>}>
-      <OfflineHandler>
+  return (
           {/* MINIMAL initial load - inga tunga komponenter */}
         
       {/* FÖRENKLAD SNABB LOADING - ingen tung animation */}
@@ -126,15 +109,6 @@ const Index = () => {
                   variant="outline" 
                   size="lg" 
                   className="items-center gap-3 glass-effect hover-glow-subtle relative border-0 font-semibold" 
-                  onClick={() => setShowStatistics(true)}
-                >
-                  <BarChart3 className="w-5 h-5" />
-                  Statistik
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="items-center gap-3 glass-effect hover-glow-subtle relative border-0 font-semibold" 
                   onClick={() => setIsOpen(true)}
                 >
                   <GitCompare className="w-5 h-5" />
@@ -148,24 +122,11 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </motion.header>
+        </header>
 
       {/* Main content */}
       <div className={`relative ${isMobile ? 'pb-16' : ''}`}>
-          {/* FÖRENKLAD Search Bar - bara ladda på demand */}
-          {!isMobile && !showLanding && (
-            <Suspense fallback={<div className="absolute left-4 top-4 z-25 w-80 h-12 bg-white/95 rounded animate-pulse"></div>}>
-              <div 
-                className={`absolute left-4 top-4 z-25 transition-all duration-200 ${showLanding ? 'opacity-0 -translate-x-4 scale-95' : 'opacity-100 translate-x-0 scale-100'}`}
-              >
-                <ErrorBoundary>
-                  <LoadingBoundary>
-                    <EnhancedHybridSearchBar />
-                  </LoadingBoundary>
-                </ErrorBoundary>
-              </div>
-            </Suspense>
-          )}
+          {/* Enkel sökning - sparar på prestanda */}
 
           {/* FÖRENKLAD MAP - CSS transition endast */}
           <div 
@@ -183,29 +144,11 @@ const Index = () => {
           
           {/* Admin Panel - bara när användaren klickar */}
           {showAdmin && (
-            <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full"></div>
-            </div>}>
-              <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
-            </Suspense>
+            <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
           )}
 
-          {/* Statistics Modal - bara när användaren klickar */}
-          {showStatistics && (
-            <Suspense fallback={null}>
-              <DynamicStatisticsModal 
-                isOpen={showStatistics} 
-                onClose={() => setShowStatistics(false)} 
-              />
-            </Suspense>
-          )}
-          
-          {/* Mobile Navigation - bara på mobil */}
-          {isMobile && (
-            <Suspense fallback={null}>
-              <MobileNavigation />
-            </Suspense>
-          )}
+          {/* Jämför Modal */}
+          <ComparisonModal />
           
           {/* FÖRENKLAD Mobile List Button */}
           {isMobile && (
@@ -223,21 +166,6 @@ const Index = () => {
             </div>
           )}
 
-          {/* FÖRENKLAD Mobile Statistics Button */}
-          {isMobile && (
-            <div 
-              className={`fixed bottom-20 left-4 z-40 md:hidden transition-all duration-300 delay-300 ${showLanding ? 'opacity-0 translate-y-3' : 'opacity-100 translate-y-0'}`}
-            >
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="glass-effect hover-glow-subtle border-0 p-3 rounded-full shadow-lg"
-                onClick={() => setShowStatistics(true)}
-              >
-                <BarChart3 className="w-5 h-5" />
-              </Button>
-            </div>
-          )}
           
           {/* FÖRENKLAD Admin Button - ingen AnimatedButton */}
           <div 
@@ -265,8 +193,7 @@ const Index = () => {
           )}
         </div>
       </div>
-    </OfflineHandler>
-    </Suspense>;
+  );
 };
 
 export default Index;
