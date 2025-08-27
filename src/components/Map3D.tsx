@@ -48,8 +48,26 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       setIsLoading(false);
     });
 
-    // Add basic controls
+    // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    
+    // Add geolocate control for user positioning
+    const geolocateControl = new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true
+      },
+      trackUserLocation: true,
+      showUserHeading: true
+    });
+    map.current.addControl(geolocateControl, 'top-right');
+    
+    // Listen to geolocate events to sync with store
+    geolocateControl.on('geolocate', (e) => {
+      const { longitude, latitude } = e.coords;
+      console.log(`User location detected: [${longitude}, ${latitude}]`);
+      setMapCenter([longitude, latitude]);
+      setMapZoom(13);
+    });
 
     // Simple debounced move handler for better performance
     let moveTimeout: NodeJS.Timeout;
@@ -70,7 +88,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
 
   // Memoize valid preschools to avoid recalculation
   const validPreschools = useMemo(() => {
-    return filteredPreschools.filter(p => 
+    const valid = filteredPreschools.filter(p => 
       p.latitud !== null && 
       p.longitud !== null && 
       typeof p.latitud === 'number' && 
@@ -78,6 +96,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       p.latitud >= 55.0 && p.latitud <= 69.1 && 
       p.longitud >= 10.9 && p.longitud <= 24.2
     );
+    console.log(`Valid preschools for map: ${valid.length}/${filteredPreschools.length}`);
+    return valid;
   }, [filteredPreschools]);
 
   // Memoize GeoJSON data
@@ -99,10 +119,10 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     }))
   }), [validPreschools]);
 
-  // Simplified rendering - update data when preschools change
+  // Update map data when preschools change
   useEffect(() => {
-    if (!map.current || !map.current.isStyleLoaded() || validPreschools.length === 0) return;
-
+    if (!map.current || !map.current.isStyleLoaded()) return;
+    
     // Remove existing layers
     const layersToRemove = ['preschools-clusters', 'preschools-cluster-count', 'preschools-unclustered'];
     layersToRemove.forEach(layerId => {
@@ -113,6 +133,9 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     if (map.current?.getSource('preschools')) {
       map.current.removeSource('preschools');
     }
+
+    if (validPreschools.length === 0) return;
+    console.log(`Adding ${validPreschools.length} preschools to map`);
 
     // Add source with clustering
     map.current.addSource('preschools', {
@@ -199,12 +222,37 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     });
   }, [filteredPreschools]);
 
+  // Handle map center and zoom changes from store
+  useEffect(() => {
+    if (!map.current) return;
+    
+    const currentCenter = map.current.getCenter();
+    const currentZoom = map.current.getZoom();
+    
+    // Only update if there's a significant difference to avoid infinite loops
+    const centerArray = Array.isArray(mapCenter) ? mapCenter : [mapCenter.lng || mapCenter.lon, mapCenter.lat];
+    const [targetLng, targetLat] = centerArray;
+    
+    const centerDiff = Math.abs(currentCenter.lng - targetLng) + Math.abs(currentCenter.lat - targetLat);
+    const zoomDiff = Math.abs(currentZoom - mapZoom);
+    
+    if (centerDiff > 0.01 || zoomDiff > 0.5) {
+      console.log(`Flying to: [${targetLng}, ${targetLat}] zoom: ${mapZoom}`);
+      map.current.flyTo({
+        center: [targetLng, targetLat],
+        zoom: mapZoom,
+        duration: 1000
+      });
+    }
+  }, [mapCenter, mapZoom]);
+
   // Simple selected preschool centering
   useEffect(() => {
     if (selectedPreschool && map.current && selectedPreschool.latitud && selectedPreschool.longitud) {
       map.current.flyTo({
         center: [selectedPreschool.longitud, selectedPreschool.latitud],
-        zoom: 14
+        zoom: 14,
+        duration: 1000
       });
     }
   }, [selectedPreschool]);
