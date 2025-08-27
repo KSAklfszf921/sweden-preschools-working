@@ -6,9 +6,9 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import mapboxgl from 'mapbox-gl';
+// Removed mapboxgl import for ultra-light performance
 import { useMapStore, Preschool } from '@/stores/mapStore';
-import { getClusteringCache } from '@/utils/clusteringCacheManager';
+// import { getClusteringCache } from '@/utils/clusteringCacheManager';
 
 interface ClusteringConfig {
   clusterRadius: number;
@@ -28,7 +28,7 @@ interface ClusteringState {
 }
 
 interface UseOptimizedClusteringProps {
-  map: mapboxgl.Map | null;
+  map: any | null; // Generic map type for ultra-light performance
   config?: Partial<ClusteringConfig>;
   onClusterClick?: (clusterId: number, coordinates: [number, number]) => void;
   onPreschoolClick?: (preschool: Preschool) => void;
@@ -64,8 +64,8 @@ export const useOptimizedClustering = ({
     ...config
   }), [config]);
 
-  // Hämta cache manager
-  const cacheManager = getClusteringCache();
+  // Hämta cache manager - disabled for ultra-light performance
+  const cacheManager = null; // getClusteringCache();
 
   // Source och layer IDs
   const sourceId = 'optimized-preschools';
@@ -336,8 +336,8 @@ export const useOptimizedClustering = ({
   const addEventHandlers = useCallback(() => {
     if (!map) return;
 
-    // Cluster click - zoom to expansion
-    const handleClusterClick = (e: mapboxgl.MapMouseEvent) => {
+    // Cluster click - zoom to expansion  
+    const handleClusterClick = (e: any) => {
       if (!e.features?.[0]) return;
 
       const features = map.queryRenderedFeatures(e.point, {
@@ -366,7 +366,7 @@ export const useOptimizedClustering = ({
     };
 
     // Individual preschool click
-    const handlePreschoolClick = (e: mapboxgl.MapMouseEvent) => {
+    const handlePreschoolClick = (e: any) => {
       if (!e.features?.[0]) return;
       
       const feature = e.features[0];
@@ -509,7 +509,7 @@ export const useOptimizedClustering = ({
   useEffect(() => {
     if (!map || !map.getSource(sourceId)) return;
 
-    const source = map.getSource(sourceId) as mapboxgl.GeoJSONSource;
+    const source = map.getSource(sourceId) as any;
     source.setData(geojsonData);
 
     setState(prev => ({ 

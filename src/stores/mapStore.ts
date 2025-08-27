@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { LngLatLike } from 'mapbox-gl';
+// Removed mapbox dependency for ultra-light performance
+type LngLatLike = [number, number] | { lng: number; lat: number };
 import { dataCache, cacheKeys, dataTransformers } from '@/utils/dataCache';
 import { performanceOptimizer } from '@/utils/performanceOptimizer';
 

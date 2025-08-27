@@ -2,7 +2,8 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useMapStore } from '@/stores/mapStore';
 import { useDebounce } from './useDebounce';
 
-export const useMapViewportSync = (map: mapboxgl.Map | null) => {
+// Lightweight hook - no mapbox dependency for UltraSimpleMap
+export const useMapViewportSync = (map: any | null) => {
   const { updateVisiblePreschoolsFromViewport } = useMapStore();
   const lastUpdateRef = useRef<number>(0);
   const updateTimeoutRef = useRef<NodeJS.Timeout>();

@@ -1,4 +1,6 @@
-import type { LngLatBoundsLike, LngLatLike } from 'mapbox-gl';
+// Removed mapbox dependency for ultra-light performance
+type LngLatBoundsLike = [[number, number], [number, number]];
+type LngLatLike = [number, number] | { lng: number; lat: number };
 import type { Preschool } from '@/stores/mapStore';
 
 export interface ViewportBounds {
