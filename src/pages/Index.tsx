@@ -18,7 +18,6 @@ import { ComparisonModal } from '@/components/ComparisonModal';
 import { MobileNavigation } from '@/components/enhanced/MobileNavigation';
 import { DynamicStatisticsPanel } from '@/components/enhanced/DynamicStatisticsPanel';
 import { PerformanceCriticalList } from '@/components/enhanced/PerformanceCriticalList';
-import { BubbleMapVisualization } from '@/components/enhanced/BubbleMapVisualization';
 import { AccessibilityEnhancements } from '@/components/enhanced/AccessibilityEnhancements';
 
 // Lazy load heavy components for better performance
@@ -190,7 +189,6 @@ const Index = () => {
 
           {/* Enhanced features */}
           <DynamicStatisticsPanel />
-          <BubbleMapVisualization />
           
           {/* Mobile Navigation */}
           {isMobile && <MobileNavigation />}

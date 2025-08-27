@@ -21,9 +21,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Optimize build for production deployment - use modern target for Mapbox compatibility
-    target: 'es2020', // Changed from es2015 to support BigInt literals used by Mapbox
-    minify: 'esbuild', // Use esbuild instead of terser for compatibility
+    target: 'es2020',
+    minify: 'esbuild',
     sourcemap: false,
     rollupOptions: {
       output: {
@@ -34,7 +33,6 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-    // Increase chunk size warning limit for map components
     chunkSizeWarningLimit: 1000,
   },
   // Optimize dependencies for faster loading
