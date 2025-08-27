@@ -180,3 +180,4 @@ Utvecklat med ❤️ för svenska föräldrar och förskolor.
 
 *Enhanced landing animation deployed - Aug 2025*
 # Deploy trigger Ons 27 Aug 2025 16:16:11 CEST
+Deploy trigger: Ons 27 Aug 2025 16:22:33 CEST
