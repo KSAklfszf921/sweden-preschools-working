@@ -55,8 +55,15 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
   const [count, setCount] = useState(0);
   const { preschools } = useMapStore();
   
-  // Get actual preschool count or use default
-  const totalPreschools = preschools.length || 8739;
+  // Get actual preschool count or use default, with real-time updates
+  const totalPreschools = preschools.length > 0 ? preschools.length : 8739;
+  
+  // Watch for real data loading
+  useEffect(() => {
+    if (preschools.length > 0) {
+      console.log(`📊 Real preschool data loaded: ${preschools.length} förskolor available`);
+    }
+  }, [preschools.length]);
 
   // Simplified progress indicators (3 items only)
   const progressSteps = [

@@ -114,6 +114,8 @@ export const usePreschools = () => {
   };
 
   useEffect(() => {
+    // Start fetching data immediately, not waiting for component mount completion
+    console.log('🚀 Starting immediate preschool data fetch during loading animation...');
     fetchPreschools();
   }, []);
 

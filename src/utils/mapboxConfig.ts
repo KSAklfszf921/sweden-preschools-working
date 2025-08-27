@@ -41,7 +41,7 @@ export const mapboxConfig = {
   // Performance settings optimized for Sweden with zoom-based hierarchy
   settings: {
     maxZoom: 18,
-    minZoom: 4,
+    minZoom: 2, // Allow zooming out to see all of Sweden clearly
     centerSweden: [15.5, 62.0], // Geographic center of Sweden
     defaultZoom: 5.5,
     

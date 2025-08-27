@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
 import { ApiManager } from '@/services/apiManager';
 import { clusterCache, type ClusterCacheItem } from '@/utils/clusterCache';
+import { useMapViewportSync } from '@/hooks/useMapViewportSync';
 
 // Mapbox token - will be set via proxy in production
 // For development, we'll use a fallback but prefer proxy
@@ -34,6 +35,17 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     lastUpdated,
     updateVisiblePreschoolsFromViewport
   } = useMapStore();
+
+  // Enable viewport synchronization for dynamic list updates  
+  useMapViewportSync(map.current);
+
+  // Preload cluster data immediately when component initializes
+  useEffect(() => {
+    console.log('🎯 Preloading Swedish cluster data for instant display...');
+    const swedishClusters = clusterCache.generateSwedishClusterApproximation();
+    console.log(`📦 Preloaded ${swedishClusters.length} cluster approximations for Sweden`);
+  }, []);
+
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -43,6 +55,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [15.2, 62.4], // Optimized center for Sweden's geographic center
       zoom: 4.9, // Perfect zoom to show all of Sweden with clusters visible
+      minZoom: 2, // Allow zooming out to see all of Sweden clearly
+      maxZoom: 18,
       pitch: 0,
       bearing: 0,
       maxBounds: [
