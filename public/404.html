@@ -5,21 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sveriges Förskolor - Hitta Bästa Förskolan Nära Dig</title>
     <script>
-      // GitHub Pages SPA redirect for React Router
-      (function(l) {
-        if (l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) { 
-            return s.replace(/~and~/g, '&')
-          }).join('?')
-          window.history.replaceState(null, null,
-              l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location))
+      // GitHub Pages SPA redirect - redirect to main page
+      window.location.replace('/sweden-preschool-spotlight/');
     </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/sweden-preschool-spotlight/assets/index-C5dBeA0p.js"></script>
+    <p>Redirecting...</p>
   </body>
 </html>
