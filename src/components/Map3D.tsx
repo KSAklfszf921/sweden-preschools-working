@@ -30,7 +30,8 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     setMapCenter,
     setMapZoom,
     preschools,
-    lastUpdated
+    lastUpdated,
+    updateVisiblePreschoolsFromViewport
   } = useMapStore();
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -51,19 +52,22 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
 
     map.current.on('style.load', () => {
       if (!map.current) return;
+      console.log('🗺️ Mapbox style loaded, map is ready');
       setIsLoading(false);
       
-      // Immediately add preschools when map is ready
-      if (validPreschools.length > 0) {
-        console.log('Map loaded, immediately adding preschools...');
-        // Small delay to ensure map is fully ready
-        setTimeout(() => {
-          if (map.current?.isStyleLoaded()) {
-            // Trigger the useEffect by updating a dependency
-            setIsLoading(false);
-          }
-        }, 100);
-      }
+      // Initial viewport update after map loads
+      setTimeout(() => {
+        if (map.current) {
+          const bounds = map.current.getBounds();
+          updateVisiblePreschoolsFromViewport({
+            north: bounds.getNorth(),
+            south: bounds.getSouth(),
+            east: bounds.getEast(),
+            west: bounds.getWest()
+          });
+          console.log('🎯 Initial viewport preschools updated');
+        }
+      }, 1000);
     });
 
     // Add navigation controls
@@ -87,7 +91,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       setMapZoom(13);
     });
 
-    // Simple debounced move handler for better performance
+    // Enhanced move handler that updates both map state and visible preschools list
     let moveTimeout: NodeJS.Timeout;
     map.current.on('moveend', () => {
       clearTimeout(moveTimeout);
@@ -97,7 +101,18 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
         const zoom = map.current.getZoom();
         setMapCenter([center.lng, center.lat]);
         setMapZoom(zoom);
-      }, 100);
+        
+        // Update visible preschools based on current viewport
+        const bounds = map.current.getBounds();
+        updateVisiblePreschoolsFromViewport({
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest()
+        });
+        
+        console.log(`🗺️ Map moved - updated visible preschools for viewport`);
+      }, 300); // Increased debounce for better performance
     });
     return () => {
       map.current?.remove();
@@ -144,14 +159,21 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
     return geoData;
   }, [validPreschools]);
 
-  // Update map data when preschools change - ensure it runs immediately
+  // Update map data when preschools change - CRITICAL for showing data
   useEffect(() => {
-    if (!map.current) return;
+    console.log(`🔄 Map useEffect triggered - valid preschools: ${validPreschools.length}`);
+    
+    if (!map.current) {
+      console.log('❌ No map instance available');
+      return;
+    }
     
     // If style is not loaded yet, wait for it
     if (!map.current.isStyleLoaded()) {
+      console.log('⏳ Waiting for map style to load...');
       const waitForStyle = () => {
         if (map.current?.isStyleLoaded()) {
+          console.log('✅ Style loaded, adding preschools');
           addPreschoolsToMap();
         } else {
           setTimeout(waitForStyle, 100);
@@ -161,6 +183,7 @@ export const Map3D: React.FC<Map3DProps> = ({ className }) => {
       return;
     }
     
+    // Style is loaded, add preschools immediately
     addPreschoolsToMap();
     
     function addPreschoolsToMap() {

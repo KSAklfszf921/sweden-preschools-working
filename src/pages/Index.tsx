@@ -8,7 +8,6 @@ import PerformanceOptimizer from '@/components/enhanced/PerformanceOptimizer';
 import { AdminPanel } from '@/components/AdminPanel';
 import { StatisticsPopup } from '@/components/StatisticsPopup';
 import LayerControl from '@/components/LayerControl';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { LandingAnimation } from '@/components/LandingAnimation';
 import { MapTransitions } from '@/components/enhanced/MapTransitions';
 import { AnimatedButton } from '@/components/enhanced/InteractiveElements';
@@ -122,12 +121,10 @@ const Index = () => {
                     </Badge>
                   )}
                 </Button>
-                <ThemeToggle />
               </div>
 
               {/* Mobile only theme toggle */}
               <div className="md:hidden">
-                <ThemeToggle />
               </div>
             </div>
           </div>

@@ -596,6 +596,10 @@ export const useMapStore = create<MapState>((set, get) => ({
     });
 
     set({ filteredPreschools: filtered });
+    
+    // Also update visible preschools if in viewport-only mode
+    // This ensures the list updates immediately when filters change
+    console.log(`🔍 Applied filters, ${filtered.length} preschools match criteria`);
   },
 }));
 

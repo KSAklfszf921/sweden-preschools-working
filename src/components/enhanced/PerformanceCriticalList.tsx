@@ -262,7 +262,7 @@ export const PerformanceCriticalList: React.FC<PreschoolListProps> = ({ classNam
   const [sortBy, setSortBy] = useState<'rating' | 'name' | 'children' | 'quality'>('rating');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [comparison, setComparison] = useState<Set<string>>(new Set());
-  const [viewportOnly, setViewportOnly] = useState(false);
+  const [viewportOnly, setViewportOnly] = useState(true); // Default to viewport-only for better performance
 
   const debouncedListSearch = useDebounce(listSearch, 300);
 
