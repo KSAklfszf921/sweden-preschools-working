@@ -37,6 +37,6 @@ export default defineConfig(({ mode }) => ({
   },
   // Optimize dependencies for faster loading
   optimizeDeps: {
-    include: ['@supabase/supabase-js', 'react', 'react-dom', 'mapbox-gl'],
+    include: ['@supabase/supabase-js', 'react', 'react-dom', 'leaflet', 'leaflet.markercluster'],
   },
 }));
