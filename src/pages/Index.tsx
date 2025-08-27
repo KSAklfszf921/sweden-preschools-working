@@ -3,34 +3,18 @@ import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { ErrorBoundary } from '@/components/enhanced/ErrorBoundary';
 import { LoadingBoundary } from '@/components/enhanced/LoadingBoundary';
 
-// ALLA komponenter lazy-loadade utom absolut kritiska för initial render
+// BARA VIKTIGA komponenter lazy-loadade - resten laddas bara på demand
 const LeafletMap = lazy(() => import('@/components/LeafletMap'));
-const OptimizedSearchBar = lazy(() => import('@/components/enhanced/OptimizedSearchBar').then(m => ({ default: m.OptimizedSearchBar })));
 const OfflineHandler = lazy(() => import('@/components/enhanced/OfflineHandler').then(m => ({ default: m.OfflineHandler })));
-const PerformanceOptimizer = lazy(() => import('@/components/enhanced/PerformanceOptimizer'));
-const SmartPerformanceManager = lazy(() => import('@/components/SmartPerformanceManager').then(m => ({ default: m.SmartPerformanceManager })));
-const LayerControl = lazy(() => import('@/components/LayerControl'));
-const EnhancedSwedenAnimation = lazy(() => import('@/components/EnhancedSwedenAnimation').then(m => ({ default: m.EnhancedSwedenAnimation })));
-const MapTransitions = lazy(() => import('@/components/enhanced/MapTransitions').then(m => ({ default: m.MapTransitions })));
-const AnimatedButton = lazy(() => import('@/components/enhanced/InteractiveElements').then(m => ({ default: m.AnimatedButton })));
-const OptimizedStatisticsButton = lazy(() => import('@/components/enhanced/OptimizedStatisticsButton').then(m => ({ default: m.OptimizedStatisticsButton })));
-const ComparisonPanel = lazy(() => import('@/components/ComparisonPanel').then(m => ({ default: m.ComparisonPanel })));
-const MobileNavigation = lazy(() => import('@/components/enhanced/MobileNavigation').then(m => ({ default: m.MobileNavigation })));
-const DynamicStatisticsPanel = lazy(() => import('@/components/enhanced/DynamicStatisticsPanel').then(m => ({ default: m.DynamicStatisticsPanel })));
-const PerformanceCriticalList = lazy(() => import('@/components/enhanced/PerformanceCriticalList').then(m => ({ default: m.PerformanceCriticalList })));
-const AccessibilityEnhancements = lazy(() => import('@/components/enhanced/AccessibilityEnhancements').then(m => ({ default: m.AccessibilityEnhancements })));
-const EnhancedHybridSearchBar = lazy(() => import('@/components/enhanced/EnhancedHybridSearchBar').then(m => ({ default: m.EnhancedHybridSearchBar })));
-const MobileSwipeNavigation = lazy(() => import('@/components/enhanced/MobileSwipeNavigation').then(m => ({ default: m.MobileSwipeNavigation })));
-const DistanceRoutingPanel = lazy(() => import('@/components/enhanced/DistanceRoutingPanel').then(m => ({ default: m.DistanceRoutingPanel })));
-const MobileOptimizations = lazy(() => import('@/components/enhanced/MobileOptimizations').then(m => ({ default: m.MobileOptimizations })));
 
-// Heavy components - bara laddas när de behövs
-const PreschoolDetailsPanel = lazy(() => import('@/components/enhanced/PreschoolDetailsPanel').then(module => ({ default: module.PreschoolDetailsPanel })));
+// Search och navigation - viktiga för UX
+const EnhancedHybridSearchBar = lazy(() => import('@/components/enhanced/EnhancedHybridSearchBar').then(m => ({ default: m.EnhancedHybridSearchBar })));
+const MobileNavigation = lazy(() => import('@/components/enhanced/MobileNavigation').then(m => ({ default: m.MobileNavigation })));
+
+// Heavy components - bara laddas när användaren behöver dem
 const AdminPanel = lazy(() => import('@/components/AdminPanel').then(m => ({ default: m.AdminPanel })));
-const StatisticsPopup = lazy(() => import('@/components/StatisticsPopup').then(m => ({ default: m.StatisticsPopup })));
 const DynamicStatisticsModal = lazy(() => import('@/components/enhanced/DynamicStatisticsModal').then(m => ({ default: m.DynamicStatisticsModal })));
 const ComparisonModal = lazy(() => import('@/components/ComparisonModal').then(m => ({ default: m.ComparisonModal })));
-const PerformanceDashboard = lazy(() => import('@/components/enhanced/PerformanceDashboard').then(m => ({ default: m.PerformanceDashboard })));
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
 import { useComparisonStore } from '@/stores/comparisonStore';
@@ -95,9 +79,7 @@ const Index = () => {
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>}>
       <OfflineHandler>
-          {/* FÖRENKLAD - ta bort tunga performance managers för nu */}
-            <AccessibilityEnhancements />
-            <MobileOptimizations />
+          {/* MINIMAL initial load - inga tunga komponenter */}
         
       {/* FÖRENKLAD SNABB LOADING - ingen tung animation */}
       {showLanding && (
@@ -169,77 +151,64 @@ const Index = () => {
 
       {/* Main content */}
       <div className={`relative ${isMobile ? 'pb-16' : ''}`}>
-          {/* FÖRENKLAD Search Bar - CSS endast */}
-          {!isMobile && (
-            <div 
-              className={`absolute left-4 top-4 z-25 transition-all duration-200 ${showLanding ? 'opacity-0 -translate-x-4 scale-95' : 'opacity-100 translate-x-0 scale-100'}`}
-            >
-              <ErrorBoundary>
-                <LoadingBoundary>
-                  <EnhancedHybridSearchBar />
-                </LoadingBoundary>
-              </ErrorBoundary>
-            </div>
+          {/* FÖRENKLAD Search Bar - bara ladda på demand */}
+          {!isMobile && !showLanding && (
+            <Suspense fallback={<div className="absolute left-4 top-4 z-25 w-80 h-12 bg-white/95 rounded animate-pulse"></div>}>
+              <div 
+                className={`absolute left-4 top-4 z-25 transition-all duration-200 ${showLanding ? 'opacity-0 -translate-x-4 scale-95' : 'opacity-100 translate-x-0 scale-100'}`}
+              >
+                <ErrorBoundary>
+                  <LoadingBoundary>
+                    <EnhancedHybridSearchBar />
+                  </LoadingBoundary>
+                </ErrorBoundary>
+              </div>
+            </Suspense>
           )}
-
-          {/* FÖRENKLAD Performance List Panel - CSS endast */}
-          <div 
-            className={`hidden lg:block transition-all duration-300 delay-100 ${showLanding ? 'opacity-0 translate-x-4 scale-95' : 'opacity-100 translate-x-0 scale-100'}`}
-          >
-            <ErrorBoundary>
-              <LoadingBoundary>
-                <PerformanceCriticalList />
-              </LoadingBoundary>
-            </ErrorBoundary>
-          </div>
 
           {/* FÖRENKLAD MAP - CSS transition endast */}
           <div 
             className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'} transition-opacity duration-400 delay-200 ${showLanding ? 'opacity-0' : 'opacity-100'}`}
           >
-            <MapTransitions isMapVisible={isMapVisible}>
+            <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+            </div>}>
               <LeafletMap className="w-full h-full" />
-              <StatisticsPopup />
-              <LayerControl />
-            </MapTransitions>
-          </motion.div>
+            </Suspense>
+          </div>
           
           {/* Toggle button for collapsed search box */}
           {showSearchToggle && <button onClick={() => setSearchBoxCollapsed(false)} className="absolute top-4 left-4 z-50 bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
               🔍 Sök förskolor
             </button>}
 
-          {/* Lazy-loaded heavy components with Suspense */}
-          <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
-            <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
-          </Suspense>
-
-          {/* Comparison Panel and Modal */}
-          <ComparisonPanel />
-          <Suspense fallback={null}>
-            <ComparisonModal />
-          </Suspense>
-
-          {/* Dynamic Statistics Modal */}
-          <Suspense fallback={null}>
-            <DynamicStatisticsModal 
-              isOpen={showStatistics} 
-              onClose={() => setShowStatistics(false)} 
-            />
-          </Suspense>
-
-          {/* Enhanced features */}
-          <DynamicStatisticsPanel />
+          {/* BARA kritiska komponenter som användaren aktivt behöver */}
           
-          {/* Performance Dashboard - only load when needed */}
-          {process.env.NODE_ENV === 'development' && (
+          {/* Admin Panel - bara när användaren klickar */}
+          {showAdmin && (
+            <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full"></div>
+            </div>}>
+              <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
+            </Suspense>
+          )}
+
+          {/* Statistics Modal - bara när användaren klickar */}
+          {showStatistics && (
             <Suspense fallback={null}>
-              <PerformanceDashboard />
+              <DynamicStatisticsModal 
+                isOpen={showStatistics} 
+                onClose={() => setShowStatistics(false)} 
+              />
             </Suspense>
           )}
           
-          {/* Mobile Navigation */}
-          {isMobile && <MobileNavigation />}
+          {/* Mobile Navigation - bara på mobil */}
+          {isMobile && (
+            <Suspense fallback={null}>
+              <MobileNavigation />
+            </Suspense>
+          )}
           
           {/* FÖRENKLAD Mobile List Button */}
           {isMobile && (
@@ -273,21 +242,18 @@ const Index = () => {
             </div>
           )}
           
-          {/* Mobile Swipe Navigation */}
-          <MobileSwipeNavigation />
-          
-          {/* FÖRENKLAD Admin Button */}
+          {/* FÖRENKLAD Admin Button - ingen AnimatedButton */}
           <div 
             className={`fixed bottom-6 right-6 z-40 transition-all duration-300 delay-400 ${showLanding ? 'opacity-0 translate-y-3 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}
           >
-            <AnimatedButton 
+            <Button 
               onClick={() => setShowAdmin(true)} 
               variant="outline" 
               size="lg" 
-              className="glass-effect hover-glow-subtle border-0 p-4 rounded-2xl shadow-nordic"
+              className="glass-effect hover:scale-105 transition-transform border-0 p-4 rounded-2xl shadow-lg hover:shadow-xl"
             >
               <Settings className="w-6 h-6" />
-            </AnimatedButton>
+            </Button>
           </div>
 
           {/* FÖRENKLAD Loading overlay - CSS endast */}
