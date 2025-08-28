@@ -13,7 +13,7 @@ import { StarRating } from '@/components/ui/star-rating';
 import { DirectionsPanel } from '@/components/directions/DirectionsPanel';
 import { StreetViewPanel } from '@/components/streetview/StreetViewPanel';
 import { ClickOutside } from '@/components/ui/click-outside';
-import { DetailedRatingsDisplay } from '@/components/enhanced/DetailedRatingsDisplay';
+// import { DetailedRatingsDisplay } from '@/components/enhanced/DetailedRatingsDisplay';
 interface GoogleData {
   google_rating?: number;
   google_reviews_count?: number;
@@ -348,11 +348,34 @@ export const PreschoolDetails: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="reviews" className="p-6">
-                <DetailedRatingsDisplay preschool={selectedPreschool} />
+                {googleData?.reviews && googleData.reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {googleData.reviews.slice(0, 3).map((review: any, index: number) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                            <User className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <StarRating rating={review.rating || 0} size="sm" />
+                            </div>
+                            <p className="text-sm text-muted-foreground">{review.text}</p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Inga recensioner tillgängliga</p>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="contact" className="p-6 space-y-4">
-                <DistanceRoutingPanel preschool={selectedPreschool} />
+                {/* <DistanceRoutingPanel preschool={selectedPreschool} /> */}
                 
                 <div className="space-y-4">
                   {googleData?.contact_phone && <Card className="p-4">

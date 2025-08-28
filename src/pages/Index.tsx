@@ -15,11 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import preschoolIcon from '@/assets/preschool-icon.jpg';
 
 const Index = () => {
-  const {
-    preschools,
-    isLoading,
-    error
-  } = usePreschools();
+  const { isLoading, error } = usePreschools();
+  const { preschools } = useMapStore();
   const {
     searchBoxCollapsed,
     setSearchBoxCollapsed

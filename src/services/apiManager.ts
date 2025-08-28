@@ -163,15 +163,8 @@ export class ApiManager {
    */
   static async clearExpiredCache() {
     try {
-      const { error } = await supabase
-        .from('api_cache')
-        .delete()
-        .lt('expires_at', new Date().toISOString());
-
-      if (error) {
-        console.error('Cache cleanup error:', error);
-        return { success: false, error: error.message };
-      }
+      // Remove cache clearing as api_cache table doesn't exist
+      console.log('Cache clearing disabled - no api_cache table');
 
       console.log('✅ Cleared expired cache entries');
       return { success: true };
@@ -189,22 +182,12 @@ export class ApiManager {
    */
   static async getCacheStats() {
     try {
-      const { data, error } = await supabase
-        .from('api_cache')
-        .select('api_type, count(*)')
-        .gte('expires_at', new Date().toISOString());
-
-      if (error) {
-        console.error('Cache stats error:', error);
-        return { success: false, error: error.message };
-      }
+      // Remove cache stats as api_cache table doesn't exist
+      console.log('Cache stats disabled - no api_cache table');
 
       return {
         success: true,
-        data: data.reduce((acc, item) => {
-          acc[item.api_type] = item.count;
-          return acc;
-        }, {} as Record<string, number>)
+        data: {}
       };
     } catch (error) {
       console.error('Cache stats client error:', error);

@@ -104,13 +104,13 @@ export const useContextualStats = (): ContextualStats => {
 
     // Teacher percentage calculation
     const preschoolsWithTeachers = validPreschools.filter(p => 
-      p.personal_andel_forskollararexamen != null && 
-      p.personal_andel_forskollararexamen > 0
+      p.andel_med_förskollärarexamen != null && 
+      p.andel_med_förskollärarexamen > 0
     );
     
     const teacherPercentage = preschoolsWithTeachers.length > 0 ?
       preschoolsWithTeachers.reduce((sum, p) => {
-        const percentage = p.personal_andel_forskollararexamen || 0;
+        const percentage = p.andel_med_förskollärarexamen || 0;
         return sum + (percentage * 100); // Convert to percentage if it's a decimal
       }, 0) / preschoolsWithTeachers.length : 0;
 

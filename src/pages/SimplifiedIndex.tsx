@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SimpleMapbox } from '@/components/SimpleMapbox';
+// import { SimpleMapbox } from '@/components/SimpleMapbox';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -142,7 +142,10 @@ const SimplifiedIndex = () => {
             animate={{ opacity: showLanding ? 0 : 1 }}
             transition={{ delay: 0.5, duration: 0.4 }}
           >
-            <SimpleMapbox className="w-full h-full" />
+            {/* <SimpleMapbox className="w-full h-full" /> */}
+            <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+              <p className="text-muted-foreground">Map placeholder</p>
+            </div>
           </motion.div>
 
           {/* Mobile sök-knapp */}

@@ -87,6 +87,13 @@ interface MapState {
   selectedPreschool: Preschool | null;
   searchFilters: SearchFilters;
   isLoading: boolean;
+  
+  // Add missing properties for contextual stats
+  selectedMunicipality: string | null;
+  searchQuery: string;
+  isGeolocationActive: boolean;
+  userLocation: { lat: number; lng: number } | null;
+  mapBounds: { north: number; south: number; east: number; west: number } | null;
   mapCenter: LngLatLike;
   mapZoom: number;
   showClusters: boolean;
@@ -133,6 +140,7 @@ interface MapState {
   clearSpecificFilter: (filterKey: keyof SearchFilters) => void;
   hasActiveFilters: boolean;
   setLoading: (loading: boolean) => void;
+  
   
   // UI actions
   setSearchBoxCollapsed: (collapsed: boolean) => void;
@@ -216,6 +224,13 @@ export const useMapStore = create<MapState>((set, get) => ({
   searchBoxCollapsed: false,
   listPanelCollapsed: false,
   searchTerm: '',
+  
+  // Initialize missing properties
+  selectedMunicipality: null,
+  searchQuery: '',
+  isGeolocationActive: false,
+  userLocation: null,
+  mapBounds: null,
 
   updatePreschool: (updatedPreschool) => set((state) => ({
     preschools: state.preschools.map(p => 
@@ -478,8 +493,8 @@ export const useMapStore = create<MapState>((set, get) => ({
       const lat = preschool.latitud;
       const lng = preschool.longitud;
       
-      return lat >= bounds.south && lat <= bounds.north &&
-             lng >= bounds.west && lng <= bounds.east;
+        return lat >= bounds.south && lat <= bounds.north &&
+               lng >= bounds.west && lng <= bounds.east;
     });
     
     // Sort based on current sort order with performance optimization
@@ -515,6 +530,13 @@ export const useMapStore = create<MapState>((set, get) => ({
   setSearchBoxCollapsed: (searchBoxCollapsed) => set({ searchBoxCollapsed }),
   setListPanelCollapsed: (listPanelCollapsed) => set({ listPanelCollapsed }),
   setSearchTerm: (searchTerm) => set({ searchTerm }),
+  
+  // Implement missing actions
+  setSelectedMunicipality: (selectedMunicipality) => set({ selectedMunicipality }),
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setIsGeolocationActive: (isGeolocationActive) => set({ isGeolocationActive }),
+  setUserLocation: (userLocation) => set({ userLocation }),
+  setMapBounds: (mapBounds) => set({ mapBounds }),
 
   applyFilters: () => {
     const { preschools, searchFilters } = get();
@@ -593,7 +615,7 @@ export const useMapStore = create<MapState>((set, get) => ({
           ? searchFilters.center 
           : 'lng' in searchFilters.center 
             ? [searchFilters.center.lng, searchFilters.center.lat]
-            : [searchFilters.center.lon, searchFilters.center.lat];
+            : [(searchFilters.center as any).lon, (searchFilters.center as any).lat];
         
         const distance = getDistance(
           centerLat, centerLng,
