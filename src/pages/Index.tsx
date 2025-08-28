@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-// ENKEL IMPLEMENTATION - bara Leaflet och grundläggande komponenter
+import { motion } from 'framer-motion';
+// ENHANCED IMPLEMENTATION - Magisk laddningsanimation + Leaflet
 import { LeafletMap } from '@/components/LeafletMap';
 import { AdminPanel } from '@/components/AdminPanel';
 import { ComparisonModal } from '@/components/ComparisonModal';
+import { MagicalPageLoader } from '@/components/MagicalPageLoader';
 import { usePreschools } from '@/hooks/usePreschools';
 import { useMapStore } from '@/stores/mapStore';
 import { useComparisonStore } from '@/stores/comparisonStore';
@@ -64,24 +66,22 @@ const Index = () => {
 
   return (
     <>
-      {/* FÖRENKLAD SNABB LOADING - ingen tung animation */}
-      {showLanding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600">
-          <div className="text-center text-white">
-            <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h2 className="text-2xl font-semibold mb-2">Sveriges Förskolor</h2>
-            <p className="text-lg opacity-90">Laddar snabbt...</p>
-          </div>
-        </div>
-      )}
+      {/* 🚀 MAGISK LADDNINGSANIMATION - Progressivt bygger upp sidan */}
+      <MagicalPageLoader 
+        isVisible={showLanding} 
+        onComplete={handleLandingComplete} 
+      />
 
       <div 
         className={`min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 transition-opacity duration-300 ${showLanding ? 'opacity-0' : 'opacity-100'}`}
         id="main-content"
       >
-        {/* FÖRENKLAD Header - ingen motion animation */}
-        <header 
-          className={`relative z-40 bg-white border-b border-border/10 transition-all duration-200 ${showLanding ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'}`}
+        {/* 🎨 ANIMERAD HEADER - Bygger upp progressivt */}
+        <motion.header 
+          initial={{ opacity: 0, y: -50 }}
+          animate={showLanding ? { opacity: 0, y: -50 } : { opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+          className="relative z-40 bg-white/95 backdrop-blur-lg border-b border-border/10 shadow-sm"
         >
           <div className="container mx-auto px-6 md:px-8 py-4 md:py-6">
             <div className="flex items-center justify-between">
@@ -121,18 +121,21 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </header>
+        </motion.header>
 
       {/* Main content */}
       <div className={`relative ${isMobile ? 'pb-16' : ''}`}>
           {/* Enkel sökning - sparar på prestanda */}
 
-          {/* FÖRENKLAD MAP - CSS transition endast */}
-          <div 
-            className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'} transition-opacity duration-400 delay-200 ${showLanding ? 'opacity-0' : 'opacity-100'}`}
+          {/* 🗺️ ANIMERAD KARTA - Zoomar in med cool effekt */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={showLanding ? { opacity: 0, scale: 0.95 } : { opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6, duration: 1, ease: "easeOut" }}
+            className={`${isMobile ? 'h-[calc(100vh-64px)]' : 'h-screen'} overflow-hidden`}
           >
             <LeafletMap preschools={preschools || []} className="w-full h-full" />
-          </div>
+          </motion.div>
           
           {/* Toggle button for collapsed search box */}
           {showSearchToggle && <button onClick={() => setSearchBoxCollapsed(false)} className="absolute top-4 left-4 z-50 bg-card/95 backdrop-blur-lg shadow-nordic border-border/50 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
@@ -149,36 +152,47 @@ const Index = () => {
           {/* Jämför Modal */}
           <ComparisonModal />
           
-          {/* FÖRENKLAD Mobile List Button */}
+          {/* 📱 ANIMERAD Mobile List Button */}
           {isMobile && (
-            <div 
-              className={`fixed bottom-20 right-4 z-40 md:hidden transition-all duration-300 delay-300 ${showLanding ? 'opacity-0 translate-y-3' : 'opacity-100 translate-y-0'}`}
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.8 }}
+              animate={showLanding ? { opacity: 0, y: 50, scale: 0.8 } : { opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 1.0, duration: 0.6, ease: "easeOut" }}
+              className="fixed bottom-20 right-4 z-40 md:hidden"
             >
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="glass-effect hover-glow-subtle border-0 p-3 rounded-full shadow-lg"
+                className="glass-effect hover-glow-subtle border-0 p-3 rounded-full shadow-lg hover:scale-110 transition-transform"
                 onClick={() => {/* Toggle mobile list */}}
               >
                 <MapPin className="w-5 h-5" />
               </Button>
-            </div>
+            </motion.div>
           )}
 
-          
-          {/* FÖRENKLAD Admin Button - ingen AnimatedButton */}
-          <div 
-            className={`fixed bottom-6 right-6 z-40 transition-all duration-300 delay-400 ${showLanding ? 'opacity-0 translate-y-3 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}
+          {/* 🔧 ANIMERAD Admin Button med cool bouncy effect */}
+          <motion.div
+            initial={{ opacity: 0, y: 100, rotate: -45 }}
+            animate={showLanding ? { opacity: 0, y: 100, rotate: -45 } : { opacity: 1, y: 0, rotate: 0 }}
+            transition={{ 
+              delay: 1.2, 
+              duration: 0.8, 
+              ease: "easeOut",
+              type: "spring",
+              stiffness: 150 
+            }}
+            className="fixed bottom-6 right-6 z-40"
           >
             <Button 
               onClick={() => setShowAdmin(true)} 
               variant="outline" 
               size="lg" 
-              className="glass-effect hover:scale-105 transition-transform border-0 p-4 rounded-2xl shadow-lg hover:shadow-xl"
+              className="glass-effect hover:scale-110 transition-all duration-200 border-0 p-4 rounded-2xl shadow-lg hover:shadow-xl hover:rotate-12"
             >
               <Settings className="w-6 h-6" />
             </Button>
-          </div>
+          </motion.div>
 
           {/* FÖRENKLAD Loading overlay - CSS endast */}
           {isLoading && !showLanding && (
