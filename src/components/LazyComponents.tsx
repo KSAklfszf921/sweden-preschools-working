@@ -10,7 +10,7 @@ export const AdminPanel = lazy(() =>
 
 // Statistics components
 export const StatisticsPanel = lazy(() => 
-  import('./StatisticsPanel').then(module => ({ default: module.StatisticsPanel }))
+  import('./StatisticsPanel')
 );
 
 // Comparison modal
@@ -18,18 +18,18 @@ export const ComparisonModal = lazy(() =>
   import('./ComparisonModal').then(module => ({ default: module.ComparisonModal }))
 );
 
-// Enhanced components
-export const PreschoolDetailsModal = lazy(() => 
-  import('./enhanced/PreschoolDetailsModal').then(module => ({ default: module.PreschoolDetailsModal }))
-);
+// Enhanced components (commented out as they don't exist)
+// export const PreschoolDetailsModal = lazy(() => 
+//   import('./enhanced/PreschoolDetailsModal')
+// );
 
-export const ClusteringControlPanel = lazy(() => 
-  import('./enhanced/ClusteringControlPanel').then(module => ({ default: module.ClusteringControlPanel }))
-);
+// export const ClusteringControlPanel = lazy(() => 
+//   import('./enhanced/ClusteringControlPanel')
+// );
 
-export const PerformanceDashboard = lazy(() => 
-  import('./enhanced/PerformanceDashboard').then(module => ({ default: module.PerformanceDashboard }))
-);
+// export const PerformanceDashboard = lazy(() => 
+//   import('./enhanced/PerformanceDashboard')
+// );
 
 // Street view and directions - heavy components
 export const StreetViewPanel = lazy(() => 
@@ -40,12 +40,12 @@ export const DirectionsPanel = lazy(() =>
   import('./directions/DirectionsPanel').then(module => ({ default: module.DirectionsPanel }))
 );
 
-// Advanced search components
-export const AdvancedSearch = lazy(() => 
-  import('./enhanced/AdvancedSearch').then(module => ({ default: module.AdvancedSearch }))
-);
+// Advanced search components (commented out as they don't exist)
+// export const AdvancedSearch = lazy(() => 
+//   import('./enhanced/AdvancedSearch')
+// );
 
-// Export functions
-export const ExportFunctions = lazy(() => 
-  import('./enhanced/ExportFunctions').then(module => ({ default: module.ExportFunctions }))
-);
+// Export functions (commented out as they don't exist)
+// export const ExportFunctions = lazy(() => 
+//   import('./enhanced/ExportFunctions')
+// );

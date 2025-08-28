@@ -49,7 +49,7 @@ const AnimatedSwedenMap: React.FC<{ progress: number; loadingPhase: 'border' | '
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8, ease: "easeOutCubic" }}
+      transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="mb-8 relative"
     >
       <svg viewBox="0 0 130 160" className="w-24 h-32 mx-auto drop-shadow-lg">
@@ -107,7 +107,7 @@ const AnimatedSwedenMap: React.FC<{ progress: number; loadingPhase: 'border' | '
               transition={{ 
                 delay: marker.delay * 0.05,
                 duration: 0.3,
-                ease: "easeOutBack",
+                ease: [0.68, -0.55, 0.265, 1.55],
                 type: "spring",
                 stiffness: 400
               }}
@@ -485,7 +485,7 @@ export const LandingAnimation: React.FC<LandingAnimationProps> = ({ onComplete }
           filter: "blur(10px)"
         }}
         transition={{ 
-          exit: { duration: 0.8, ease: "easeInOut" }
+          duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94]
         }}
         className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
         style={{

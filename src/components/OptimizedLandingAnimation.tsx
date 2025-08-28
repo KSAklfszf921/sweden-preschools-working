@@ -132,7 +132,6 @@ const FastProgressStep: React.FC<{
               : 'none'
         }}
         whileHover={{ scale: 1.05 }}
-        className="will-change-transform"
       >
         {/* Minimal shimmer effect för aktiv state */}
         {isActive && (
@@ -203,7 +202,6 @@ const OptimizedSparkles: React.FC = () => (
           delay: i * 0.08,
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
-        className="will-change-transform"
       />
     ))}
   </div>
@@ -293,9 +291,7 @@ export const OptimizedLandingAnimation: React.FC<OptimizedLandingAnimationProps>
           scale: 0.98,
           filter: "blur(8px)"
         }}
-        transition={{ 
-          exit: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }
-        }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="fixed inset-0 z-50 flex items-center justify-center will-change-transform"
         style={{
           background: `radial-gradient(ellipse at center, 
@@ -381,7 +377,6 @@ export const OptimizedLandingAnimation: React.FC<OptimizedLandingAnimationProps>
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.1, ease: "linear" }}
-                className="will-change-transform"
               >
                 {/* Shimmer effect */}
                 <motion.div
@@ -423,7 +418,6 @@ export const OptimizedLandingAnimation: React.FC<OptimizedLandingAnimationProps>
                 scale: count === totalPreschools ? [1, 1.03, 1] : 1
               }}
               transition={{ duration: 0.2 }}
-              className="will-change-transform"
             >
               {Math.floor(count).toLocaleString('sv-SE')}
             </motion.div>
