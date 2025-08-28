@@ -1,0 +1,15 @@
+            - name: Manage Merge
+  # You may pin to the exact commit or the version.
+  # uses: sanjeev-labs/manage-merge@5be72c01f30ab6f4ea4c16ad29305689f5f235da
+  uses: sanjeev-labs/manage-merge@v1.0
+  with:
+    # Merge method to use. Possible values are `merge`, `squash` or
+`rebase`. Default is `merge`.
+    merge_method: # optional, default is merge
+    # Time zone to use. Default is UTC.
+    time_zone: # optional, default is UTC
+    # Target branch, pull requested created for.
+    target_branch: # optional, default is main
+    # Target branch's label to make sure branch that branch is ready for merge, if any label is given.
+    label_name: # optional, default is merge-ready
+          
