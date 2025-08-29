@@ -7,9 +7,24 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMapStore } from '@/stores/mapStore';
 import { motion } from 'framer-motion';
-import { useDebounce } from '@/hooks/useDebounce';
-import { ActiveFiltersDisplay } from './ActiveFiltersDisplay';
 import { SWEDISH_MUNICIPALITIES } from '@/data/municipalities';
+
+// Simple inline debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 interface OptimizedSearchBarProps {
   className?: string;
 }
@@ -243,12 +258,7 @@ export const OptimizedSearchBar: React.FC<OptimizedSearchBarProps> = ({
             </div>
             
             
-            {/* Active filters display */}
-            {hasActiveFilters && (
-              <div className="pt-2 border-t border-border/50">
-                <ActiveFiltersDisplay />
-              </div>
-            )}
+            {/* Active filters display removed - component deleted */}
           </div>
         </Card>
       </motion.div>;

@@ -5,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useMapStore } from '@/stores/mapStore';
-import { AdvancedSearch } from '@/components/enhanced/AdvancedSearch';
-import { TravelTimeCalculator } from '@/components/enhanced/TravelTimeCalculator';
+// AdvancedSearch and TravelTimeCalculator removed - components deleted
 import { Filter, X, MapPin, Search, ChevronDown, ChevronUp, Settings, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -293,23 +292,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ onClose }) => {
         </div>
       </Card>
 
-      {/* Travel Times Panel */}
-      {showTravelTimes && userLocation && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="mt-4"
-        >
-          <TravelTimeCalculator userLocation={userLocation} />
-        </motion.div>
-      )}
-
-      {/* Advanced Search Modal */}
-      <AdvancedSearch
-        isOpen={showAdvancedSearch}
-        onClose={() => setShowAdvancedSearch(false)}
-      />
+      {/* Travel Times Panel and Advanced Search removed - components deleted */}
     </motion.div>
   );
 };

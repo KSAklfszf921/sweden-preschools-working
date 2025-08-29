@@ -4,7 +4,7 @@ import MapboxLanguage from '@mapbox/mapbox-gl-language';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapStore, Preschool } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
+// EnhancedPopup removed - component deleted
 import { mapboxConfig } from '@/utils/mapboxConfig';
 import { 
   calculateOptimalView, 
@@ -470,14 +470,7 @@ export const Map3D: React.FC<Map3DProps> = ({
   }, [preschools]);
   return <div className={`relative ${className}`}>
       <AnimatePresence>
-        {showPopup && popupPreschool && <EnhancedPopup preschool={popupPreschool} onClose={() => {
-        setShowPopup(false);
-        setPopupPreschool(null);
-      }} onViewDetails={() => {
-        setSelectedPreschool(popupPreschool);
-        setShowPopup(false);
-        setPopupPreschool(null);
-      }} nationalAverage={nationalAverage} />}
+        {/* EnhancedPopup removed - component deleted */}
       </AnimatePresence>
       <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden" />
       

@@ -10,8 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { X, MapPin, Users, GraduationCap, Star, Phone, Globe, Camera, Navigation, Plus, Route, Eye, Clock, MessageSquare, ExternalLink, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StarRating } from '@/components/ui/star-rating';
-import { DirectionsPanel } from '@/components/directions/DirectionsPanel';
-import { StreetViewPanel } from '@/components/streetview/StreetViewPanel';
+// DirectionsPanel removed - component deleted
+// StreetViewPanel removed - component deleted
 import { ClickOutside } from '@/components/ui/click-outside';
 interface GoogleData {
   google_rating?: number;
@@ -487,21 +487,10 @@ export const PreschoolDetails: React.FC = () => {
       opacity: 0,
       y: 20
     }} className="fixed right-4 bottom-4 w-96 z-40">
-          <DirectionsPanel preschool={selectedPreschool} userLocation={userLocation} onClose={() => setShowDirections(false)} />
+          {/* DirectionsPanel removed - component deleted */}
         </motion.div>}
 
-      {showStreetView && <motion.div initial={{
-      opacity: 0,
-      y: 20
-    }} animate={{
-      opacity: 1,
-      y: 0
-    }} exit={{
-      opacity: 0,
-      y: 20
-    }} className="fixed left-4 bottom-4 w-96 z-40">
-          <StreetViewPanel preschool={selectedPreschool} onClose={() => setShowStreetView(false)} />
-        </motion.div>}
+      {/* StreetViewPanel removed - component deleted */}
 
     </AnimatePresence>;
 };

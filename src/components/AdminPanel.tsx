@@ -35,9 +35,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMapStore } from '@/stores/mapStore';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAdminRealTimeMonitor } from '@/hooks/useAdminRealTimeMonitor';
-import { useAdminCoordinateStats } from '@/hooks/useAdminCoordinateStats';
-import { CoordinateBatchProcessor } from '@/components/CoordinateBatchProcessor';
+// Admin hooks and CoordinateBatchProcessor removed - components deleted
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
@@ -100,7 +98,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [statsLoading, setStatsLoading] = useState(false);
   const { preschools } = useMapStore();
   const { toast } = useToast();
-  const { stats: coordinateStats, isLoading: coordinateStatsLoading, refresh: refreshStats } = useAdminCoordinateStats();
+  // useAdminCoordinateStats removed - hook deleted
+  const coordinateStats = null;
+  const coordinateStatsLoading = false;
+  const refreshStats = () => {};
 
   const missingCoords = preschools.filter(p => 
     p.latitud === null || p.longitud === null || p.latitud === 0 || p.longitud === 0
@@ -193,11 +194,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // Enable real-time monitoring for admin data changes
-  useAdminRealTimeMonitor({
-    onDataChange: loadAdminStats,
-    isEnabled: isOpen
-  });
+  // useAdminRealTimeMonitor removed - hook deleted
   const checkApiStatus = async () => {
     setApiStatus('checking');
     try {
@@ -549,72 +546,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                             <RefreshCw className="h-6 w-6 animate-spin" />
                             <span className="ml-2">Laddar koordinatstatistik...</span>
                           </div>
-                        ) : coordinateStats ? (
+                        ) : (
                           <div className="space-y-4">
                             <div className="grid grid-cols-4 gap-4">
                               <div className="text-center p-4 bg-background/50 rounded-lg">
-                                <div className="text-2xl font-bold">{coordinateStats.total}</div>
+                                <div className="text-2xl font-bold">{preschools.length}</div>
                                 <p className="text-xs text-muted-foreground">Totalt förskolor</p>
                               </div>
                               <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                                <div className="text-2xl font-bold text-green-600">{coordinateStats.withCoordinates}</div>
+                                <div className="text-2xl font-bold text-green-600">{preschools.length - missingCoords.length}</div>
                                 <p className="text-xs text-muted-foreground">Med koordinater</p>
                               </div>
                               <div className="text-center p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
-                                <div className="text-2xl font-bold text-red-600">{coordinateStats.missingCoordinates}</div>
+                                <div className="text-2xl font-bold text-red-600">{missingCoords.length}</div>
                                 <p className="text-xs text-muted-foreground">Saknar koordinater</p>
                               </div>
                               <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                                 <div className="text-2xl font-bold text-blue-600">
-                                  {Math.round((coordinateStats.withCoordinates / coordinateStats.total) * 100)}%
+                                  {preschools.length > 0 ? Math.round(((preschools.length - missingCoords.length) / preschools.length) * 100) : 0}%
                                 </div>
                                 <p className="text-xs text-muted-foreground">Täckning</p>
                               </div>
                             </div>
-
-                            {/* Top kommuner with missing coordinates */}
-                            {Object.entries(coordinateStats.byKommun).filter(([_, stats]) => stats.missing > 0).length > 0 && (
-                              <div className="space-y-2">
-                                <h4 className="font-medium">Kommuner med saknade koordinater:</h4>
-                                <div className="space-y-1 max-h-40 overflow-y-auto">
-                                  {Object.entries(coordinateStats.byKommun)
-                                    .filter(([_, stats]) => stats.missing > 0)
-                                    .sort((a, b) => b[1].missing - a[1].missing)
-                                    .slice(0, 10)
-                                    .map(([kommun, stats]) => (
-                                      <div key={kommun} className="flex justify-between items-center text-sm p-2 bg-background/30 rounded">
-                                        <span className="truncate font-medium">{kommun}</span>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-red-600 font-semibold">{stats.missing}</span>
-                                          <span className="text-muted-foreground">av {stats.total}</span>
-                                          <Badge variant="outline">{stats.percentage}%</Badge>
-                                        </div>
-                                      </div>
-                                    ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-muted-foreground">
-                            Kunde inte ladda koordinatstatistik
                           </div>
                         )}
                       </div>
                     </Card>
 
-                    {/* Batch Processor */}
-                    <CoordinateBatchProcessor 
-                      missingCoordinatesCount={missingCoords.length}
-                      onComplete={() => {
-                        loadAdminStats();
-                        refreshStats();
-                        toast({
-                          title: "Koordinater uppdaterade",
-                          description: "Förskoledata har uppdaterats med nya koordinater."
-                        });
-                      }}
-                    />
+                    {/* CoordinateBatchProcessor removed - component deleted */}
 
                     {/* Legacy Geocoding Controls */}
                     <Card className="glass-popup">
