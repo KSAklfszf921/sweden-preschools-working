@@ -5,7 +5,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapStore, Preschool } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
-import { BubbleMapIntegration } from '@/components/enhanced/BubbleMapIntegration';
 import { mapboxConfig } from '@/utils/mapboxConfig';
 import { 
   calculateOptimalView, 
@@ -480,9 +479,6 @@ export const Map3D: React.FC<Map3DProps> = ({
         setPopupPreschool(null);
       }} nationalAverage={nationalAverage} />}
       </AnimatePresence>
-      
-      <BubbleMapIntegration map={map.current} />
-      
       <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden" />
       
       {isLoading && <motion.div initial={{
