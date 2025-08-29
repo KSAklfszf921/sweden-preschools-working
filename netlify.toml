@@ -1,4 +1,5 @@
-# Netlify deployment configuration
+# Netlify deployment configuration 
+
 [build]
   publish = "dist"
   command = "npm run build"
