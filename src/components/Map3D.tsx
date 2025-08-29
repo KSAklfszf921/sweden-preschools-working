@@ -7,8 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedPopup } from '@/components/enhanced/EnhancedPopup';
 import { BubbleMapIntegration } from '@/components/enhanced/BubbleMapIntegration';
 import { mapboxConfig } from '@/utils/mapboxConfig';
-import { useMapViewportSync } from '@/hooks/useMapViewportSync';
-import { withPerformanceMonitoring } from './enhanced/PerformanceMonitor';
 import { 
   calculateOptimalView, 
   determineViewScenario, 
@@ -24,7 +22,7 @@ interface Map3DProps {
   className?: string;
   onMapReady?: (map: mapboxgl.Map) => void;
 }
-const Map3DComponent: React.FC<Map3DProps> = ({
+export const Map3D: React.FC<Map3DProps> = ({
   className,
   onMapReady
 }) => {
@@ -51,9 +49,6 @@ const Map3DComponent: React.FC<Map3DProps> = ({
     updateVisiblePreschoolsFromViewport,
     searchFilters
   } = useMapStore();
-
-  // Initialize viewport synchronization
-  useMapViewportSync(map.current);
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -523,5 +518,3 @@ const Map3DComponent: React.FC<Map3DProps> = ({
       
     </div>;
 };
-
-export const Map3D = withPerformanceMonitoring(Map3DComponent);

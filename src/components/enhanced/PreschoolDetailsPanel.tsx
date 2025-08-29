@@ -1,13 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, MapPin, User, Phone, Globe, Clock, Award, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { PreschoolImageGallery } from '@/components/PreschoolImageGallery';
-import { PreschoolReviews } from '@/components/PreschoolReviews';
-import { useEnhancedGoogleData } from '@/hooks/useEnhancedGoogleData';
 import type { Preschool } from '@/stores/mapStore';
 
 interface PreschoolDetailsPanelProps {
@@ -26,18 +23,6 @@ export const PreschoolDetailsPanel: React.FC<PreschoolDetailsPanelProps> = ({
   onBack,
   nationalAverage
 }) => {
-  const [googleData, setGoogleData] = useState<any>(null);
-  const { getGoogleData } = useEnhancedGoogleData();
-
-  useEffect(() => {
-    const loadGoogleData = async () => {
-      const data = await getGoogleData(preschool.id);
-      setGoogleData(data);
-    };
-    
-    loadGoogleData();
-  }, [preschool.id, getGoogleData]);
-
   const getHuvudmanInfo = (huvudman: string) => {
     switch (huvudman) {
       case 'Kommunal':
@@ -138,10 +123,10 @@ export const PreschoolDetailsPanel: React.FC<PreschoolDetailsPanelProps> = ({
                 {huvudmanInfo.icon}
                 <span className="ml-1">{huvudmanInfo.label}</span>
               </Badge>
-              {(googleData?.google_rating || preschool.google_rating) && (
+              {preschool.google_rating && (
                 <div className="flex items-center gap-1 text-sm">
                   <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{(googleData?.google_rating || preschool.google_rating)?.toFixed(1)}</span>
+                  <span className="font-medium">{preschool.google_rating.toFixed(1)}</span>
                 </div>
               )}
             </div>
@@ -157,11 +142,11 @@ export const PreschoolDetailsPanel: React.FC<PreschoolDetailsPanelProps> = ({
           <Separator />
 
           {/* Google Rating */}
-          {(googleData?.google_rating || preschool.google_rating) && (
+          {preschool.google_rating && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm">Betyg</h4>
-              {getRatingDisplay(googleData?.google_rating || preschool.google_rating)}
-              {nationalAverage && (googleData?.google_rating || preschool.google_rating) > nationalAverage.avgRating && (
+              {getRatingDisplay(preschool.google_rating)}
+              {nationalAverage && preschool.google_rating > nationalAverage.avgRating && (
                 <p className="text-xs text-green-600">
                   Över riksgenomsnittet ({nationalAverage.avgRating.toFixed(1)})
                 </p>
@@ -230,28 +215,28 @@ export const PreschoolDetailsPanel: React.FC<PreschoolDetailsPanelProps> = ({
           )}
 
           {/* Contact Info */}
-          {(googleData?.contact_phone || googleData?.website_url || preschool.contact_phone || preschool.website_url) && (
+          {(preschool.contact_phone || preschool.website_url) && (
             <>
               <Separator />
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">Kontakt</h4>
                 <div className="space-y-2">
-                  {(googleData?.contact_phone || preschool.contact_phone) && (
+                  {preschool.contact_phone && (
                     <div className="flex items-center gap-2 text-sm">
                       <Phone className="h-4 w-4 text-muted-foreground" />
                       <a 
-                        href={`tel:${googleData?.contact_phone || preschool.contact_phone}`}
+                        href={`tel:${preschool.contact_phone}`}
                         className="text-primary hover:underline"
                       >
-                        {googleData?.contact_phone || preschool.contact_phone}
+                        {preschool.contact_phone}
                       </a>
                     </div>
                   )}
-                  {(googleData?.website_url || preschool.website_url) && (
+                  {preschool.website_url && (
                     <div className="flex items-center gap-2 text-sm">
                       <Globe className="h-4 w-4 text-muted-foreground" />
                       <a 
-                        href={googleData?.website_url || preschool.website_url}
+                        href={preschool.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline truncate"
@@ -266,7 +251,7 @@ export const PreschoolDetailsPanel: React.FC<PreschoolDetailsPanelProps> = ({
           )}
 
           {/* Opening Hours */}
-          {(googleData?.opening_hours || preschool.opening_hours) && (
+          {preschool.opening_hours && (
             <>
               <Separator />
               <div className="space-y-2">
@@ -275,9 +260,9 @@ export const PreschoolDetailsPanel: React.FC<PreschoolDetailsPanelProps> = ({
                   Öppettider
                 </h4>
                 <div className="text-sm">
-                  {typeof (googleData?.opening_hours || preschool.opening_hours) === 'object' ? (
+                  {typeof preschool.opening_hours === 'object' ? (
                     <div className="space-y-1">
-                      {Object.entries(googleData?.opening_hours || preschool.opening_hours).map(([day, hours]) => (
+                      {Object.entries(preschool.opening_hours).map(([day, hours]) => (
                         <div key={day} className="flex justify-between">
                           <span className="text-muted-foreground capitalize">{day}:</span>
                           <span>{hours as string}</span>
@@ -285,32 +270,12 @@ export const PreschoolDetailsPanel: React.FC<PreschoolDetailsPanelProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">{(googleData?.opening_hours || preschool.opening_hours) as string}</p>
+                    <p className="text-muted-foreground">{preschool.opening_hours as string}</p>
                   )}
                 </div>
               </div>
             </>
           )}
-
-          <Separator />
-
-          {/* Image Gallery */}
-          <PreschoolImageGallery
-            preschoolId={preschool.id}
-            preschoolName={preschool.namn}
-            streetViewPanoId={googleData?.street_view_pano_id}
-            lat={preschool.latitud}
-            lng={preschool.longitud}
-          />
-
-          <Separator />
-
-          {/* Reviews */}
-          <PreschoolReviews
-            reviews={googleData?.reviews}
-            rating={googleData?.google_rating || preschool.google_rating}
-            reviewsCount={googleData?.google_reviews_count || preschool.google_reviews_count}
-          />
 
           <Separator />
 
@@ -329,7 +294,7 @@ export const PreschoolDetailsPanel: React.FC<PreschoolDetailsPanelProps> = ({
               <div className="flex flex-col">
                 <span className="text-muted-foreground">Betyg</span>
                 <span className="font-medium">
-                  {(googleData?.google_rating || preschool.google_rating) ? `${(googleData?.google_rating || preschool.google_rating).toFixed(1)} ⭐` : 'Inget betyg'}
+                  {preschool.google_rating ? `${preschool.google_rating.toFixed(1)} ⭐` : 'Inget betyg'}
                 </span>
               </div>
               <div className="flex flex-col">

@@ -215,48 +215,12 @@ All colors MUST be HSL.
 }
 
 .glass-search {
-  background: hsla(var(--background), 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid hsla(var(--border), 0.3);
-  box-shadow: var(--shadow-soft);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  box-shadow: 0 2px 12px -4px rgba(0, 0, 0, 0.12);
   border-radius: var(--radius);
-}
-
-/* Consistent glass panels for statistics and controls */
-.glass-panel {
-  background: hsla(var(--card), 0.9);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid hsla(var(--border), 0.25);
-  box-shadow: var(--shadow-elegant);
-  border-radius: var(--radius);
-}
-
-/* Glass overlay for modals and popups */
-.glass-overlay {
-  background: hsla(var(--background), 0.95);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid hsla(var(--border), 0.4);
-  box-shadow: var(--shadow-nordic);
-  border-radius: var(--radius-lg);
-}
-
-/* Dark mode glass adjustments */
-.dark .glass-search {
-  background: hsla(var(--background), 0.8);
-  border: 1px solid hsla(var(--border), 0.4);
-}
-
-.dark .glass-panel {
-  background: hsla(var(--card), 0.85);
-  border: 1px solid hsla(var(--border), 0.3);
-}
-
-.dark .glass-overlay {
-  background: hsla(var(--background), 0.9);
-  border: 1px solid hsla(var(--border), 0.5);
 }
 
 /* Enhanced hover effects with semantic colors */
@@ -374,19 +338,14 @@ All colors MUST be HSL.
 .transition-spring { transition: var(--transition-spring); }
 .transition-bounce { transition: var(--transition-bounce); }
 
-/* Mobile optimizations and responsive utilities */
+/* Mobile optimizations */
 @media (max-width: 768px) {
   .glass-effect {
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
   
   .glass-card {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-  
-  .glass-search {
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
   }
@@ -395,9 +354,6 @@ All colors MUST be HSL.
   .touch-target {
     min-height: 44px;
     min-width: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
   /* Enhanced contrast for outdoor visibility */
@@ -405,80 +361,4 @@ All colors MUST be HSL.
     background: hsl(var(--background) / 0.95);
     border: 2px solid hsl(var(--border) / 0.8);
   }
-  
-  /* Mobile-specific layout utilities */
-  .portrait-mode {
-    --mobile-spacing: 1rem;
-  }
-  
-  .landscape-mode {
-    --mobile-spacing: 0.5rem;
-  }
-  
-  /* Optimized animations for mobile */
-  .mobile-animation {
-    animation-duration: 0.2s;
-    animation-timing-function: ease-out;
-  }
-  
-  /* Reduced motion for battery saving */
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-}
-
-/* Tablet optimizations */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .glass-effect,
-  .glass-card,
-  .glass-search {
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-  
-  .touch-target {
-    min-height: 40px;
-    min-width: 40px;
-  }
-}
-
-/* High DPI screen optimizations */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .glass-effect,
-  .glass-card,
-  .glass-search {
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-}
-
-/* Performance optimization classes */
-.gpu-accelerated {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-.memory-optimized {
-  contain: layout style paint;
-}
-
-.lazy-load {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 500px;
-}
-
-/* Virtual scrolling optimizations */
-.virtual-scroll-container {
-  overflow: auto;
-  height: 100%;
-  contain: strict;
-}
-
-.virtual-scroll-item {
-  contain: layout style paint;
-  will-change: transform;
 }
