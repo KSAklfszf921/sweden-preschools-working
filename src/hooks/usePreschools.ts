@@ -3,23 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMapStore, type Preschool } from '@/stores/mapStore';
 import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 import { useBackgroundGoogleEnrichment } from './useBackgroundGoogleEnrichment';
-import { useOptimizedPreschools } from './useOptimizedPreschools';
-import { dataCache, cacheKeys } from '@/utils/dataCache';
-import { performanceOptimizer } from '@/utils/performanceOptimizer';
 
 export const usePreschools = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setPreschools, setLoading } = useMapStore();
   const { startBackgroundEnrichment } = useBackgroundGoogleEnrichment();
-  
-  // Use optimized preschool loading with smart caching - but don't double-load
-  // const optimizedHook = useOptimizedPreschools({
-  //   enableCaching: true,
-  //   batchSize: 500,
-  //   maxRetries: 3,
-  //   prefetchNearby: true
-  // });
   
   // Enable real-time updates
   useRealTimeUpdates();
@@ -29,18 +18,6 @@ export const usePreschools = () => {
       setIsLoading(true);
       setLoading(true);
       setError(null);
-
-      // 🚀 Smart caching check first
-      const cacheKey = cacheKeys.preschools();
-      const cachedData = dataCache.get<Preschool[]>(cacheKey);
-      
-      if (cachedData) {
-        console.log('🚀 Loading preschools from cache - performance optimized!');
-        setPreschools(cachedData);
-        setIsLoading(false);
-        setLoading(false);
-        return;
-      }
 
       // Fetch ALL preschools with correct column casing
       const { data: preschoolsData, error: preschoolsError } = await supabase
@@ -69,10 +46,8 @@ export const usePreschools = () => {
 
       if (preschoolsError) throw preschoolsError;
 
-      // 🚀 Transform preschools with batch processing for better performance
-      const transformedPreschools: Preschool[] = await performanceOptimizer.batchProcess(
-        preschoolsData || [],
-        (preschool: any) => ({
+      // Transform preschools - keep NULL coordinates as null, don't convert to 0
+      const transformedPreschools: Preschool[] = (preschoolsData || []).map(preschool => ({
         id: preschool.id,
         namn: preschool.Namn,
         kommun: preschool.Kommun,
@@ -91,10 +66,7 @@ export const usePreschools = () => {
         contact_phone: preschool.preschool_google_data?.[0]?.contact_phone,
         website_url: preschool.preschool_google_data?.[0]?.website_url,
         opening_hours: preschool.preschool_google_data?.[0]?.opening_hours,
-        }),
-        500, // Process 500 at a time
-        10   // 10ms delay between batches
-      );
+      }));
 
       // Find preschools that actually need geocoding (NULL or 0 coordinates)
       const missingCoords = transformedPreschools.filter(p => 
@@ -124,13 +96,8 @@ export const usePreschools = () => {
         });
       }
 
-      // 🚀 Cache the processed data for next time
-      dataCache.set(cacheKey, transformedPreschools, 10 * 60 * 1000); // 10 minutes cache
-
-      // Set preschools in store - this will trigger map updates immediately
-      console.log(`🗺️ Setting ${transformedPreschools.length} preschools in store for map display`);
       setPreschools(transformedPreschools);
-      console.log(`✅ Successfully loaded and displayed ${transformedPreschools.length} preschools on map with smart caching!`);
+      console.log(`Loaded ${transformedPreschools.length} preschools`);
 
       // Start discrete background Google data enrichment
       startBackgroundEnrichment();
@@ -145,8 +112,6 @@ export const usePreschools = () => {
   };
 
   useEffect(() => {
-    // Start fetching data immediately, not waiting for component mount completion
-    console.log('🚀 Starting immediate preschool data fetch during loading animation...');
     fetchPreschools();
   }, []);
 

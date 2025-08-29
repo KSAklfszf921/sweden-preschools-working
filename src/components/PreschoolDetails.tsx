@@ -13,7 +13,6 @@ import { StarRating } from '@/components/ui/star-rating';
 import { DirectionsPanel } from '@/components/directions/DirectionsPanel';
 import { StreetViewPanel } from '@/components/streetview/StreetViewPanel';
 import { ClickOutside } from '@/components/ui/click-outside';
-// import { DetailedRatingsDisplay } from '@/components/enhanced/DetailedRatingsDisplay';
 interface GoogleData {
   google_rating?: number;
   google_reviews_count?: number;
@@ -348,19 +347,51 @@ export const PreschoolDetails: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="reviews" className="p-6">
-                {googleData?.reviews && googleData.reviews.length > 0 ? (
+                {isLoadingGoogle ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Laddar recensioner...</p>
+                  </div>
+                ) : googleData?.reviews && (Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).length > 0 ? (
                   <div className="space-y-4">
-                    {googleData.reviews.slice(0, 3).map((review: any, index: number) => (
+                    {/* Average rating summary */}
+                    {googleData.google_rating && (
+                      <Card className="p-4 bg-yellow-50">
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-1 mb-2">
+                            {renderStarRating(googleData.google_rating, googleData.google_reviews_count)}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Baserat på {googleData.google_reviews_count || 0} recensioner
+                          </p>
+                        </div>
+                      </Card>
+                    )}
+                    
+                    {/* Individual reviews */}
+                    {(Array.isArray(googleData.reviews) ? googleData.reviews : JSON.parse(googleData.reviews || '[]')).map((review: any, index: number) => (
                       <Card key={index} className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                            <User className="w-4 h-4 text-primary" />
-                          </div>
+                          <User className="h-8 w-8 text-muted-foreground" />
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <StarRating rating={review.rating || 0} size="sm" />
+                              <span className="font-medium">{review.author_name}</span>
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`h-3 w-3 ${
+                                      i < review.rating 
+                                        ? 'text-yellow-400 fill-yellow-400' 
+                                        : 'text-muted-foreground'
+                                    }`} 
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(review.time * 1000).toLocaleDateString('sv-SE')}
+                              </span>
                             </div>
-                            <p className="text-sm text-muted-foreground">{review.text}</p>
+                            <p className="text-sm text-foreground">{review.text}</p>
                           </div>
                         </div>
                       </Card>
@@ -374,9 +405,7 @@ export const PreschoolDetails: React.FC = () => {
                 )}
               </TabsContent>
 
-              <TabsContent value="contact" className="p-6 space-y-4">
-                {/* <DistanceRoutingPanel preschool={selectedPreschool} /> */}
-                
+              <TabsContent value="contact" className="p-6">
                 <div className="space-y-4">
                   {googleData?.contact_phone && <Card className="p-4">
                       <div className="flex items-center gap-3">

@@ -1,6 +1,4 @@
-// Removed mapbox dependency for ultra-light performance
-type LngLatBoundsLike = [[number, number], [number, number]];
-type LngLatLike = [number, number] | { lng: number; lat: number };
+import type { LngLatBoundsLike, LngLatLike } from 'mapbox-gl';
 import type { Preschool } from '@/stores/mapStore';
 
 export interface ViewportBounds {
@@ -29,85 +27,171 @@ export interface MapViewOptions {
 /**
  * Calculate optimal map view for a set of preschools
  */
-export const calculateOptimalView = (preschools: Preschool[], scenario: string): MapViewOptions => {
-  if (preschools.length === 0) {
-    return {
-      center: [15.5, 62.0], // Sweden center
-      zoom: 5.5,
-      duration: 1000,
-      essential: true,
-      pitch: 30
-    };
-  }
+export const calculateOptimalView = (
+  preschools: Preschool[],
+  scenario: 'single' | 'few' | 'many' | 'municipality' | 'multi-municipality' = 'many'
+): MapViewOptions => {
+  const validPreschools = preschools.filter(
+    p => p.latitud !== null && p.longitud !== null && 
+    p.latitud !== 0 && p.longitud !== 0 &&
+    typeof p.latitud === 'number' && typeof p.longitud === 'number'
+  );
 
-  const validPreschools = preschools.filter(p => p.latitud && p.longitud);
-  
   if (validPreschools.length === 0) {
     return {
-      center: [15.5, 62.0],
-      zoom: 5.5,
+      center: [15.0, 62.0],
+      zoom: 5,
       duration: 1000,
-      essential: true,
-      pitch: 30
+      essential: true
     };
   }
 
+  // Single preschool - zoom in close with details
   if (validPreschools.length === 1) {
+    const preschool = validPreschools[0];
     return {
-      center: [validPreschools[0].longitud!, validPreschools[0].latitud!],
-      zoom: 14,
+      center: [preschool.longitud!, preschool.latitud!],
+      zoom: 15,
+      pitch: 45,
       duration: 1500,
       essential: true,
-      pitch: 45
+      padding: { top: 50, bottom: 50, left: 50, right: 50 }
     };
   }
 
-  // Calculate bounds
-  const lngs = validPreschools.map(p => p.longitud!);
+  // Calculate bounds for multiple preschools
   const lats = validPreschools.map(p => p.latitud!);
+  const lngs = validPreschools.map(p => p.longitud!);
   
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
+  const bounds: LngLatBoundsLike = [
+    [Math.min(...lngs), Math.min(...lats)], // Southwest
+    [Math.max(...lngs), Math.max(...lats)]  // Northeast
+  ];
+
+  // Calculate geographic spread
+  const latSpread = Math.max(...lats) - Math.min(...lats);
+  const lngSpread = Math.max(...lngs) - Math.min(...lngs);
+  const maxSpread = Math.max(latSpread, lngSpread);
+
+  // Determine optimal settings based on scenario and spread
+  let zoom: number;
+  let duration: number;
+  let padding: { top: number; bottom: number; left: number; right: number };
+  let pitch = 30;
+
+  switch (scenario) {
+    case 'few': // 2-10 preschools
+      if (maxSpread < 0.005) {
+        zoom = 14;
+        padding = { top: 100, bottom: 100, left: 100, right: 100 };
+      } else if (maxSpread < 0.02) {
+        zoom = 13;
+        padding = { top: 80, bottom: 80, left: 80, right: 80 };
+      } else {
+        zoom = 12;
+        padding = { top: 60, bottom: 60, left: 60, right: 60 };
+      }
+      duration = 1200;
+      break;
+
+    case 'municipality':
+      if (maxSpread < 0.01) {
+        zoom = 13;
+        padding = { top: 80, bottom: 80, left: 80, right: 80 };
+      } else if (maxSpread < 0.05) {
+        zoom = 12;
+        padding = { top: 100, bottom: 100, left: 100, right: 100 };
+      } else {
+        zoom = 11;
+        padding = { top: 120, bottom: 120, left: 120, right: 120 };
+      }
+      duration = 1500;
+      pitch = 20;
+      break;
+
+    case 'multi-municipality':
+      if (maxSpread < 0.1) {
+        zoom = 10;
+        padding = { top: 100, bottom: 100, left: 100, right: 100 };
+      } else if (maxSpread < 0.5) {
+        zoom = 8;
+        padding = { top: 120, bottom: 120, left: 120, right: 120 };
+      } else {
+        zoom = 6;
+        padding = { top: 150, bottom: 150, left: 150, right: 150 };
+      }
+      duration = 2000;
+      pitch = 15;
+      break;
+
+    case 'many': // 10+ preschools
+    default:
+      if (maxSpread < 0.01) {
+        zoom = 13;
+        padding = { top: 80, bottom: 80, left: 80, right: 80 };
+      } else if (maxSpread < 0.05) {
+        zoom = 11;
+        padding = { top: 100, bottom: 100, left: 100, right: 100 };
+      } else if (maxSpread < 0.2) {
+        zoom = 9;
+        padding = { top: 120, bottom: 120, left: 120, right: 120 };
+      } else {
+        zoom = 7;
+        padding = { top: 150, bottom: 150, left: 150, right: 150 };
+      }
+      duration = 1800;
+      pitch = 20;
+      break;
+  }
 
   return {
-    bounds: [[minLng, minLat], [maxLng, maxLat]] as LngLatBoundsLike,
-    padding: { top: 50, bottom: 50, left: 50, right: 50 },
-    duration: 1200,
+    bounds,
+    duration,
     essential: true,
-    pitch: 30
+    pitch,
+    padding
   };
 };
 
 /**
- * Determine view scenario based on data
+ * Determine the appropriate scenario based on preschool count and context
  */
-export const determineViewScenario = (preschoolCount: number, municipalityCount: number): string => {
+export const determineViewScenario = (
+  preschoolCount: number,
+  municipalityCount: number
+): 'single' | 'few' | 'many' | 'municipality' | 'multi-municipality' => {
   if (preschoolCount === 1) return 'single';
-  if (preschoolCount <= 10) return 'few';
+  if (municipalityCount > 1) return 'multi-municipality';
   if (municipalityCount === 1) return 'municipality';
-  if (municipalityCount <= 3) return 'region';
-  return 'national';
+  if (preschoolCount <= 10) return 'few';
+  return 'many';
 };
 
 /**
- * Create smooth easing function
+ * Create smooth easing function for map animations
  */
 export const createSmoothEasing = (scenario: string) => {
-  return (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  switch (scenario) {
+    case 'single':
+      return (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    case 'municipality':
+    case 'multi-municipality':
+      return (t: number) => t * t * (3 - 2 * t);
+    default:
+      return (t: number) => 1 - Math.pow(1 - t, 3);
+  }
 };
 
 /**
- * Debounce function
+ * Debounce function for map updates
  */
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: any[]) => void>(
   func: T,
-  delay: number
+  wait: number
 ): ((...args: Parameters<T>) => void) => {
-  let timeoutId: NodeJS.Timeout;
+  let timeout: NodeJS.Timeout;
   return (...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
   };
 };

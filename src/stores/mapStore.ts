@@ -1,8 +1,5 @@
 import { create } from 'zustand';
-// Removed mapbox dependency for ultra-light performance
-type LngLatLike = [number, number] | { lng: number; lat: number };
-import { dataCache, cacheKeys, dataTransformers } from '@/utils/dataCache';
-import { performanceOptimizer } from '@/utils/performanceOptimizer';
+import type { LngLatLike } from 'mapbox-gl';
 
 export interface Preschool {
   id: string;
@@ -22,7 +19,6 @@ export interface Preschool {
   contact_phone?: string;
   website_url?: string;
   opening_hours?: any;
-  updated_at?: string; // For cache invalidation
 }
 
 export interface SearchFilters {
@@ -64,7 +60,6 @@ export interface LayerVisibility {
   clusters: boolean;
   markers: boolean;
   communeBorders: boolean;
-  optimizedClusters: boolean; // New optimized clustering
 }
 
 export interface CommuneStats {
@@ -87,17 +82,9 @@ interface MapState {
   selectedPreschool: Preschool | null;
   searchFilters: SearchFilters;
   isLoading: boolean;
-  
-  // Add missing properties for contextual stats
-  selectedMunicipality: string | null;
-  searchQuery: string;
-  isGeolocationActive: boolean;
-  userLocation: { lat: number; lng: number } | null;
-  mapBounds: { north: number; south: number; east: number; west: number } | null;
   mapCenter: LngLatLike;
   mapZoom: number;
   showClusters: boolean;
-  lastUpdated?: number;
   updatePreschool: (updatedPreschool: Preschool) => void;
   
   // Heatmap states
@@ -121,14 +108,9 @@ interface MapState {
   // Performance
   performanceMode: 'high' | 'medium' | 'low';
   
-  // Clustering optimization
-  clusteringEnabled: boolean;
-  clusteringPerformanceMode: 'optimized' | 'legacy';
-  
   // UI state
   searchBoxCollapsed: boolean;
   listPanelCollapsed: boolean;
-  searchTerm: string;
   
   // Actions
   setPreschools: (preschools: Preschool[]) => void;
@@ -141,11 +123,9 @@ interface MapState {
   hasActiveFilters: boolean;
   setLoading: (loading: boolean) => void;
   
-  
   // UI actions
   setSearchBoxCollapsed: (collapsed: boolean) => void;
   setListPanelCollapsed: (collapsed: boolean) => void;
-  setSearchTerm: (term: string) => void;
   setMapCenter: (center: LngLatLike) => void;
   setMapZoom: (zoom: number) => void;
   setShowClusters: (show: boolean) => void;
@@ -172,10 +152,6 @@ interface MapState {
   // Performance actions
   setPerformanceMode: (mode: 'high' | 'medium' | 'low') => void;
   
-  // Clustering actions
-  setClusteringEnabled: (enabled: boolean) => void;
-  setClusteringPerformanceMode: (mode: 'optimized' | 'legacy') => void;
-  
   applyFilters: () => void;
 }
 
@@ -185,22 +161,21 @@ export const useMapStore = create<MapState>((set, get) => ({
   selectedPreschool: null,
   searchFilters: {},
   isLoading: false,
-  mapCenter: [15.2, 62.4], // Optimized center over all of Sweden  
-  mapZoom: 4.9, // Perfect zoom to show all of Sweden with visible clusters
-  showClusters: true, // Start with clusters visible
+  mapCenter: [15.0, 62.0], // Center of Sweden
+  mapZoom: 5, // Start with heatmap view
+  showClusters: false, // Start with heatmap, not clusters
   
-  // Heatmap defaults
+  // Heatmap defaults - start with heatmap visible
   heatmapType: 'density',
   heatmapIntensity: 1,
-  showHeatmap: false,
+  showHeatmap: true,
   
-  // Layer visibility defaults - start with optimized clusters
+  // Layer visibility defaults - start with heatmap
   layerVisibility: {
-    heatmap: false,
-    clusters: false, // Disable legacy clustering
-    markers: true,
+    heatmap: true,
+    clusters: false,
+    markers: false,
     communeBorders: false,
-    optimizedClusters: true, // Enable optimized clustering by default
   },
   
   // List module defaults
@@ -216,21 +191,9 @@ export const useMapStore = create<MapState>((set, get) => ({
   // Performance defaults
   performanceMode: 'high',
   
-  // Clustering defaults
-  clusteringEnabled: true,
-  clusteringPerformanceMode: 'optimized',
-  
   // UI state defaults
   searchBoxCollapsed: false,
   listPanelCollapsed: false,
-  searchTerm: '',
-  
-  // Initialize missing properties
-  selectedMunicipality: null,
-  searchQuery: '',
-  isGeolocationActive: false,
-  userLocation: null,
-  mapBounds: null,
 
   updatePreschool: (updatedPreschool) => set((state) => ({
     preschools: state.preschools.map(p => 
@@ -239,11 +202,8 @@ export const useMapStore = create<MapState>((set, get) => ({
   })),
 
   setPreschools: (preschools) => {
-    console.log(`Setting ${preschools.length} preschools in store`);
     set({ preschools });
     get().applyFilters();
-    // Force re-render of map components by updating a timestamp
-    set({ lastUpdated: Date.now() });
   },
 
   setFilteredPreschools: (filteredPreschools) => set({ filteredPreschools }),
@@ -493,8 +453,8 @@ export const useMapStore = create<MapState>((set, get) => ({
       const lat = preschool.latitud;
       const lng = preschool.longitud;
       
-        return lat >= bounds.south && lat <= bounds.north &&
-               lng >= bounds.west && lng <= bounds.east;
+      return lat >= bounds.south && lat <= bounds.north &&
+             lng >= bounds.west && lng <= bounds.east;
     });
     
     // Sort based on current sort order with performance optimization
@@ -522,39 +482,14 @@ export const useMapStore = create<MapState>((set, get) => ({
   // Performance actions
   setPerformanceMode: (performanceMode) => set({ performanceMode }),
   
-  // Clustering actions
-  setClusteringEnabled: (clusteringEnabled) => set({ clusteringEnabled }),
-  setClusteringPerformanceMode: (clusteringPerformanceMode) => set({ clusteringPerformanceMode }),
-  
   // UI actions
   setSearchBoxCollapsed: (searchBoxCollapsed) => set({ searchBoxCollapsed }),
   setListPanelCollapsed: (listPanelCollapsed) => set({ listPanelCollapsed }),
-  setSearchTerm: (searchTerm) => set({ searchTerm }),
-  
-  // Implement missing actions
-  setSelectedMunicipality: (selectedMunicipality) => set({ selectedMunicipality }),
-  setSearchQuery: (searchQuery) => set({ searchQuery }),
-  setIsGeolocationActive: (isGeolocationActive) => set({ isGeolocationActive }),
-  setUserLocation: (userLocation) => set({ userLocation }),
-  setMapBounds: (mapBounds) => set({ mapBounds }),
 
   applyFilters: () => {
     const { preschools, searchFilters } = get();
     
-    // Smart caching for filtered results
-    const cacheKey = cacheKeys.preschools(searchFilters);
-    const cachedResult = dataCache.get<Preschool[]>(cacheKey);
-    
-    if (cachedResult) {
-      console.log('🚀 Using cached filter results');
-      set({ filteredPreschools: cachedResult });
-      return;
-    }
-    
-    // Performance-optimized filtering
-    const filtered = performanceOptimizer.smartFilter(
-      preschools,
-      (preschool: Preschool) => {
+    const filtered = preschools.filter(preschool => {
       // Query filter (search in name and kommun)
       if (searchFilters.query) {
         const query = searchFilters.query.toLowerCase();
@@ -615,7 +550,7 @@ export const useMapStore = create<MapState>((set, get) => ({
           ? searchFilters.center 
           : 'lng' in searchFilters.center 
             ? [searchFilters.center.lng, searchFilters.center.lat]
-            : [(searchFilters.center as any).lon, (searchFilters.center as any).lat];
+            : [searchFilters.center.lon, searchFilters.center.lat];
         
         const distance = getDistance(
           centerLat, centerLng,
@@ -654,18 +589,9 @@ export const useMapStore = create<MapState>((set, get) => ({
       }
 
       return true;
-      },
-      2000 // Limit for performance
-    );
-
-    // Cache the filtered results
-    dataCache.set(cacheKey, filtered, 3 * 60 * 1000); // 3 minutes cache
+    });
 
     set({ filteredPreschools: filtered });
-    
-    // Also update visible preschools if in viewport-only mode
-    // This ensures the list updates immediately when filters change
-    console.log(`🔍 Applied filters, ${filtered.length} preschools match criteria (cached for reuse)`);
   },
 }));
 

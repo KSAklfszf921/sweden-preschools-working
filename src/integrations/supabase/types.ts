@@ -206,39 +206,6 @@ export type Database = {
         }
         Relationships: []
       }
-      forskolor_changelog: {
-        Row: {
-          change_type: string
-          created_at: string | null
-          field_name: string
-          id: string
-          new_value: string | null
-          old_value: string | null
-          preschool_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          change_type?: string
-          created_at?: string | null
-          field_name: string
-          id?: string
-          new_value?: string | null
-          old_value?: string | null
-          preschool_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          change_type?: string
-          created_at?: string | null
-          field_name?: string
-          id?: string
-          new_value?: string | null
-          old_value?: string | null
-          preschool_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       municipalities: {
         Row: {
           created_at: string | null

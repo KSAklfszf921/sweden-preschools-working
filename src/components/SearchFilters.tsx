@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useMapStore } from '@/stores/mapStore';
-// import { AdvancedSearch } from '@/components/enhanced/AdvancedSearch';
-// import { TravelTimeCalculator } from '@/components/enhanced/TravelTimeCalculator';
+import { AdvancedSearch } from '@/components/enhanced/AdvancedSearch';
+import { TravelTimeCalculator } from '@/components/enhanced/TravelTimeCalculator';
 import { Filter, X, MapPin, Search, ChevronDown, ChevronUp, Settings, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -301,18 +301,15 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ onClose }) => {
           exit={{ opacity: 0, y: 20 }}
           className="mt-4"
         >
-          {/* <TravelTimeCalculator userLocation={userLocation} /> */}
-          <div className="text-center text-muted-foreground text-sm">
-            Restider kommer snart
-          </div>
+          <TravelTimeCalculator userLocation={userLocation} />
         </motion.div>
       )}
 
       {/* Advanced Search Modal */}
-      {/* <AdvancedSearch
+      <AdvancedSearch
         isOpen={showAdvancedSearch}
         onClose={() => setShowAdvancedSearch(false)}
-      /> */}
+      />
     </motion.div>
   );
 };

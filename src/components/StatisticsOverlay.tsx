@@ -110,7 +110,7 @@ export const StatisticsOverlay: React.FC<StatisticsOverlayProps> = ({ className 
           </div>
 
           {/* Average Children */}
-          <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+          <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-lg">
             <div className="flex items-center gap-2 mb-1">
               <Users className="h-3 w-3 text-blue-600" />
               <span className="text-xs font-medium">Snitt Barn</span>
@@ -126,7 +126,7 @@ export const StatisticsOverlay: React.FC<StatisticsOverlayProps> = ({ className 
           </div>
 
           {/* Staff Density */}
-          <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+          <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 rounded-lg">
             <div className="flex items-center gap-2 mb-1">
               <Users className="h-3 w-3 text-green-600" />
               <span className="text-xs font-medium">Personal</span>
@@ -142,7 +142,7 @@ export const StatisticsOverlay: React.FC<StatisticsOverlayProps> = ({ className 
           </div>
 
           {/* Teacher Exam */}
-          <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+          <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg">
             <div className="flex items-center gap-2 mb-1">
               <GraduationCap className="h-3 w-3 text-purple-600" />
               <span className="text-xs font-medium">Lärarexamen</span>
@@ -158,7 +158,7 @@ export const StatisticsOverlay: React.FC<StatisticsOverlayProps> = ({ className 
           </div>
 
           {/* Google Rating */}
-          <div className="p-3 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg">
+          <div className="p-3 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 rounded-lg">
             <div className="flex items-center gap-2 mb-1">
               <Star className="h-3 w-3 text-yellow-600" />
               <span className="text-xs font-medium">Betyg</span>
@@ -174,7 +174,7 @@ export const StatisticsOverlay: React.FC<StatisticsOverlayProps> = ({ className 
           </div>
 
           {/* Operator Distribution */}
-          <div className="col-span-2 p-3 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg">
+          <div className="col-span-2 p-3 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <MapPin className="h-3 w-3 text-indigo-600" />
               <span className="text-xs font-medium">Huvudman</span>

@@ -13,8 +13,8 @@ import { useMapStore } from '@/stores/mapStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SearchFilters } from '@/components/SearchFilters';
 import { DistanceFilter } from '@/components/filters/DistanceFilter';
-// import { AdvancedSearch } from '@/components/enhanced/AdvancedSearch';
-// import { TravelTimeCalculator } from '@/components/enhanced/TravelTimeCalculator';
+import { AdvancedSearch } from '@/components/enhanced/AdvancedSearch';
+import { TravelTimeCalculator } from '@/components/enhanced/TravelTimeCalculator';
 
 const SmartSearchBar: React.FC = () => {
   const { 
@@ -681,19 +681,16 @@ const SmartSearchBar: React.FC = () => {
             exit={{ opacity: 0, y: -10 }}
             className="mt-2"
           >
-            {/* <TravelTimeCalculator userLocation={userLocation} /> */}
-            <div className="text-center text-muted-foreground text-sm">
-              Restider kommer snart
-            </div>
+            <TravelTimeCalculator userLocation={userLocation} />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Advanced Search Modal */}
-      {/* <AdvancedSearch
+      <AdvancedSearch
         isOpen={showAdvancedSearch}
         onClose={() => setShowAdvancedSearch(false)}
-      /> */}
+      />
 
       {/* Search suggestions */}
       <AnimatePresence>

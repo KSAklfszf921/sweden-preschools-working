@@ -5,7 +5,6 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: './',
   server: {
     host: "::",
     port: 8080,
@@ -21,22 +20,24 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    target: 'es2020',
-    minify: 'esbuild',
+    // Optimize build for production deployment - use modern target for Mapbox compatibility
+    target: 'es2020', // Changed from es2015 to support BigInt literals used by Mapbox
+    minify: 'esbuild', // Use esbuild instead of terser for compatibility
     sourcemap: false,
-    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
-      }
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          mapbox: ['mapbox-gl'],
+          supabase: ['@supabase/supabase-js'],
+        },
+      },
     },
-    cssCodeSplit: true,
-    assetsInlineLimit: 4096
+    // Increase chunk size warning limit for map components
+    chunkSizeWarningLimit: 1000,
   },
   // Optimize dependencies for faster loading
   optimizeDeps: {
-    include: ['@supabase/supabase-js', 'react', 'react-dom', 'leaflet', 'leaflet.markercluster'],
+    include: ['mapbox-gl', '@supabase/supabase-js', 'react', 'react-dom'],
   },
 }));

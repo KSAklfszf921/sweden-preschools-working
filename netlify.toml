@@ -1,13 +1,10 @@
-# 🚀 Netlify deployment configuration - Sverige Förskolor
+# Netlify deployment configuration
 [build]
   publish = "dist"
   command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
-  VITE_SUPABASE_PROJECT_ID = "zfeqsdtddvelapbrwlol"
-  VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZXFzZHRkZHZlbGFwYnJ3bG9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3Njk1NzIsImV4cCI6MjA3MDM0NTU3Mn0.EhgHQSRum7-ZglFq1aAl7vPMM_c0i54gs5eD1fN03UU"
-  VITE_SUPABASE_URL = "https://zfeqsdtddvelapbrwlol.supabase.co"
 
 # Redirect all 404s to index.html for SPA routing
 [[redirects]]
@@ -20,29 +17,23 @@
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff" 
+    X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com; style-src 'self' 'unsafe-inline' https://api.mapbox.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.mapbox.com https://*.supabase.co wss://*.supabase.co; worker-src 'self' blob:; font-src 'self' data:;"
 
-# Force correct MIME types and caching
+# Cache static assets
 [[headers]]
-  for = "/assets/*.js"
+  for = "/assets/*"
   [headers.values]
-    Content-Type = "application/javascript; charset=utf-8"
     Cache-Control = "public, max-age=31536000, immutable"
 
-[[headers]]
-  for = "/assets/*.css"
-  [headers.values]
-    Content-Type = "text/css; charset=utf-8"
-    Cache-Control = "public, max-age=31536000, immutable"
+# Environment variables for Netlify
+[context.production]
+  environment = { NODE_ENV = "production" }
 
-[[headers]]
-  for = "/*.js"
-  [headers.values]
-    Content-Type = "application/javascript; charset=utf-8"
+[context.deploy-preview]
+  environment = { NODE_ENV = "production" }
 
-[[headers]]
-  for = "/*.css"  
-  [headers.values]
-    Content-Type = "text/css; charset=utf-8"
+[context.branch-deploy]
+  environment = { NODE_ENV = "production" }
